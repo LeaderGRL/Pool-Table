@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Balls : MonoBehaviour
+public class Ballls : MonoBehaviour
 {
     //private Vector3 ballPosition;
     //private Vector3 ballVelocity;

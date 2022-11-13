@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Stick : MonoBehaviour
+public class Cue : MonoBehaviour
 {
     public GameObject WhiteBall;
     public GameObject Camera;
