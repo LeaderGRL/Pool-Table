@@ -9,12 +9,14 @@ public class PlayerManager : MonoBehaviour
     public static PlayerManager playerInstance;
 
     [SerializeField] private GameObject cue;
-    [SerializeField] private GameObject ball;
+    //[SerializeField] private GameObject ball;
     private Player player1;
     private Player player2;
     private void Awake()
     {
         GameManager.OnGameStateChanged += GameManager_OnGameStateChanged;
+        player1 = new Player();
+        player2 = new Player();
     }
 
     private void GameManager_OnGameStateChanged(GameState state)
@@ -30,8 +32,16 @@ public class PlayerManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        player1 = new Player();
-        player2 = new Player();
+        player1.ballType = player1.getRandomBallType();
+
+        if (player1.ballType == "striped")
+        {
+            player2.ballType = "filled";
+        }
+        else
+        {
+            player2.ballType = "striped";
+        }
     }
 
     // Update is called once per frame
@@ -40,12 +50,12 @@ public class PlayerManager : MonoBehaviour
         
     }
 
-    public void nextPlayer()
-    {
-        if (GameManager.instance.state == GameState.spectate && ball.gameObject.GetComponent<Rigidbody>().velocity == Vector3.zero)
-        {
-            //GameManager.instance.updateGameState(GameState)
-            //GameManager.Instance.CurrentState = GameState.PlayerTwoTurn;
-        }
-    }
+    //public void nextPlayer()
+    //{
+    //    if (GameManager.instance.state == GameState.spectate && ball.gameObject.GetComponent<Rigidbody>().velocity == Vector3.zero)
+    //    {
+    //        //GameManager.instance.updateGameState(GameState)
+    //        //GameManager.Instance.CurrentState = GameState.PlayerTwoTurn;
+    //    }
+    //}
 }

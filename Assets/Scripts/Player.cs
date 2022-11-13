@@ -5,7 +5,7 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     private Score score;
-    private string[] ballType = { "striped", "filled" };
+    public string ballType;
     
     // Start is called before the first frame update
     void Start()
@@ -19,8 +19,9 @@ public class Player : MonoBehaviour
         
     }
 
-    public string getBallType()
+    public string getRandomBallType()
     {
-        return ballType[Random.Range(0, ballType.Length)];
+        string[] ballsType = { "striped", "filled" };
+        return ballsType[Random.Range(0, ballType.Length)];
     }
 }
