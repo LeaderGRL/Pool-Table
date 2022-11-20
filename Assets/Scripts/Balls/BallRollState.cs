@@ -6,11 +6,12 @@ public class BallRollState : BallBaseState
 {
     public override void EnterState(BallStateManager ball)
     {
-        Debug.Log(ball.gameObject.name + " : Hello from the BallRollState");
+        //Debug.Log(ball.gameObject.name + " : Hello from the BallRollState");
     }
 
     public override void OnCollisionEnter(BallStateManager ball, Collision collision)
     {
+        
         
     }
 

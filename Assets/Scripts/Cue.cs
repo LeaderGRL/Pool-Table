@@ -95,7 +95,7 @@ public class Cue : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log("Force : " + transform.up * -Input.GetAxis("Mouse Y") * 10 * force);
+        //Debug.Log("Force : " + transform.up * -Input.GetAxis("Mouse Y") * 10 * force);
 
         //Debug.Log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: " + collision.contacts[0].point);
         //Vector3 forceDirection = (collision.contacts[0].point - transform.position).normalized;

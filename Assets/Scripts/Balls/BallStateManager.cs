@@ -10,6 +10,9 @@ public class BallStateManager : MonoBehaviour
     public BallRollState rollState = new BallRollState();
     public BallIdleState idleState = new BallIdleState();
 
+    public bool hasCollide = false;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -19,7 +22,6 @@ public class BallStateManager : MonoBehaviour
         currentState = idleState;
         // "this" is a reference to the context
         currentState.EnterState(this);
-
         
     }
 
@@ -42,7 +44,7 @@ public class BallStateManager : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if((collision.gameObject.tag == "ball" || collision.gameObject.tag == "striped" || collision.gameObject.tag == "filled") && collision.gameObject.GetComponent<Rigidbody>().velocity.magnitude > 0.1f)
+        if((collision.gameObject.tag == "ball" || collision.gameObject.tag == "striped" || collision.gameObject.tag == "filled" || collision.gameObject.tag == "white") && collision.gameObject.GetComponent<Rigidbody>().velocity.magnitude > 0.1f)
         {
             currentState.OnCollisionEnter(this, collision);
         }
@@ -53,7 +55,7 @@ public class BallStateManager : MonoBehaviour
         currentState = state;
         state.EnterState(this);
     }
-
+    
     public float GetVelocity()
     {
         return GetComponent<Rigidbody>().velocity.magnitude;
@@ -61,5 +63,10 @@ public class BallStateManager : MonoBehaviour
 
     public bool isBallMoving(){
         return GetComponent<Rigidbody>().velocity.magnitude > 0.001f;
+    }
+
+    public GameObject getParent()
+    {
+        return transform.parent.gameObject;
     }
 }
