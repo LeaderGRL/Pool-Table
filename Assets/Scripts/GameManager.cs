@@ -11,6 +11,12 @@ public enum GameState
     spectate,
     play,
 }
+
+public enum ballType
+{
+    striped,
+    filled,
+}
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
@@ -18,7 +24,12 @@ public class GameManager : MonoBehaviour
     public GameState state;
     
     private GameState currentPlayerTurn;
-    
+
+    private Player player1;
+    private Player player2;
+
+    private int turnNumber = 0;
+
     private void Awake()
     {
         if (instance == null)
@@ -34,6 +45,20 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        player1 = new Player();
+        player2 = new Player();
+
+        player1.ballType = getRandomBallType();
+
+        if (player1.ballType == ballType.striped)
+        {
+            player2.ballType = ballType.filled;
+        }
+        else
+        {
+            player2.ballType = ballType.striped;
+        }
+        
         updateGameState(GameState.PlayerOneTurn);
     }
 
@@ -71,25 +96,58 @@ public class GameManager : MonoBehaviour
 
     private void HandleSpectate()
     {
-        Debug.Log("Spectating");
+        //Debug.Log("Spectating");
     }
 
     private void HandlePlayerOneTurn()
     {
-        Debug.Log("Player One's Turn");
+        Debug.Log("Player One's Turn" + getTurnNumber());
 
         currentPlayerTurn = GameState.PlayerOneTurn;
+
+        Debug.Log("Player One's ball type is " + player1.ballType.ToString());
+
+        turnNumber++;
     }
 
     private void HandlePlayerTwoTurn()
     {
-        Debug.Log("Player Two's Turn");
+        Debug.Log("Player Two's Turn" + getTurnNumber());
 
         currentPlayerTurn = GameState.PlayerTwoTurn;
+
+        Debug.Log("Player Two's ball type is " + player2.ballType.ToString());
+
+        turnNumber++;
     }
 
     public GameState getCurrentPlayerTurn()
     {
         return currentPlayerTurn;
     }
+
+    public ballType getRandomBallType()
+    {
+        System.Array value = ballType.GetValues(typeof(ballType));
+        System.Random random = new System.Random();
+        ballType randomBall = (ballType)value.GetValue(random.Next(value.Length));
+        return randomBall;
+    }
+
+    public ballType getPlayer1BallType()
+    {
+        return player1.ballType;
+    }
+
+    public ballType getPlayer2BallType()
+    {
+        return player2.ballType;
+    }
+
+    public int getTurnNumber()
+    {
+        return turnNumber;
+    }
+
+    
 }

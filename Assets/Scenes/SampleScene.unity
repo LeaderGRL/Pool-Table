@@ -248,7 +248,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: 2cec02ba13cf00c4b9d9a3a3f66fefac, type: 3}
       propertyPath: m_TagString
-      value: ball
+      value: filled
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 2cec02ba13cf00c4b9d9a3a3f66fefac, type: 3}
       propertyPath: m_RootOrder
@@ -3364,7 +3364,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: 640ca4bdd51fe144c92f84869ed38b86, type: 3}
       propertyPath: m_TagString
-      value: ball
+      value: white
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 640ca4bdd51fe144c92f84869ed38b86, type: 3}
       propertyPath: m_RootOrder
