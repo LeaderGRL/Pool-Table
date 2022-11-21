@@ -13,11 +13,17 @@ public class PlayersShootState : PlayersBaseState
         player.shoot();
     }
 
+    public override void FixedUpdateState(PlayersStateManagement player)
+    {
+        
+    }
+
     public override void OnCollisionEnter(PlayersStateManagement player, Collision collision)
     {
         collision.rigidbody.AddForce(player.transform.up * -Input.GetAxis("Mouse Y") * 10 * player.force, ForceMode.Impulse);
-        if (collision.gameObject.tag == "ball")
+        if (collision.gameObject.tag == "white")
         {
+            //Debug.Log("HIT THE WHITE BALL !");
             player.SwitchState(player.spectateState);
         }
     }

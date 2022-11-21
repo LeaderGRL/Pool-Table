@@ -8,5 +8,7 @@ public abstract class PlayersBaseState
 
     public abstract void UpdateState(PlayersStateManagement player);
 
+    public abstract void FixedUpdateState(PlayersStateManagement player);
+
     public abstract void OnCollisionEnter(PlayersStateManagement player, Collision collision);
 }
