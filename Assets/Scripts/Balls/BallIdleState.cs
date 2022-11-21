@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class BallIdleState : BallBaseState
 {
+    private int tempCount = 0;
     public override void EnterState(BallStateManager ball)
     {
         //Debug.Log("Hello from the Idle State");
@@ -16,7 +17,7 @@ public class BallIdleState : BallBaseState
             return;
         }
         Debug.Log(ball.gameObject.name);
-        if (GameManager.instance.getTurnNumber() != 1) // if its not the first turn of the game
+        if (GameManager.instance.getTurnNumber() != 999) // if its not the first turn of the game
         {
             //ball.getParent().GetComponentInChildren<BallStateManager>().hasCollide = true;
             //BallStateManager.instance.getParent().GetComponentInChildren<BallStateManager>().hasCollide == true;
@@ -27,12 +28,12 @@ public class BallIdleState : BallBaseState
                     if (collision.gameObject.tag == ballType.filled.ToString())
                     {
                         GameManager.instance.updateGameState(GameState.PlayerTwoTurn); // if the player 1 hit the wrong ball, it is now player 2's turn
-                        Debug.Log("Player 1 hit the wrong ball, it is now player 2's turn");
+                        Debug.Log("Player 1 hit the wrong ball, it is now player 2's turn " + tempCount++);
                     }
                     else
                     {
                         GameManager.instance.updateGameState(GameState.PlayerOneTurn); // if the player 1 hit the right ball, it is still player 1's turn
-                        Debug.Log("Player 1 hit the right ball, it is still player 1's turn");
+                        Debug.Log("Player 1 hit the right ball, it is still player 1's turn " + tempCount++);
                     }
                 }
                 else if (GameManager.instance.getPlayer1BallType() == ballType.filled)
@@ -40,12 +41,12 @@ public class BallIdleState : BallBaseState
                     if (collision.gameObject.tag == ballType.striped.ToString())
                     {
                         GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
-                        Debug.Log("Player 1 hit the wrong ball, it is now player 2's turn");
+                        Debug.Log("Player 1 hit the wrong ball, it is now player 2's turn " + tempCount++);
                     }
                     else
                     {
                         GameManager.instance.updateGameState(GameState.PlayerOneTurn);
-                        Debug.Log("Player 1 hit the right ball, it is still player 1's turn");
+                        Debug.Log("Player 1 hit the right ball, it is still player 1's turn " + tempCount++);
                     }
                 }
             }
@@ -56,12 +57,12 @@ public class BallIdleState : BallBaseState
                     if (collision.gameObject.tag == ballType.filled.ToString())
                     {
                         GameManager.instance.updateGameState(GameState.PlayerOneTurn);
-                        Debug.Log("Player 2 hit the wrong ball, it is now player 1's turn");
+                        Debug.Log("Player 2 hit the wrong ball, it is now player 1's turn " + tempCount++);
                     }
                     else
                     {
                         GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
-                        Debug.Log("Player 2 hit the right ball, it is still player 2's turn");
+                        Debug.Log("Player 2 hit the right ball, it is still player 2's turn " + tempCount++);
                     }
                 }
                 else if (GameManager.instance.getPlayer2BallType() == ballType.filled)
@@ -69,12 +70,12 @@ public class BallIdleState : BallBaseState
                     if (collision.gameObject.tag == ballType.striped.ToString())
                     {
                         GameManager.instance.updateGameState(GameState.PlayerOneTurn);
-                        Debug.Log("Player 2 hit the wrong ball, it is now player 1's turn");
+                        Debug.Log("Player 2 hit the wrong ball, it is now player 1's turn " + tempCount++);
                     }
                     else
                     {
                         GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
-                        Debug.Log("Player 2 hit the right ball, it is still player 2's turn");
+                        Debug.Log("Player 2 hit the right ball, it is still player 2's turn " + tempCount++);
                     }
                 }
             }

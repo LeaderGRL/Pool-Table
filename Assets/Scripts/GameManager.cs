@@ -28,7 +28,7 @@ public class GameManager : MonoBehaviour
     private Player player1;
     private Player player2;
 
-    private int turnNumber = 0;
+    private int turnNumber = 1;
 
     private void Awake()
     {

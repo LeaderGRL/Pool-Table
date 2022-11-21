@@ -12,14 +12,14 @@ public class Camera : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         transform.LookAt(target.transform);
 
-        turnArround();
+        TurnArround();
     }
 
-    protected void turnArround()
+    protected void TurnArround()
     {
         float mouseRotationX = Input.GetAxis("Mouse X");
         float mouseRotationY = Input.GetAxis("Mouse Y");
