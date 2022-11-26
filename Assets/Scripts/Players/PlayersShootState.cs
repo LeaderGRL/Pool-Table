@@ -6,6 +6,7 @@ public class PlayersShootState : PlayersBaseState
 {
     public override void EnterState(PlayersStateManagement player)
     {
+        
     }
 
     public override void UpdateState(PlayersStateManagement player)
@@ -18,9 +19,14 @@ public class PlayersShootState : PlayersBaseState
         
     }
 
+    public override void LateUpdateState(PlayersStateManagement player)
+    {
+
+    }
+
     public override void OnCollisionEnter(PlayersStateManagement player, Collision collision)
     {
-        collision.rigidbody.AddForce(player.transform.up * -Input.GetAxis("Mouse Y") * 10 * player.force, ForceMode.Impulse);
+        collision.rigidbody.AddForce(player.transform.forward * -Input.GetAxis("Mouse Y") * 10 * player.force, ForceMode.Impulse);
         if (collision.gameObject.tag == "white")
         {
             //Debug.Log("HIT THE WHITE BALL !");

@@ -672,6 +672,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="com.ben-w.erp.csproj">
+      <Project>{F321433F-EBFC-168A-B851-F42DC74B1DB7}</Project>
+      <Name>com.ben-w.erp</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />

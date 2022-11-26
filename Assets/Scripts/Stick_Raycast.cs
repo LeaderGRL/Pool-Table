@@ -19,7 +19,7 @@ public class Stick_Raycast : Raycast
     void Update()
     {
 
-        ray = new Ray(transform.position, transform.up);
+        ray = new Ray(transform.position, transform.forward);
 
         Debug.DrawRay(ray.origin, ray.direction * 100, Color.red);
 
