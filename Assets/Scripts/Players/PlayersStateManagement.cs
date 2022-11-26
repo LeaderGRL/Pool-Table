@@ -14,7 +14,13 @@ public class PlayersStateManagement : MonoBehaviour
     public GameObject Camera;
     public float distance;
     public float force;
+    public Vector3 CameraOffset;
 
+    private Vector3 velocity;
+
+    private void Awake()
+    {
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -27,6 +33,11 @@ public class PlayersStateManagement : MonoBehaviour
     void Update()
     {
         currentPlayerState.UpdateState(this);
+    }
+
+    void LateUpdate() 
+    {
+        currentPlayerState.LateUpdateState(this);
     }
 
     public void SwitchState(PlayersBaseState newState)
@@ -52,14 +63,15 @@ public class PlayersStateManagement : MonoBehaviour
 
     public void setPosition()
     {
-        transform.position = (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position;
+        //transform.position = (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position;
+        transform.position = Vector3.SmoothDamp(transform.position, (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position, ref velocity, 1f);
     }
 
     public void setRotation()
     {
         transform.LookAt(WhiteBall.transform.position);
-        transform.Rotate(0, 90, 90);
-
+        //transform.Rotate(0, 90, 90);
+        //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, transform.eulerAngles.y, transform.eulerAngles.z + 90), Time.deltaTime * 2f);
         turnArround();
     }
 
@@ -78,12 +90,12 @@ public class PlayersStateManagement : MonoBehaviour
 
         lockCamera(true);
 
-        transform.position -= transform.up * mouseAxisY * 0.1f;
+        transform.position -= transform.forward * mouseAxisY * 0.1f;
     }
 
     public void lockCamera(bool lockCamera)
     {
-        Camera.GetComponent<Camera>().enabled = !lockCamera;
+        //Camera.GetComponent<Camera>().enabled = !lockCamera;
     }
 
     private void OnCollisionEnter(Collision collision)

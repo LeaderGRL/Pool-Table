@@ -90,7 +90,7 @@ public class Cue : MonoBehaviour
 
     protected void lockCamera(bool lockCamera)
     {
-        Camera.GetComponent<Camera>().enabled = !lockCamera;
+        //Camera.GetComponent<Camera>().enabled = !lockCamera;
     }
 
     private void OnCollisionEnter(Collision collision)
