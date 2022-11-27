@@ -71,6 +71,7 @@
     <Compile Include="Assets\Scripts\Player.cs" />
     <Compile Include="Assets\Scripts\Cue.cs" />
     <Compile Include="Assets\Scripts\Players\PlayersStateManagement.cs" />
+    <Compile Include="Assets\Scripts\UI\PlayerInformations.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

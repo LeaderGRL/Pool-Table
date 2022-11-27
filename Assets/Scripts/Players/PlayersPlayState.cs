@@ -17,7 +17,6 @@ public class PlayersPlayState : PlayersBaseState
         {
             player.SwitchState(player.shootState);
         }
-
         player.setRotation();
     }
 
@@ -29,10 +28,13 @@ public class PlayersPlayState : PlayersBaseState
     public override void LateUpdateState(PlayersStateManagement player)
     {
         player.Camera.transform.LookAt(player.WhiteBall.transform);
+        
 
         TurnArround(player);
 
-        player.Camera.transform.position = player.transform.position + player.CameraOffset;
+        player.Camera.transform.position = (player.transform.position + player.WhiteBall.transform.position) / 2 + player.CameraOffset;
+
+        //player.Camera.transform.position = player.transform.position + player.Camera.transform.forward * player.CameraDistance;
 
     }
 

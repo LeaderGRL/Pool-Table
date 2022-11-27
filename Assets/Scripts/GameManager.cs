@@ -22,6 +22,7 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
     public static event System.Action<GameState> OnGameStateChanged;
     public GameState state;
+    public GameObject UI_PlayerTurn;
     
     private GameState currentPlayerTurn;
 
@@ -47,6 +48,9 @@ public class GameManager : MonoBehaviour
     {
         player1 = new Player();
         player2 = new Player();
+
+        player1.score = new Score();
+        player2.score = new Score();
 
         player1.ballType = getRandomBallType();
 
@@ -108,6 +112,8 @@ public class GameManager : MonoBehaviour
         Debug.Log("Player One's ball type is " + player1.ballType.ToString());
 
         turnNumber++;
+
+        UI_PlayerTurn.GetComponent<UnityEngine.UI.Text>().text = "Player One's Turn";
     }
 
     private void HandlePlayerTwoTurn()
@@ -119,11 +125,49 @@ public class GameManager : MonoBehaviour
         Debug.Log("Player Two's ball type is " + player2.ballType.ToString());
 
         turnNumber++;
+
+        UI_PlayerTurn.GetComponent<UnityEngine.UI.Text>().text = "Player Two's Turn";
     }
 
     public GameState getCurrentPlayerTurn()
     {
         return currentPlayerTurn;
+    }
+
+    public Player getCurrentPlayer()
+    {
+        if (currentPlayerTurn == GameState.PlayerOneTurn)
+        {
+            return player1;
+        }
+        else
+        {
+            return player2;
+        }
+    }
+
+    public Player getPlayerWithBallStriped()
+    {
+        if (player1.ballType == ballType.striped)
+        {
+            return player1;
+        }
+        else
+        {
+            return player2;
+        }
+    }
+
+    public Player getPlayerWithBallFilled()
+    {
+        if (player1.ballType == ballType.filled)
+        {
+            return player1;
+        }
+        else
+        {
+            return player2;
+        }
     }
 
     public ballType getRandomBallType()

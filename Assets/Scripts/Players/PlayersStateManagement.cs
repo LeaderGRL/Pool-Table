@@ -15,6 +15,7 @@ public class PlayersStateManagement : MonoBehaviour
     public float distance;
     public float force;
     public Vector3 CameraOffset;
+    public float CameraDistance;
 
     private Vector3 velocity;
 
@@ -63,13 +64,19 @@ public class PlayersStateManagement : MonoBehaviour
 
     public void setPosition()
     {
+        //transform.position = WhiteBall.transform.position + getDirection() * distance;
         //transform.position = (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position;
         transform.position = Vector3.SmoothDamp(transform.position, (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position, ref velocity, 1f);
     }
 
     public void setRotation()
     {
-        transform.LookAt(WhiteBall.transform.position);
+        //transform.LookAt(WhiteBall.transform.position);
+
+        var targetRotation = Quaternion.LookRotation(WhiteBall.transform.position - transform.position);
+
+        // Smoothly rotate towards the target point.
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 2f * Time.deltaTime);
         //transform.Rotate(0, 90, 90);
         //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, transform.eulerAngles.y, transform.eulerAngles.z + 90), Time.deltaTime * 2f);
         turnArround();

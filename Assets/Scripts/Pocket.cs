@@ -17,20 +17,64 @@ public class Pocket : MonoBehaviour
     }
 
     private void OnTriggerEnter(Collider other)
-    {   
+    {
         if (other.gameObject.tag == "filled")
         {
-            //Destroy
-            Destroy(other.gameObject);
-            GameManager.instance.updateGameState(GameState.PlayerOneTurn);
-            Debug.Log(other.gameObject.name + " has been destroyed");
+            GameManager.instance.getPlayerWithBallFilled().score.addScore(1);
+
+            if (GameManager.instance.getCurrentPlayerTurn() == GameState.PlayerOneTurn)
+            {
+                if (GameManager.instance.getPlayer1BallType() == ballType.filled)
+                {
+                    GameManager.instance.updateGameState(GameState.PlayerOneTurn);
+                }
+                else
+                {
+                    GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
+                }
+            }
+            else
+            {
+                if (GameManager.instance.getPlayer2BallType() == ballType.filled)
+                {
+                    GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
+                }
+                else
+                {
+                    GameManager.instance.updateGameState(GameState.PlayerOneTurn);
+                }
+            }
+   
         }
         else if (other.gameObject.tag == "striped")
         {
-            //Destroy
-            Destroy(other.gameObject);
-            GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
-            Debug.Log(other.gameObject.name + " has been destroyed");
+            GameManager.instance.getPlayerWithBallStriped().score.addScore(1);
+
+            if (GameManager.instance.getCurrentPlayerTurn() == GameState.PlayerOneTurn)
+            {
+                if (GameManager.instance.getPlayer1BallType() == ballType.striped)
+                {
+                    GameManager.instance.updateGameState(GameState.PlayerOneTurn);
+                }
+                else
+                {
+                    GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
+                }
+            }
+            else
+            {
+                if (GameManager.instance.getPlayer2BallType() == ballType.striped)
+                {
+                    GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
+                }
+                else
+                {
+                    GameManager.instance.updateGameState(GameState.PlayerOneTurn);
+                }
+            }
         }
+        
+        Destroy(other.gameObject);
+        Debug.Log(other.gameObject.name + " has been destroyed");
     }
 }

@@ -6,7 +6,8 @@ public class PlayersShootState : PlayersBaseState
 {
     public override void EnterState(PlayersStateManagement player)
     {
-        
+        Debug.Log(GameManager.instance.getCurrentPlayer().score.getScore());
+
     }
 
     public override void UpdateState(PlayersStateManagement player)

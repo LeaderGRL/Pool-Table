@@ -30,8 +30,10 @@ public class PlayersSpectateState : PlayersBaseState
         // Use a coroutine to execute the code after a delay.
         // Without that, the code is somotime executed before the ball are moving !
         player.StartCoroutine(CheckIfBallIsMoving(player)); //Genius system 
+
+        //Animating the cue to get it off the table
         player.transform.position = Vector3.SmoothDamp(player.transform.position, targetPosition , ref velocity, 1f);
-        player.transform.rotation = Quaternion.Slerp(player.transform.rotation, Quaternion.Euler(player.transform.eulerAngles.x, player.transform.eulerAngles.y, 0), Time.deltaTime * 2f);
+        player.transform.rotation = Quaternion.Slerp(player.transform.rotation, Quaternion.Euler(-90, player.transform.eulerAngles.y, player.transform.eulerAngles.z), Time.deltaTime * 2f);
     }
 
     public override void FixedUpdateState(PlayersStateManagement player)
