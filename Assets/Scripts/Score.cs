@@ -6,12 +6,12 @@ public class Score
 {
     private int score = 0;
     
-    private int getScore()
+    public int getScore()
     {
         return score;
     }
 
-    private void addScore(int points)
+    public void addScore(int points)
     {
         score += points;
     }
