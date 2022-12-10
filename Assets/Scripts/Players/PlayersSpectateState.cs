@@ -28,8 +28,9 @@ public class PlayersSpectateState : PlayersBaseState
     public override void UpdateState(PlayersStateManagement player)
     {
         // Use a coroutine to execute the code after a delay.
-        // Without that, the code is somotime executed before the ball are moving !
-        player.StartCoroutine(CheckIfBallIsMoving(player)); //Genius system 
+        // Without that, the code is sometime executed before the ball are moving !
+        //player.StartCoroutine(CheckIfBallIsMoving(player)); //Genius system 
+        CheckIfBallIsMoving(player);
 
         //Animating the cue to get it off the table
         player.transform.position = Vector3.SmoothDamp(player.transform.position, targetPosition , ref velocity, 1f);
@@ -48,6 +49,8 @@ public class PlayersSpectateState : PlayersBaseState
         {
             moveCamera(player);
         }
+
+
         //player.Camera.transform.position = Vector3.SmoothDamp(player.Camera.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 2, ref velocity, 1f);
 
         //player.Camera.transform.position = player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 2;
@@ -56,16 +59,17 @@ public class PlayersSpectateState : PlayersBaseState
 
     public override void OnCollisionEnter(PlayersStateManagement player, Collision collision)
     {
-
+        player.WhiteBall.GetComponent<BallStateManager>().hasCollide = true;
     }
 
-    private IEnumerator CheckIfBallIsMoving(PlayersStateManagement player)
+    private void CheckIfBallIsMoving(PlayersStateManagement player)
     {
-        yield return new WaitForSeconds(1);
+        //yield return new WaitForSeconds(1);
 
         if (balls.GetComponentInChildren<BallStateManager>().isBallMoving() == false)
         {
             player.SwitchState(player.playState);
+            //yield break;
         }
     }
 

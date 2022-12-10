@@ -18,9 +18,12 @@ public class Pocket : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        
         if (other.gameObject.tag == "filled")
         {
+            other.gameObject.GetComponent<BallStateManager>().SwitchState(BallStateManager.instance.pocketedState);
             GameManager.instance.getPlayerWithBallFilled().score.addScore(1);
+            GameManager.instance.UI_Message.GetComponent<UnityEngine.UI.Text>().text = "filled pocketed";
 
             if (GameManager.instance.getCurrentPlayerTurn() == GameState.PlayerOneTurn)
             {
@@ -49,6 +52,8 @@ public class Pocket : MonoBehaviour
         else if (other.gameObject.tag == "striped")
         {
             GameManager.instance.getPlayerWithBallStriped().score.addScore(1);
+            GameManager.instance.UI_Message.GetComponent<UnityEngine.UI.Text>().text = "striped pocketed";
+
 
             if (GameManager.instance.getCurrentPlayerTurn() == GameState.PlayerOneTurn)
             {
@@ -74,7 +79,7 @@ public class Pocket : MonoBehaviour
             }
         }
         
-        Destroy(other.gameObject);
-        Debug.Log(other.gameObject.name + " has been destroyed");
+        //Destroy(other.gameObject);
+        //Debug.Log(other.gameObject.name + " has been destroyed");
     }
 }

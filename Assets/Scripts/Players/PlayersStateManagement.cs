@@ -6,6 +6,7 @@ public class PlayersStateManagement : MonoBehaviour
 {
     PlayersBaseState currentPlayerState;
 
+    public static PlayersStateManagement Instance;
     public PlayersPlayState playState = new PlayersPlayState();
     public PlayersSpectateState spectateState = new PlayersSpectateState();
     public PlayersShootState shootState = new PlayersShootState();
@@ -25,6 +26,15 @@ public class PlayersStateManagement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(this);
+        }
+
         currentPlayerState = playState;
 
         playState.EnterState(this);

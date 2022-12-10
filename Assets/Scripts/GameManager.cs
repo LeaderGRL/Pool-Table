@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour
     public static event System.Action<GameState> OnGameStateChanged;
     public GameState state;
     public GameObject UI_PlayerTurn;
+    public GameObject UI_PlayerBallType;
+    public GameObject UI_Message;
     
     private GameState currentPlayerTurn;
 
@@ -30,6 +32,8 @@ public class GameManager : MonoBehaviour
     private Player player2;
 
     private int turnNumber = 1;
+
+    //private Dictionary<BallStateManager, int> pocketedBalls;
 
     private void Awake()
     {
@@ -51,6 +55,8 @@ public class GameManager : MonoBehaviour
 
         player1.score = new Score();
         player2.score = new Score();
+
+        //pocketedBalls = new Dictionary<BallStateManager, int>();
 
         player1.ballType = getRandomBallType();
 
@@ -114,6 +120,8 @@ public class GameManager : MonoBehaviour
         turnNumber++;
 
         UI_PlayerTurn.GetComponent<UnityEngine.UI.Text>().text = "Player One's Turn";
+        UI_PlayerBallType.GetComponent<UnityEngine.UI.Text>().text = player1.ballType.ToString();
+
     }
 
     private void HandlePlayerTwoTurn()
@@ -127,6 +135,7 @@ public class GameManager : MonoBehaviour
         turnNumber++;
 
         UI_PlayerTurn.GetComponent<UnityEngine.UI.Text>().text = "Player Two's Turn";
+        UI_PlayerBallType.GetComponent<UnityEngine.UI.Text>().text = player2.ballType.ToString();
     }
 
     public GameState getCurrentPlayerTurn()
@@ -193,5 +202,61 @@ public class GameManager : MonoBehaviour
         return turnNumber;
     }
 
-    
+    public GameState switchPlayerTurn()
+    {
+        if (currentPlayerTurn == GameState.PlayerOneTurn)
+        {
+            return GameState.PlayerTwoTurn;
+        }
+        else
+        {
+            return GameState.PlayerOneTurn;
+        }
+    }
+
+    //public Dictionary<BallStateManager, int> getPocketedBalls()
+    //{
+    //    return pocketedBalls;
+    //}
+
+    //public void addPocketedBall(BallStateManager ball, int turn)
+    //{
+    //    pocketedBalls.Add(ball, turn);
+    //}
+
+    //public void clearPocketedBalls()
+    //{
+    //    pocketedBalls.Clear();
+    //}
+
+    //public bool isBallPocketedLastTurn()
+    //{
+    //    foreach (KeyValuePair<BallStateManager, int> ball in pocketedBalls)
+    //    {
+    //        if (ball.Value == turnNumber - 1)
+    //        {
+    //            return true;
+    //        }
+    //    }
+
+    //    return false;
+    //}
+
+    //public bool isLastPocketedBallMatchPlayerBall()
+    //{
+    //    foreach (KeyValuePair<BallStateManager, int> ball in pocketedBalls)
+    //    {
+    //        if (ball.Value == turnNumber - 1)
+    //        {
+    //            if (ball.Key.GetBallType() == getCurrentPlayer().ballType)
+    //            {
+    //                return true;
+    //            }
+    //        }
+    //    }
+
+    //    return false;
+    //}
+
+
 }

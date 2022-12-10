@@ -86,7 +86,10 @@ public class BallIdleState : BallBaseState
 
     public override void UpdateState(BallStateManager ball)
     {
-        
+        if (ball.isBallMoving())
+        {
+            ball.SwitchState(ball.rollState);
+        }
     }
     public override void FixedUpdateState(BallStateManager ball)
     {
