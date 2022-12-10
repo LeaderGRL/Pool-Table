@@ -56,6 +56,7 @@
     <Compile Include="Assets\Scripts\Camera.cs" />
     <Compile Include="Assets\Scripts\Raycast.cs" />
     <Compile Include="Assets\Scripts\Stick_Raycast.cs" />
+    <Compile Include="Assets\Scripts\UI\PlayerInformations.cs" />
     <Compile Include="Assets\Scripts\Balls.cs" />
     <Compile Include="Assets\Scripts\Balls\BallBaseState.cs" />
     <Compile Include="Assets\Scripts\Balls\BallIdleState.cs" />
@@ -71,7 +72,7 @@
     <Compile Include="Assets\Scripts\Player.cs" />
     <Compile Include="Assets\Scripts\Cue.cs" />
     <Compile Include="Assets\Scripts\Players\PlayersStateManagement.cs" />
-    <Compile Include="Assets\Scripts\UI\PlayerInformations.cs" />
+    <Compile Include="Assets\Scripts\Balls\BallPocketedState.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

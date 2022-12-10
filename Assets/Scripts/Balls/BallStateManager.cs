@@ -9,8 +9,13 @@ public class BallStateManager : MonoBehaviour
     BallBaseState currentState;
     public BallRollState rollState = new BallRollState();
     public BallIdleState idleState = new BallIdleState();
+    public BallPocketedState pocketedState = new BallPocketedState();
 
     public bool hasCollide = false;
+
+    private ballType ballType;
+    private Dictionary<GameObject, int> pocketedBalls;
+
 
 
     // Start is called before the first frame update
@@ -22,7 +27,9 @@ public class BallStateManager : MonoBehaviour
         currentState = idleState;
         // "this" is a reference to the context
         currentState.EnterState(this);
-        
+
+        pocketedBalls = new Dictionary<GameObject, int>();
+
     }
 
     // Update is called once per frame
@@ -68,5 +75,75 @@ public class BallStateManager : MonoBehaviour
     public GameObject getParent()
     {
         return transform.parent.gameObject;
+    }
+
+    private void SetBallType()
+    {
+        if (gameObject.tag == "ball")
+        {
+            //ballType = ballType.ball;
+        }
+        else if (gameObject.tag == "striped")
+        {
+            ballType = ballType.striped;
+        }
+        else if (gameObject.tag == "filled")
+        {
+            ballType = ballType.filled;
+        }
+        else if (gameObject.tag == "white")
+        {
+            //ballType = ballType.white;
+        }
+    }
+
+    public ballType GetBallType()
+    {
+        return ballType;
+    }
+
+    public Dictionary<GameObject, int> getPocketedBalls()
+    {
+        return pocketedBalls;
+    }
+
+    public void addPocketedBall(GameObject ball, int turn)
+    {
+        pocketedBalls.Add(ball, turn);
+    }
+
+    public void clearPocketedBalls()
+    {
+        pocketedBalls.Clear();
+    }
+
+    public bool isBallPocketedLastTurn()
+    {
+        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        {
+            if (ball.Value == GameManager.instance.getTurnNumber() - 1)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+    public bool isLastPocketedBallMatchPlayerBall()
+    {
+        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        {
+            if (ball.Value == GameManager.instance.getTurnNumber() - 1)
+            {
+                if (ball.Key.GetComponent<BallStateManager>().GetBallType() == GameManager.instance.getCurrentPlayer().ballType)
+                {
+                    Debug.Log("Last pocketed ball is the same as the player's ball");
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

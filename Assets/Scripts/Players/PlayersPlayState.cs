@@ -7,8 +7,21 @@ public class PlayersPlayState : PlayersBaseState
     public override void EnterState(PlayersStateManagement player)
     {
         Debug.Log("Entered Play State");
+        if (!player.WhiteBall.GetComponent<BallStateManager>().hasCollide)
+        {
+            GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
+        }
+
+        if (BallStateManager.instance.isLastPocketedBallMatchPlayerBall() == false)
+        {
+            GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
+        }
+
+
+
         player.setPosition();
         player.lockCamera(false);
+        player.WhiteBall.GetComponent<BallStateManager>().hasCollide = false;
     }
 
     public override void UpdateState(PlayersStateManagement player)

@@ -7,11 +7,11 @@ public class BallRollState : BallBaseState
     public override void EnterState(BallStateManager ball)
     {
         //Debug.Log(ball.gameObject.name + " : Hello from the BallRollState");
+        PlayersStateManagement.Instance.SwitchState(PlayersStateManagement.Instance.spectateState);
     }
 
     public override void OnCollisionEnter(BallStateManager ball, Collision collision)
     {
-        
         
     }
 
