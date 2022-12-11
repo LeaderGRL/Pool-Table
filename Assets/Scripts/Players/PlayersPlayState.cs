@@ -7,21 +7,28 @@ public class PlayersPlayState : PlayersBaseState
     public override void EnterState(PlayersStateManagement player)
     {
         Debug.Log("Entered Play State");
+        
+        player.setPosition();
+        player.lockCamera(false);
+        
         if (!player.WhiteBall.GetComponent<BallStateManager>().hasCollide)
         {
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
+            return;
+        }
+
+        if (!BallStateManager.instance.hitTheGoodBall)
+        {
+            GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
+            return;
         }
 
         if (BallStateManager.instance.isLastPocketedBallMatchPlayerBall() == false)
         {
+            Debug.Log("OUIIII : " + BallStateManager.instance.getPocketedBalls());
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
+            return;
         }
-
-
-
-        player.setPosition();
-        player.lockCamera(false);
-        player.WhiteBall.GetComponent<BallStateManager>().hasCollide = false;
     }
 
     public override void UpdateState(PlayersStateManagement player)
