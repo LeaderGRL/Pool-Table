@@ -69,7 +69,7 @@ public class GameManager : MonoBehaviour
             player2.ballType = ballType.striped;
         }
         
-        updateGameState(GameState.PlayerOneTurn);
+        //updateGameState(GameState.PlayerOneTurn);
     }
 
     // Update is called once per frame

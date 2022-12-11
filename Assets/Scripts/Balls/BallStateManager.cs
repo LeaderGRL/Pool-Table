@@ -12,6 +12,7 @@ public class BallStateManager : MonoBehaviour
     public BallPocketedState pocketedState = new BallPocketedState();
 
     public bool hasCollide = false;
+    public bool hitTheGoodBall = false;
 
     private ballType ballType;
     private Dictionary<GameObject, int> pocketedBalls;
@@ -29,6 +30,7 @@ public class BallStateManager : MonoBehaviour
         currentState.EnterState(this);
 
         pocketedBalls = new Dictionary<GameObject, int>();
+        SetBallType();
 
     }
 
@@ -134,13 +136,15 @@ public class BallStateManager : MonoBehaviour
     {
         foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
         {
-            if (ball.Value == GameManager.instance.getTurnNumber() - 1)
+            if (ball.Value != GameManager.instance.getTurnNumber() - 1)
             {
-                if (ball.Key.GetComponent<BallStateManager>().GetBallType() == GameManager.instance.getCurrentPlayer().ballType)
-                {
-                    Debug.Log("Last pocketed ball is the same as the player's ball");
-                    return true;
-                }
+                return false;
+            }
+
+            if (ball.Key.GetComponent<BallStateManager>().GetBallType() == GameManager.instance.getCurrentPlayer().ballType)
+            {
+                Debug.Log("Last pocketed ball is the same as the player's ball");
+                return true;
             }
         }
 

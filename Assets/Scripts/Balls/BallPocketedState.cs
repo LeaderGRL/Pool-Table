@@ -6,6 +6,7 @@ public class BallPocketedState : BallBaseState
 {
     public override void EnterState(BallStateManager ball)
     {
+        //Debug.Log(ball.name + " : is in pocketed state");
         BallStateManager.instance.addPocketedBall(ball.gameObject, GameManager.instance.getTurnNumber());
     }
 
