@@ -76,7 +76,8 @@ public class PlayersStateManagement : MonoBehaviour
     {
         //transform.position = WhiteBall.transform.position + getDirection() * distance;
         //transform.position = (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position;
-        transform.position = Vector3.SmoothDamp(transform.position, (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position, ref velocity, 1f);
+        //transform.position = Vector3.SmoothDamp(transform.position, (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position, ref velocity, 1f);
+        transform.position = Vector3.MoveTowards(transform.position, (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position, 1f);
     }
 
     public void setRotation()
@@ -87,8 +88,12 @@ public class PlayersStateManagement : MonoBehaviour
 
         // Smoothly rotate towards the target point.
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 2f * Time.deltaTime);
+
+
         //transform.Rotate(0, 90, 90);
         //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, transform.eulerAngles.y, transform.eulerAngles.z + 90), Time.deltaTime * 2f);
+        //Quaternion targetRotation = Quaternion.LookRotation(WhiteBall.transform.position - transform.position);
+        //transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 2f * Time.deltaTime);
         turnArround();
     }
 
@@ -99,6 +104,11 @@ public class PlayersStateManagement : MonoBehaviour
 
         transform.RotateAround(WhiteBall.transform.position, Vector3.up, mouseRotationX);
         transform.RotateAround(WhiteBall.transform.position, Vector3.forward, mouseRotationY);
+
+        transform.rotation = Quaternion.Euler(
+         Mathf.Clamp(transform.rotation.eulerAngles.x, -90f, 90f),
+         transform.rotation.eulerAngles.y,
+         Mathf.Clamp(transform.rotation.eulerAngles.z, -90f, 90f));
     }
 
     public void shoot()

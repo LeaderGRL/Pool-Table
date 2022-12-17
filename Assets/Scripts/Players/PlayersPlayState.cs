@@ -4,13 +4,21 @@ using UnityEngine;
 
 public class PlayersPlayState : PlayersBaseState
 {
+    //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {
         Debug.Log("Entered Play State");
         
         player.setPosition();
         player.lockCamera(false);
-        
+
+        if (BallStateManager.instance.isPocketedBallContainWhiteBall())
+        {
+            BallStateManager.instance.resetWhiteBallFromPocket();
+            GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
+            return;
+        }
+
         if (!player.WhiteBall.GetComponent<BallStateManager>().hasCollide)
         {
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
@@ -29,6 +37,8 @@ public class PlayersPlayState : PlayersBaseState
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
             return;
         }
+
+        
     }
 
     public override void UpdateState(PlayersStateManagement player)

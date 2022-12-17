@@ -73,6 +73,7 @@
     <Compile Include="Assets\Scripts\Cue.cs" />
     <Compile Include="Assets\Scripts\Players\PlayersStateManagement.cs" />
     <Compile Include="Assets\Scripts\Balls\BallPocketedState.cs" />
+    <Compile Include="Assets\Scripts\Ground.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

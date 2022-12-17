@@ -25,13 +25,15 @@ public class GameManager : MonoBehaviour
     public GameObject UI_PlayerTurn;
     public GameObject UI_PlayerBallType;
     public GameObject UI_Message;
-    
+
+
     private GameState currentPlayerTurn;
 
     private Player player1;
     private Player player2;
 
     private int turnNumber = 1;
+
 
     //private Dictionary<BallStateManager, int> pocketedBalls;
 
@@ -213,50 +215,4 @@ public class GameManager : MonoBehaviour
             return GameState.PlayerOneTurn;
         }
     }
-
-    //public Dictionary<BallStateManager, int> getPocketedBalls()
-    //{
-    //    return pocketedBalls;
-    //}
-
-    //public void addPocketedBall(BallStateManager ball, int turn)
-    //{
-    //    pocketedBalls.Add(ball, turn);
-    //}
-
-    //public void clearPocketedBalls()
-    //{
-    //    pocketedBalls.Clear();
-    //}
-
-    //public bool isBallPocketedLastTurn()
-    //{
-    //    foreach (KeyValuePair<BallStateManager, int> ball in pocketedBalls)
-    //    {
-    //        if (ball.Value == turnNumber - 1)
-    //        {
-    //            return true;
-    //        }
-    //    }
-
-    //    return false;
-    //}
-
-    //public bool isLastPocketedBallMatchPlayerBall()
-    //{
-    //    foreach (KeyValuePair<BallStateManager, int> ball in pocketedBalls)
-    //    {
-    //        if (ball.Value == turnNumber - 1)
-    //        {
-    //            if (ball.Key.GetBallType() == getCurrentPlayer().ballType)
-    //            {
-    //                return true;
-    //            }
-    //        }
-    //    }
-
-    //    return false;
-    //}
-
-
 }

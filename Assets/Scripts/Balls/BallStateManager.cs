@@ -13,9 +13,12 @@ public class BallStateManager : MonoBehaviour
 
     public bool hasCollide = false;
     public bool hitTheGoodBall = false;
+    public GameObject ballOut;
 
     private ballType ballType;
     private Dictionary<GameObject, int> pocketedBalls;
+
+    //[SerializeField] private GameObject whiteBall;
 
 
 
@@ -149,5 +152,43 @@ public class BallStateManager : MonoBehaviour
         }
 
         return false;
+    }
+
+    public bool isPocketedBallContainWhiteBall()
+    {
+        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        {
+            if (ball.Key.gameObject.tag == "white")
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void resetWhiteBallFromPocket()
+    {
+        GameObject temp = new GameObject();
+        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        {
+            if (ball.Key.gameObject.tag == "white")
+            {
+                ball.Key.gameObject.transform.position = new Vector3(-0.635f, 1, 0);
+                ball.Key.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                ball.Key.gameObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                temp = ball.Key;
+            }
+        }
+        if (temp != null)
+        {
+            pocketedBalls.Remove(temp);
+        }
+    }
+
+    public void resetBall(GameObject ball)
+    {
+        ball.transform.position = new Vector3(-0.635f, 1, 0);
+        ball.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        ball.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
     }
 }
