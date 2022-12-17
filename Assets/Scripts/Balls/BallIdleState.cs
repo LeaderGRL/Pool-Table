@@ -8,6 +8,15 @@ public class BallIdleState : BallBaseState
     private bool hasCollide = false;
     public override void EnterState(BallStateManager ball)
     {
+        if (ball.gameObject.tag != "white")
+        {
+            return;
+        }
+        
+        if (ball.ballOut != null)
+        {
+            ball.resetBall(ball.ballOut);
+        }
         //Debug.Log("Hello from the Idle State");
     }
 

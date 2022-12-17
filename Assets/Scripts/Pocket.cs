@@ -18,7 +18,7 @@ public class Pocket : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "filled" || other.gameObject.tag == "striped")
+        if (other.gameObject.tag == "filled" || other.gameObject.tag == "striped" || other.gameObject.tag == "white")
         {
             other.GetComponent<BallStateManager>().SwitchState(other.GetComponent<BallStateManager>().pocketedState);
         }

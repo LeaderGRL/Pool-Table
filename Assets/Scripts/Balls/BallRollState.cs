@@ -12,7 +12,7 @@ public class BallRollState : BallBaseState
 
     public override void OnCollisionEnter(BallStateManager ball, Collision collision)
     {
-        
+
     }
 
     public override void UpdateState(BallStateManager ball)
