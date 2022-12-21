@@ -44,16 +44,16 @@ public class PlayersSpectateState : PlayersBaseState
 
     public override void LateUpdateState(PlayersStateManagement player)
     {
-        player.Camera.transform.LookAt(player.WhiteBall.transform);
+        player.Cam.transform.LookAt(player.WhiteBall.transform);
         if (player.WhiteBall.GetComponent<Rigidbody>().velocity.magnitude < 0.1f)
         {
             moveCamera(player);
         }
 
 
-        //player.Camera.transform.position = Vector3.SmoothDamp(player.Camera.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 2, ref velocity, 1f);
+        //player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 2, ref velocity, 1f);
 
-        //player.Camera.transform.position = player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 2;
+        //player.Cam.transform.position = player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 2;
 
     }
 
@@ -99,24 +99,24 @@ public class PlayersSpectateState : PlayersBaseState
 
     private void moveCamera(PlayersStateManagement player)
     {
-        player.Camera.transform.position = Vector3.SmoothDamp(player.Camera.transform.position, player.WhiteBall.transform.position + Vector3.up * 2, ref velocity, 1f);
+        player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.up * 2, ref velocity, 1f);
 
         switch (checkWhiteBallPosition(player))
         {
             case corner.bottom_left:
-                player.Camera.transform.position = Vector3.SmoothDamp(player.Camera.transform.position, player.WhiteBall.transform.position + Vector3.forward * 5 + Vector3.up, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.forward * 5 + Vector3.up, ref velocity, 1f);
                 break;
             case corner.bottom_right:
-                player.Camera.transform.position = Vector3.SmoothDamp(player.Camera.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up, ref velocity, 1f);
                 break;
             case corner.top_left:
-                player.Camera.transform.position = Vector3.SmoothDamp(player.Camera.transform.position, player.WhiteBall.transform.position + Vector3.forward * 5 + Vector3.up * 3, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.forward * 5 + Vector3.up * 3, ref velocity, 1f);
                 break;
             case corner.top_right:
-                player.Camera.transform.position = Vector3.SmoothDamp(player.Camera.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 3, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 3, ref velocity, 1f);
                 break;
             default:
-                player.Camera.transform.position = Vector3.SmoothDamp(player.Camera.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 2, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 2, ref velocity, 1f);
                 break;
         }
     }

@@ -15,6 +15,8 @@ public class BallStateManager : MonoBehaviour
     public bool hitTheGoodBall = false;
     public GameObject ballOut;
 
+    public Rigidbody rb;
+
     private ballType ballType;
     private Dictionary<GameObject, int> pocketedBalls;
 
@@ -33,6 +35,9 @@ public class BallStateManager : MonoBehaviour
         currentState.EnterState(this);
 
         pocketedBalls = new Dictionary<GameObject, int>();
+
+        rb = GetComponent<Rigidbody>();
+        
         SetBallType();
 
     }
@@ -191,4 +196,35 @@ public class BallStateManager : MonoBehaviour
         ball.GetComponent<Rigidbody>().velocity = Vector3.zero;
         ball.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
     }
+
+    public void AddBallForce()
+    {
+        //GetComponent<Rigidbody>().AddForce(transform.forward * -Input.GetAxis("Mouse Y") * 10 * force);
+    }
+
+    public Vector3 CalculateCollisionVelocity(Vector3 velocity1, Vector3 velocity2, float mass1, float mass2, Collision collision)
+    {
+        // Calculate the relative velocity of the two objects
+        Vector3 relativeVelocity = velocity1 - velocity2;
+
+        // Calculate the impulse of the collision
+        float impulse = -(1 + 1) * Vector3.Dot(relativeVelocity, collision.contacts[0].normal) / Vector3.Dot(collision.contacts[0].normal, collision.contacts[0].normal * (1 / mass1 + 1 / mass2));
+
+        // Calculate the new velocity of the first object after the collision
+        return velocity1 + impulse / mass1 * collision.contacts[0].normal;
+    }
+
+    public Vector3 CalculateCollisionVelocityImpulseMomentum(Vector3 velocity1, Vector3 velocity2, float mass1, float mass2, Vector3 normal)
+    {
+        // Calculate the relative velocity of the two objects
+        Vector3 relativeVelocity = velocity1 - velocity2;
+
+        // Calculate the impulse of the collision
+        float impulse = -(1 + 1) * Vector3.Dot(relativeVelocity, normal) / (1 / mass1 + 1 / mass2);
+
+        // Calculate the new velocity of the first object after the collision
+        return velocity1 + impulse / mass1 * normal;
+    }    
+
+
 }

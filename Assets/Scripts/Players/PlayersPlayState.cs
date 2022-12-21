@@ -6,9 +6,7 @@ public class PlayersPlayState : PlayersBaseState
 {
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
-    {
-        Debug.Log("Entered Play State");
-        
+    {        
         player.setPosition();
         player.lockCamera(false);
 
@@ -57,14 +55,14 @@ public class PlayersPlayState : PlayersBaseState
 
     public override void LateUpdateState(PlayersStateManagement player)
     {
-        player.Camera.transform.LookAt(player.WhiteBall.transform);
+        player.Cam.transform.LookAt(player.WhiteBall.transform);
         
 
         TurnArround(player);
 
-        player.Camera.transform.position = (player.transform.position + player.WhiteBall.transform.position) / 2 + player.CameraOffset;
+        player.Cam.transform.position = (player.transform.position + player.WhiteBall.transform.position) / 2 + player.CameraOffset;
 
-        //player.Camera.transform.position = player.transform.position + player.Camera.transform.forward * player.CameraDistance;
+        //player.Cam.transform.position = player.transform.position + player.Cam.transform.forward * player.CameraDistance;
 
     }
 
@@ -78,7 +76,15 @@ public class PlayersPlayState : PlayersBaseState
         float mouseRotationX = Input.GetAxis("Mouse X");
         float mouseRotationY = Input.GetAxis("Mouse Y");
 
-        player.Camera.transform.RotateAround(player.WhiteBall.transform.position, Vector3.up, mouseRotationX);
-        player.Camera.transform.RotateAround(player.WhiteBall.transform.position, Vector3.forward, mouseRotationY);
+        player.Cam.transform.RotateAround(player.WhiteBall.transform.position, Vector3.up, mouseRotationX);
+        player.Cam.transform.RotateAround(player.WhiteBall.transform.position, Vector3.forward, mouseRotationY);
+
+        //limit the rotation
+        //Vector3 rotation = player.Cam.transform.eulerAngles;
+        //rotation.x = Mathf.Clamp(rotation.x, 0, 90);
+        //rotation.y = Mathf.Clamp(rotation.y, 0, 90);
+        //rotation.z = Mathf.Clamp(rotation.z, 0, 90);
+        //player.Cam.transform.eulerAngles = rotation;
+       
     }
 }
