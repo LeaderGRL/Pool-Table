@@ -9,6 +9,7 @@ TagManager:
   - striped
   - white
   - black
+  - Rail
   layers:
   - Default
   - TransparentFX

@@ -26,6 +26,12 @@ public class GameManager : MonoBehaviour
     public GameObject UI_PlayerBallType;
     public GameObject UI_Message;
 
+    public GameObject ballPrefab;
+    private float ballRadius;
+    public float ballSpacing;
+
+    public int rows;
+
 
     private GameState currentPlayerTurn;
 
@@ -52,6 +58,8 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        setTrianglePositionBall();
+
         player1 = new Player();
         player2 = new Player();
 
@@ -128,11 +136,7 @@ public class GameManager : MonoBehaviour
 
     private void HandlePlayerTwoTurn()
     {
-        Debug.Log("Player Two's Turn" + getTurnNumber());
-
         currentPlayerTurn = GameState.PlayerTwoTurn;
-
-        Debug.Log("Player Two's ball type is " + player2.ballType.ToString());
 
         turnNumber++;
 
@@ -215,4 +219,59 @@ public class GameManager : MonoBehaviour
             return GameState.PlayerOneTurn;
         }
     }
+
+    private void setTrianglePositionBall()
+    {
+        int count = ballPrefab.transform.childCount;
+        float posBall = 0;
+
+        float rowOffset = 0;
+
+        ballRadius = ballPrefab.GetComponentInChildren<SphereCollider>().radius;
+
+        // Calculate the position of the first ball in the triangle
+        Vector3 startPosition = ballPrefab.transform.position;
+
+        // Calculate the center position of the current row
+
+        for (int row = 0; row < rows; row++)
+            {
+
+
+            rowOffset = row * ballRadius * 2 + ballSpacing * row;
+
+            // Calculate the number of balls in the current row
+            int ballCount = rows - row;
+
+            Vector3 rowCenter = startPosition + new Vector3(-rowOffset / 2, 0, 0);
+
+
+            // Place the balls in the current row
+            for (int j = 0; j < ballCount; j++)
+                {
+
+                posBall += ballSpacing;
+
+                // Calculate the index of the current ball
+                int index = j + (row * (row + 1)) / 2;
+
+
+                // Print the index to the console
+                Debug.Log("Index: " + index);
+                // Calculate the position of the current ball
+                Vector3 ballPosition = rowCenter + new Vector3(ballSpacing * j, 0, 0);
+
+                posBall += ballSpacing;
+
+                // Update the position of the ball game object
+                if(count > 1)
+                {
+                    ballPrefab.transform.GetChild(count-1).gameObject.transform.position = ballPosition;
+
+                }
+                count--;
+                }
+        }
+    }
 }
+

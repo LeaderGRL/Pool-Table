@@ -12,13 +12,21 @@ public class PlayersStateManagement : MonoBehaviour
     public PlayersShootState shootState = new PlayersShootState();
 
     public GameObject WhiteBall;
-    public GameObject Camera;
+    public GameObject Cam;
     public float distance;
     public float force;
+    public float spin;
     public Vector3 CameraOffset;
     public float CameraDistance;
 
+    public float rotationSpeed = 5.0f;
+    public float angleLimit = 45.0f;
+
+    private float angle = 0.0f;
+
     private Vector3 velocity;
+    private float mouseRotationX = 0;
+    private float mouseRotationY = 0;
 
     private void Awake()
     {
@@ -34,6 +42,9 @@ public class PlayersStateManagement : MonoBehaviour
         {
             Destroy(this);
         }
+
+        mouseRotationX = transform.eulerAngles.x;
+        mouseRotationY = transform.eulerAngles.y;
 
         currentPlayerState = playState;
 
@@ -74,41 +85,47 @@ public class PlayersStateManagement : MonoBehaviour
 
     public void setPosition()
     {
-        //transform.position = WhiteBall.transform.position + getDirection() * distance;
-        //transform.position = (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position;
-        //transform.position = Vector3.SmoothDamp(transform.position, (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position, ref velocity, 1f);
         transform.position = Vector3.MoveTowards(transform.position, (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position, 1f);
     }
 
     public void setRotation()
     {
-        //transform.LookAt(WhiteBall.transform.position);
-
         var targetRotation = Quaternion.LookRotation(WhiteBall.transform.position - transform.position);
 
         // Smoothly rotate towards the target point.
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 2f * Time.deltaTime);
-
-
-        //transform.Rotate(0, 90, 90);
-        //transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(transform.eulerAngles.x, transform.eulerAngles.y, transform.eulerAngles.z + 90), Time.deltaTime * 2f);
-        //Quaternion targetRotation = Quaternion.LookRotation(WhiteBall.transform.position - transform.position);
-        //transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, 2f * Time.deltaTime);
+        
         turnArround();
     }
 
     public void turnArround()
     {
-        float mouseRotationX = Input.GetAxis("Mouse X");
-        float mouseRotationY = Input.GetAxis("Mouse Y");
+        mouseRotationX = Input.GetAxis("Mouse X");
+        mouseRotationY = Input.GetAxis("Mouse Y");
 
-        transform.RotateAround(WhiteBall.transform.position, Vector3.up, mouseRotationX);
-        transform.RotateAround(WhiteBall.transform.position, Vector3.forward, mouseRotationY);
+        //Debug.Log(transform.eulerAngles.x + " , " + transform.eulerAngles.y + " , " + transform.eulerAngles.z);
+
+ 
+        if (transform.eulerAngles.x < 1f)
+        {
+            if (mouseRotationY < 0)
+            {
+                transform.RotateAround(WhiteBall.transform.position, Vector3.forward, Input.GetAxis("Mouse Y"));
+            }
+        }
+        else
+        {
+            transform.RotateAround(WhiteBall.transform.position, Vector3.forward, Input.GetAxis("Mouse Y"));
+        }
+
+        transform.RotateAround(WhiteBall.transform.position, Vector3.up, Input.GetAxis("Mouse X"));
 
         transform.rotation = Quaternion.Euler(
-         Mathf.Clamp(transform.rotation.eulerAngles.x, -90f, 90f),
-         transform.rotation.eulerAngles.y,
-         Mathf.Clamp(transform.rotation.eulerAngles.z, -90f, 90f));
+            Mathf.Clamp(transform.rotation.eulerAngles.x, -90f, 90f),
+            transform.rotation.eulerAngles.y,
+            Mathf.Clamp(transform.rotation.eulerAngles.z, -90f, 90f)
+        );
+
     }
 
     public void shoot()
@@ -122,7 +139,7 @@ public class PlayersStateManagement : MonoBehaviour
 
     public void lockCamera(bool lockCamera)
     {
-        //Camera.GetComponent<Camera>().enabled = !lockCamera;
+        //Cam.GetComponent<Cam>().enabled = !lockCamera;
     }
 
     private void OnCollisionEnter(Collision collision)

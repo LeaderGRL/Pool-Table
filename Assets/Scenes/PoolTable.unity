@@ -901,11 +901,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WhiteBall: {fileID: 578393810}
-  Camera: {fileID: 963194225}
+  Cam: {fileID: 963194225}
   distance: 1.8
   force: 3
+  spin: 3
   CameraOffset: {x: 0, y: 0.15, z: 0}
   CameraDistance: 1
+  rotationSpeed: 5
+  angleLimit: 45
 --- !u!114 &534474668
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1397,11 +1400,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WhiteBall: {fileID: 578393810}
-  Camera: {fileID: 963194225}
+  Cam: {fileID: 0}
   distance: 0.8
   force: 3
+  spin: 0
   CameraOffset: {x: 0, y: 0.15, z: 0}
   CameraDistance: 1
+  rotationSpeed: 5
+  angleLimit: 45
 --- !u!114 &714982921
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2047,6 +2053,9 @@ MonoBehaviour:
   UI_PlayerTurn: {fileID: 1532381071}
   UI_PlayerBallType: {fileID: 1343272612}
   UI_Message: {fileID: 1989891876}
+  ballPrefab: {fileID: 1362464028}
+  ballSpacing: 2
+  rows: 5
 --- !u!1 &1045741551 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 100000, guid: 2cec02ba13cf00c4b9d9a3a3f66fefac, type: 3}
@@ -2356,7 +2365,7 @@ GameObject:
   - component: {fileID: 1318723547}
   m_Layer: 0
   m_Name: sides_low_Mesh.017
-  m_TagString: Untagged
+  m_TagString: Rail
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
