@@ -62,6 +62,11 @@ public class PlayersStateManagement : MonoBehaviour
         currentPlayerState.LateUpdateState(this);
     }
 
+    void OnMouseDown()
+    {
+        currentPlayerState.OnMouseDown(this);
+    }
+
     public void SwitchState(PlayersBaseState newState)
     {
         currentPlayerState = newState;
@@ -85,7 +90,8 @@ public class PlayersStateManagement : MonoBehaviour
 
     public void setPosition()
     {
-        transform.position = Vector3.MoveTowards(transform.position, (transform.position - WhiteBall.transform.position).normalized * distance + WhiteBall.transform.position, 1f);
+        transform.position = WhiteBall.transform.position + getDirection() * distance;
+        //transform.position = Vector3.MoveTowards(transform.position, (transform.position - WhiteBall.transform.position) * distance + WhiteBall.transform.position, 1f);
     }
 
     public void setRotation()

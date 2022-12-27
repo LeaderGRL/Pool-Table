@@ -58,7 +58,7 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        setTrianglePositionBall();
+        //setTrianglePositionBall();
 
         player1 = new Player();
         player2 = new Player();

@@ -7,7 +7,7 @@ public class PlayersPlayState : PlayersBaseState
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {        
-        player.setPosition();
+        //player.setPosition();
         player.lockCamera(false);
 
         if (BallStateManager.instance.isPocketedBallContainWhiteBall())
@@ -45,6 +45,7 @@ public class PlayersPlayState : PlayersBaseState
         {
             player.SwitchState(player.shootState);
         }
+        player.setPosition();
         player.setRotation();
     }
 
@@ -86,5 +87,11 @@ public class PlayersPlayState : PlayersBaseState
         //rotation.z = Mathf.Clamp(rotation.z, 0, 90);
         //player.Cam.transform.eulerAngles = rotation;
        
+    }
+
+    public override void OnMouseDown(PlayersStateManagement player)
+    {
+        //Vector3 power = Vector3.right * 100;
+        //player.WhiteBall.GetComponent<Rigidbody>().AddForce(power, ForceMode.Impulse);
     }
 }

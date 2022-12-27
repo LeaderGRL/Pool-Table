@@ -47,6 +47,7 @@ public class PlayersSpectateState : PlayersBaseState
         player.Cam.transform.LookAt(player.WhiteBall.transform);
         if (player.WhiteBall.GetComponent<Rigidbody>().velocity.magnitude < 0.1f)
         {
+            player.Cam.transform.LookAt(player.WhiteBall.transform);
             moveCamera(player);
         }
 
@@ -104,20 +105,25 @@ public class PlayersSpectateState : PlayersBaseState
         switch (checkWhiteBallPosition(player))
         {
             case corner.bottom_left:
-                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.forward * 5 + Vector3.up, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.forward * 100 + Vector3.up, ref velocity, 1f);
                 break;
             case corner.bottom_right:
-                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 100 + Vector3.up, ref velocity, 1f);
                 break;
             case corner.top_left:
-                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.forward * 5 + Vector3.up * 3, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.forward * 100 + Vector3.up * 3, ref velocity, 1f);
                 break;
             case corner.top_right:
-                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 3, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 100 + Vector3.up * 3, ref velocity, 1f);
                 break;
             default:
-                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 5 + Vector3.up * 2, ref velocity, 1f);
+                player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.back * 100 + Vector3.up * 2, ref velocity, 1f);
                 break;
         }
+    }
+
+    public override void OnMouseDown(PlayersStateManagement player)
+    {
+        
     }
 }
