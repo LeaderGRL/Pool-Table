@@ -20,6 +20,8 @@ public class BallStateManager : MonoBehaviour
     private ballType ballType;
     private Dictionary<GameObject, int> pocketedBalls;
 
+
+
     //[SerializeField] private GameObject whiteBall;
 
 
@@ -85,6 +87,16 @@ public class BallStateManager : MonoBehaviour
     public GameObject getParent()
     {
         return transform.parent.gameObject;
+    }
+    
+    public float getBallRadius()
+    {
+        return GetComponent<SphereCollider>().radius;
+    }
+
+    public float getBallMass()
+    {
+        return GetComponent<Rigidbody>().mass;
     }
 
     private void SetBallType()
@@ -224,7 +236,40 @@ public class BallStateManager : MonoBehaviour
 
         // Calculate the new velocity of the first object after the collision
         return velocity1 + impulse / mass1 * normal;
-    }    
+    }
 
+    // Applies spin to a ball based on the direction and strength of the shot
+    public void ApplySpin(Rigidbody ball, Vector3 direction, float strength)
+    {
+        // Clamp the strength to the maximum allowed spin
+        strength = Mathf.Clamp(strength, 0, 100);
+
+        // Calculate the spin to apply based on the direction and strength of the shot
+        Vector3 spin = Vector3.Cross(direction, Vector3.up) * strength * ball.mass * getBallRadius();
+
+        // Apply the spin to the ball
+        ball.AddTorque(spin, ForceMode.Impulse);
+    }
+
+
+    // Calculates the impulse applied to two colliders based on their mass, velocity, and collision normal
+    public float CalculateImpulse(Rigidbody collider1, Rigidbody collider2, Vector3 relativeVelocity, Vector3 collisionNormal)
+    {
+        // Calculate the mass of each collider
+        float mass1 = collider1.mass;
+        float mass2 = collider2.mass;
+
+        // Calculate the coefficient of restitution (bounciness) of each collider
+        float cor1 = collider1.gameObject.GetComponent<Collider>().material.bounciness;
+        float cor2 = collider2.gameObject.GetComponent<Collider>().material.bounciness;
+
+        // Calculate the combined coefficient of restitution
+        float cor = cor1 * cor2;
+
+        // Calculate the impulse applied to each collider
+        float impulse = (-(1 + cor) * Vector3.Dot(relativeVelocity, collisionNormal)) / (1 / mass1 + 1 / mass2);
+
+        return impulse;
+    }
 
 }
