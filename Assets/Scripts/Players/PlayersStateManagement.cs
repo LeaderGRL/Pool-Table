@@ -140,7 +140,7 @@ public class PlayersStateManagement : MonoBehaviour
 
         lockCamera(true);
 
-        transform.position -= transform.forward * mouseAxisY * 0.1f;
+        transform.position -= transform.forward * mouseAxisY * 0.3f;
     }
 
     public void lockCamera(bool lockCamera)
