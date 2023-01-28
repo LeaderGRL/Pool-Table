@@ -45,7 +45,7 @@ public class PlayersSpectateState : PlayersBaseState
     public override void LateUpdateState(PlayersStateManagement player)
     {
         player.Cam.transform.LookAt(player.WhiteBall.transform);
-        if (player.WhiteBall.GetComponent<Rigidbody>().velocity.magnitude < 0.1f)
+        if (player.WhiteBall.GetComponent<Rigidbody>().velocity.magnitude < 1f)
         {
             player.Cam.transform.LookAt(player.WhiteBall.transform);
             moveCamera(player);

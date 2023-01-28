@@ -81,7 +81,7 @@ public class BallStateManager : MonoBehaviour
     }
 
     public bool isBallMoving(){
-        return GetComponent<Rigidbody>().velocity.magnitude > 0.001f;
+        return GetComponent<Rigidbody>().velocity.magnitude > 0.1f;
     }
 
     public GameObject getParent()
