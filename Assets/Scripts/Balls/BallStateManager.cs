@@ -19,6 +19,7 @@ public class BallStateManager : MonoBehaviour
 
     private ballType ballType;
     private Dictionary<GameObject, int> pocketedBalls;
+    private bool playAgain = false;
 
 
 
@@ -81,7 +82,16 @@ public class BallStateManager : MonoBehaviour
     }
 
     public bool isBallMoving(){
-        return GetComponent<Rigidbody>().velocity.magnitude > 0.1f;
+        //Debug.Log(GetComponent<Rigidbody>().velocity.magnitude);
+        //return GetComponent<Rigidbody>().velocity.magnitude > 0.1f;
+        if (GetComponent<Rigidbody>().velocity.magnitude > 0.1f)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public GameObject getParent()
@@ -124,6 +134,15 @@ public class BallStateManager : MonoBehaviour
         return ballType;
     }
 
+    public bool GetPlayAgain()
+    {
+        return playAgain;
+    }
+
+    public void SetPlayAgain(bool playAgain)
+    {
+        this.playAgain = playAgain;
+    }
     public Dictionary<GameObject, int> getPocketedBalls()
     {
         return pocketedBalls;
@@ -175,6 +194,7 @@ public class BallStateManager : MonoBehaviour
     {
         foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
         {
+            Debug.Log("Ball : " + ball.Key.name);
             if (ball.Key.gameObject.tag == "white")
             {
                 return true;
@@ -190,7 +210,7 @@ public class BallStateManager : MonoBehaviour
         {
             if (ball.Key.gameObject.tag == "white")
             {
-                ball.Key.gameObject.transform.position = new Vector3(-0.635f, 1, 0);
+                ball.Key.gameObject.transform.position = new Vector3(-9.52f, 20, 0);
                 ball.Key.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 ball.Key.gameObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
                 temp = ball.Key;

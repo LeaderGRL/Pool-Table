@@ -16,24 +16,24 @@ public class BallRollState : BallBaseState
         //Debug.Log("Hello from the roll State");
 
         // Get the Rigidbody of the first collider
-        Rigidbody collider1 = ball.gameObject.GetComponent<SphereCollider>().attachedRigidbody;
+        //Rigidbody collider1 = ball.gameObject.GetComponent<SphereCollider>().attachedRigidbody;
 
-        // Get the Rigidbody of the second collider
-        Rigidbody collider2 = collision.collider.attachedRigidbody;
+        //// Get the Rigidbody of the second collider
+        //Rigidbody collider2 = collision.collider.attachedRigidbody;
 
-        // Calculate the collision point and normal
-        Vector3 collisionPoint = collision.contacts[0].point;
-        Vector3 collisionNormal = collision.contacts[0].normal;
+        //// Calculate the collision point and normal
+        //Vector3 collisionPoint = collision.contacts[0].point;
+        //Vector3 collisionNormal = collision.contacts[0].normal;
 
-        // Calculate the relative velocity of the two colliders at the collision point
-        Vector3 relativeVelocity = collider1.GetPointVelocity(collisionPoint) - collider2.GetPointVelocity(collisionPoint);
+        //// Calculate the relative velocity of the two colliders at the collision point
+        //Vector3 relativeVelocity = collider1.GetPointVelocity(collisionPoint) - collider2.GetPointVelocity(collisionPoint);
 
-        // Calculate the impulse applied to each collider
-        float impulse = ball.CalculateImpulse(collider1, collider2, relativeVelocity, collisionNormal);
+        //// Calculate the impulse applied to each collider
+        //float impulse = ball.CalculateImpulse(collider1, collider2, relativeVelocity, collisionNormal);
 
-        // Apply the impulse to each collider
-        collider1.AddForceAtPosition(collisionNormal * impulse, collisionPoint, ForceMode.Impulse);
-        collider2.AddForceAtPosition(-collisionNormal * impulse, collisionPoint, ForceMode.Impulse);
+        //// Apply the impulse to each collider
+        //collider1.AddForceAtPosition(collisionNormal * impulse, collisionPoint, ForceMode.Impulse);
+        //collider2.AddForceAtPosition(-collisionNormal * impulse, collisionPoint, ForceMode.Impulse);
 
         //// Calculate the rolling friction torque applied to each collider
         //float torque1 = CalculateRollingFrictionTorque(collider1, collisionPoint, collisionNormal);

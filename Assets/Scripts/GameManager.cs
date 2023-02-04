@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
     private Player player1;
     private Player player2;
 
-    private int turnNumber = 1;
+    private int turnNumber = 0;
 
 
     //private Dictionary<BallStateManager, int> pocketedBalls;
@@ -80,7 +80,7 @@ public class GameManager : MonoBehaviour
         {
             player2.ballType = ballType.striped;
         }
-        
+
         //updateGameState(GameState.PlayerOneTurn);
     }
 
@@ -123,11 +123,11 @@ public class GameManager : MonoBehaviour
 
     private void HandlePlayerOneTurn()
     {
-        Debug.Log("Player One's Turn" + getTurnNumber());
+        //Debug.Log("Player One's Turn" + getTurnNumber());
 
         currentPlayerTurn = GameState.PlayerOneTurn;
 
-        Debug.Log("Player One's ball type is " + player1.ballType.ToString());
+        //Debug.Log("Player One's ball type is " + player1.ballType.ToString());
 
         turnNumber++;
 

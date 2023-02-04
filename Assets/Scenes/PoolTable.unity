@@ -140,7 +140,7 @@ GameObject:
   - component: {fileID: 39856150}
   m_Layer: 0
   m_Name: Sphere (3)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -432,7 +432,7 @@ GameObject:
   - component: {fileID: 138793840}
   m_Layer: 0
   m_Name: Sphere (6)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -946,7 +946,7 @@ GameObject:
   - component: {fileID: 466467924}
   m_Layer: 0
   m_Name: Sphere (4)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1092,7 +1092,7 @@ GameObject:
   - component: {fileID: 506606839}
   m_Layer: 0
   m_Name: Sphere (14)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1364,7 +1364,7 @@ GameObject:
   - component: {fileID: 589692458}
   m_Layer: 0
   m_Name: Sphere (12)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1800,7 +1800,7 @@ GameObject:
   - component: {fileID: 726879718}
   m_Layer: 0
   m_Name: Sphere (5)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1946,7 +1946,7 @@ GameObject:
   - component: {fileID: 728835054}
   m_Layer: 0
   m_Name: Sphere (15)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2092,7 +2092,7 @@ GameObject:
   - component: {fileID: 752744636}
   m_Layer: 0
   m_Name: Sphere (7)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2238,7 +2238,7 @@ GameObject:
   - component: {fileID: 795021687}
   m_Layer: 0
   m_Name: Sphere (13)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2874,7 +2874,7 @@ GameObject:
   - component: {fileID: 1019706807}
   m_Layer: 0
   m_Name: Sphere (1)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3020,7 +3020,7 @@ GameObject:
   - component: {fileID: 1062358942}
   m_Layer: 0
   m_Name: Sphere (8)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3166,7 +3166,7 @@ GameObject:
   - component: {fileID: 1072184239}
   m_Layer: 0
   m_Name: Sphere (10)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4361,7 +4361,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1598627957}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 654f2cff4023cb0408f14b2e9b165ba8, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
@@ -4385,7 +4385,7 @@ GameObject:
   - component: {fileID: 1640636886}
   m_Layer: 0
   m_Name: Sphere (11)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4708,7 +4708,7 @@ GameObject:
   - component: {fileID: 1722692149}
   m_Layer: 0
   m_Name: Sphere (2)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
