@@ -22,25 +22,53 @@ public class BallIdleState : BallBaseState
     
     public override void OnCollisionEnter(BallStateManager ball, Collision collision)
     {
+        //Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+        
+        if (collision.gameObject.tag == "white")
+        {
+            if (ball.gameObject.tag == "stripe" || ball.gameObject.tag == "filled")
+            {
+                Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+                collision.gameObject.GetComponent<BallStateManager>().hasCollide = true;
+            }
+        }
+        
+        if (ball.gameObject.tag == "white")
+        {
+            if (collision.gameObject.tag == "stripe" || collision.gameObject.tag == "filled")
+            {
+                Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+                ball.gameObject.GetComponent<BallStateManager>().hasCollide = true;
+            }
+        }
+
+
+
+
+
+
+
+
+
         //Get the Rigidbody of the first collider
-        Rigidbody collider1 = ball.gameObject.GetComponent<SphereCollider>().attachedRigidbody;
+        //Rigidbody collider1 = ball.gameObject.GetComponent<SphereCollider>().attachedRigidbody;
 
-        // Get the Rigidbody of the second collider
-        Rigidbody collider2 = collision.collider.attachedRigidbody;
+        //// Get the Rigidbody of the second collider
+        //Rigidbody collider2 = collision.collider.attachedRigidbody;
 
-        // Calculate the collision point and normal
-        Vector3 collisionPoint = collision.contacts[0].point;
-        Vector3 collisionNormal = collision.contacts[0].normal;
+        //// Calculate the collision point and normal
+        //Vector3 collisionPoint = collision.contacts[0].point;
+        //Vector3 collisionNormal = collision.contacts[0].normal;
 
-        // Calculate the relative velocity of the two colliders at the collision point
-        Vector3 relativeVelocity = collider1.GetPointVelocity(collisionPoint) - collider2.GetPointVelocity(collisionPoint);
+        //// Calculate the relative velocity of the two colliders at the collision point
+        //Vector3 relativeVelocity = collider1.GetPointVelocity(collisionPoint) - collider2.GetPointVelocity(collisionPoint);
 
-        // Calculate the impulse applied to each collider
-        float impulse = ball.CalculateImpulse(collider1, collider2, relativeVelocity, collisionNormal);
+        //// Calculate the impulse applied to each collider
+        //float impulse = ball.CalculateImpulse(collider1, collider2, relativeVelocity, collisionNormal);
 
-        // Apply the impulse to each collider
-        collider1.AddForceAtPosition(collisionNormal * impulse, collisionPoint, ForceMode.Impulse);
-        collider2.AddForceAtPosition(-collisionNormal * impulse, collisionPoint, ForceMode.Impulse);
+        //// Apply the impulse to each collider
+        //collider1.AddForceAtPosition(collisionNormal * impulse, collisionPoint, ForceMode.Impulse);
+        //collider2.AddForceAtPosition(-collisionNormal * impulse, collisionPoint, ForceMode.Impulse);
 
         //if (collision.gameObject.CompareTag("Rail"))
         //{
