@@ -25,19 +25,29 @@ public class SoundManager : MonoBehaviour
         SFX_SoundEffect.PlayOneShot(clip, volume);
     }
 
-    public void setMasterVolume(float volume)
+    public void SetMasterVolume(float volume)
     {
         AudioListener.volume = volume;
     }
 
-    public void setSFXVolume(float volume)
+    public void SetSFXVolume(float volume)
     {
         SFX_SoundEffect.volume = volume;
     }
 
-    public void setMusicVolume(float volume)
+    public void SetMusicVolume(float volume)
     {
         
+    }
+
+    public void SetPitch(float pitch)
+    {
+        SFX_SoundEffect.pitch = pitch;
+    }
+
+    public AudioSource GetSFXSoundEffect() 
+    {
+        return SFX_SoundEffect;
     }
 
 }
