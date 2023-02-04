@@ -595,7 +595,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 665, y: 20.199951}
+  m_AnchoredPosition: {x: 590, y: 20.199951}
   m_SizeDelta: {x: 185, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &229226240
@@ -2471,7 +2471,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -665, y: 20.199951}
+  m_AnchoredPosition: {x: -590, y: 20.199951}
   m_SizeDelta: {x: 185, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &798109568
@@ -2805,8 +2805,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   state: 0
-  UI_PlayerTurn: {fileID: 1532381071}
-  UI_PlayerBallType: {fileID: 1343272612}
+  UI_Player1Turn: {fileID: 1289538527}
+  UI_Player2Turn: {fileID: 2024197572}
+  UI_Player1BallType: {fileID: 2080755198}
+  UI_Player2BallType: {fileID: 1678041036}
   UI_Message: {fileID: 1989891876}
   ballPrefab: {fileID: 1362464028}
   ballSpacing: 2
@@ -3520,7 +3522,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -810, y: 21}
+  m_AnchoredPosition: {x: -730, y: 21}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1289538529
@@ -4546,8 +4548,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 676.76, y: -2}
-  m_SizeDelta: {x: 275, y: 45}
+  m_AnchoredPosition: {x: 660, y: -2}
+  m_SizeDelta: {x: 290, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1678041038
 MonoBehaviour:
@@ -4576,13 +4578,15 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 8
     m_MaxSize: 40
-    m_Alignment: 2
+    m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Playing as \n"
+  m_Text: 'Playing as filled
+
+'
 --- !u!222 &1678041039
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -5323,7 +5327,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 810, y: 21}
+  m_AnchoredPosition: {x: 730, y: 21}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2024197574
@@ -5398,8 +5402,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -676.4, y: -2}
-  m_SizeDelta: {x: 275, y: 45}
+  m_AnchoredPosition: {x: -540, y: -2}
+  m_SizeDelta: {x: 290, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2080755200
 MonoBehaviour:
@@ -5434,7 +5438,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Playing as \n"
+  m_Text: 'Playing as striped
+
+'
 --- !u!222 &2080755201
 CanvasRenderer:
   m_ObjectHideFlags: 0
