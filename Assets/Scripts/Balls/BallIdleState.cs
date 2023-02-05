@@ -23,31 +23,36 @@ public class BallIdleState : BallBaseState
     public override void OnCollisionEnter(BallStateManager ball, Collision collision)
     {
 
-        if (ball.gameObject.tag != "white")
-        {
-            return;
-        }
+        //if (!ball.gameObject.CompareTag("white") && !collision.gameObject.CompareTag("white"))
+        //{
+        //    return;
+        //}
 
-        if (collision.gameObject.tag != "striped" && collision.gameObject.tag != "filled")
-        {
-            return;
-        }
+        //Debug.Log("Idle Collision between " + ball.gameObject.name + " and " + collision.gameObject.name + " detected !!!!!!!!!!!!!!!!!!!!");
 
-        if (ball.gameObject.GetComponent<BallStateManager>().hasCollide)
-        {
-            return;
-        }
+        //if ((!collision.gameObject.CompareTag("striped") && !collision.gameObject.CompareTag("filled")) && (!ball.gameObject.CompareTag("filled") && !ball.gameObject.CompareTag("striped")))
+        //{
+        //    return;
+        //}
 
-        Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
-        ball.gameObject.GetComponent<BallStateManager>().hasCollide = true;
+        //if (ball.gameObject.GetComponent<BallStateManager>().hasCollide)
+        //{
+        //    return;
+        //}
 
-        if (GameManager.instance.getCurrentPlayer().ballType.ToString() != collision.gameObject.tag)
-        {
-            Debug.Log(GameManager.instance.getCurrentPlayer().ballType.ToString() + " collide with " + collision.gameObject.tag + " that is not the same type");
-            return;
-        }
+        //Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+        //ball.gameObject.GetComponent<BallStateManager>().hasCollide = true;
 
-        PlayersStateManagement.Instance.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = true;
+        //if (!collision.gameObject.CompareTag(GameManager.instance.getCurrentPlayer().ballType.ToString()))
+        //{
+        //    Debug.Log(GameManager.instance.getCurrentPlayer().ballType.ToString() + " collide with " + collision.gameObject.tag + " that is not the same type");
+        //    return;
+        //}
+
+        //PlayersStateManagement.Instance.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = true;
+
+        //Debug.Log("White ball hit the good ball : " + PlayersStateManagement.Instance.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall);
+
 
         //Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
 

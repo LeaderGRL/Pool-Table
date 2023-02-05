@@ -7,6 +7,8 @@ public class PlayersPlayState : PlayersBaseState
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {
+        GameManager.instance.turnNumber++;
+
         //player.setPosition();
         player.lockCamera(false);
 
@@ -40,7 +42,9 @@ public class PlayersPlayState : PlayersBaseState
             return;
         }
 
-        if (!BallStateManager.instance.hitTheGoodBall)
+        //Debug.Log("has collide : " + player.WhiteBall.GetComponent<BallStateManager>().hasCollide);
+
+        if (!player.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall)
         {
             Debug.Log("Hit The Wrong Ball");
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
@@ -48,15 +52,29 @@ public class PlayersPlayState : PlayersBaseState
             return;
         }
 
+        if (!BallStateManager.instance.IsBallPocketedLastTurn())
+        {
+            Debug.Log("No Ball Pocketed");
+            GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
+            //BallStateManager.instance.SetPlayAgain(false);
+            return;
+        }
+
         if (!BallStateManager.instance.isLastPocketedBallMatchPlayerBall())
         {
+            Debug.Log("Last Pocketed Ball Not Match");
             //Debug.Log("OUIIII : " + BallStateManager.instance.getPocketedBalls());
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
             BallStateManager.instance.SetPlayAgain(true);
             return;
         }
 
-        
+        if (BallStateManager.instance.GetPlayAgain())
+        {
+            Debug.Log("Play Again");
+            BallStateManager.instance.SetPlayAgain(false);
+            return;
+        }
     }
 
     public override void UpdateState(PlayersStateManagement player)
