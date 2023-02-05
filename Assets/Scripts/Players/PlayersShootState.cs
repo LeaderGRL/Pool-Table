@@ -9,8 +9,8 @@ public class PlayersShootState : PlayersBaseState
     private Vector3 lastPos = Vector3.zero;
     public override void EnterState(PlayersStateManagement player)
     {
-        Debug.Log(GameManager.instance.getCurrentPlayer().score.getScore());
-
+        player.WhiteBall.GetComponent<BallStateManager>().hasCollide = false; //reset the collide state
+        player.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = false; //reset the hitTheGoodBall state
     }
 
     public override void UpdateState(PlayersStateManagement player)

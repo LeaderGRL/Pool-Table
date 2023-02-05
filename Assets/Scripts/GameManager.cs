@@ -22,8 +22,10 @@ public class GameManager : MonoBehaviour
     public static GameManager instance;
     public static event System.Action<GameState> OnGameStateChanged;
     public GameState state;
-    public GameObject UI_PlayerTurn;
-    public GameObject UI_PlayerBallType;
+    public GameObject UI_Player1Turn;
+    public GameObject UI_Player2Turn;
+    public GameObject UI_Player1BallType;
+    public GameObject UI_Player2BallType;
     public GameObject UI_Message;
 
     public GameObject ballPrefab;
@@ -31,6 +33,7 @@ public class GameManager : MonoBehaviour
     public float ballSpacing;
 
     public int rows;
+    public int turnNumber = 0;
 
 
     private GameState currentPlayerTurn;
@@ -38,7 +41,6 @@ public class GameManager : MonoBehaviour
     private Player player1;
     private Player player2;
 
-    private int turnNumber = 1;
 
 
     //private Dictionary<BallStateManager, int> pocketedBalls;
@@ -78,7 +80,7 @@ public class GameManager : MonoBehaviour
         {
             player2.ballType = ballType.striped;
         }
-        
+
         //updateGameState(GameState.PlayerOneTurn);
     }
 
@@ -121,27 +123,37 @@ public class GameManager : MonoBehaviour
 
     private void HandlePlayerOneTurn()
     {
-        Debug.Log("Player One's Turn" + getTurnNumber());
+       Debug.Log("Player One's Turn" + getTurnNumber());
 
         currentPlayerTurn = GameState.PlayerOneTurn;
 
-        Debug.Log("Player One's ball type is " + player1.ballType.ToString());
+        //Debug.Log("Player One's ball type is " + player1.ballType.ToString());
 
-        turnNumber++;
+        //turnNumber++;
 
-        UI_PlayerTurn.GetComponent<UnityEngine.UI.Text>().text = "Player One's Turn";
-        UI_PlayerBallType.GetComponent<UnityEngine.UI.Text>().text = player1.ballType.ToString();
+        UI_Player1Turn.SetActive(true);
+        UI_Player2Turn.SetActive(false);
+        
+        UI_Player1BallType.GetComponent<UnityEngine.UI.Text>().text = "Playing as " + player1.ballType.ToString();
+        UI_Player2BallType.GetComponent<UnityEngine.UI.Text>().text = "Playing as " + player2.ballType.ToString();
+        //UI_PlayerTurn.GetComponent<UnityEngine.UI.Text>().text = "Player One's Turn";
+        //UI_Player1BallType.GetComponent<UnityEngine.UI.Text>().text = player1.ballType.ToString();
 
     }
 
     private void HandlePlayerTwoTurn()
     {
+        Debug.Log("Player Two's Turn" + getTurnNumber());
+
         currentPlayerTurn = GameState.PlayerTwoTurn;
 
-        turnNumber++;
+        //turnNumber++;
 
-        UI_PlayerTurn.GetComponent<UnityEngine.UI.Text>().text = "Player Two's Turn";
-        UI_PlayerBallType.GetComponent<UnityEngine.UI.Text>().text = player2.ballType.ToString();
+        UI_Player1Turn.SetActive(false);
+        UI_Player2Turn.SetActive(true);
+
+        UI_Player1BallType.GetComponent<UnityEngine.UI.Text>().text = "Playing as " + player1.ballType.ToString();
+        UI_Player2BallType.GetComponent<UnityEngine.UI.Text>().text = "Playing as " + player2.ballType.ToString();
     }
 
     public GameState getCurrentPlayerTurn()

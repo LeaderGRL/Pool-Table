@@ -19,6 +19,7 @@ public class BallStateManager : MonoBehaviour
 
     private ballType ballType;
     private Dictionary<GameObject, int> pocketedBalls;
+    private bool playAgain = false;
 
 
 
@@ -81,7 +82,16 @@ public class BallStateManager : MonoBehaviour
     }
 
     public bool isBallMoving(){
-        return GetComponent<Rigidbody>().velocity.magnitude > 0.1f;
+        //Debug.Log(GetComponent<Rigidbody>().velocity.magnitude);
+        //return GetComponent<Rigidbody>().velocity.magnitude > 0.1f;
+        if (GetComponent<Rigidbody>().velocity.magnitude > 0.1f)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public GameObject getParent()
@@ -124,6 +134,15 @@ public class BallStateManager : MonoBehaviour
         return ballType;
     }
 
+    public bool GetPlayAgain()
+    {
+        return playAgain;
+    }
+
+    public void SetPlayAgain(bool playAgain)
+    {
+        this.playAgain = playAgain;
+    }
     public Dictionary<GameObject, int> getPocketedBalls()
     {
         return pocketedBalls;
@@ -132,6 +151,29 @@ public class BallStateManager : MonoBehaviour
     public void addPocketedBall(GameObject ball, int turn)
     {
         pocketedBalls.Add(ball, turn);
+    }
+
+    public List<GameObject> GetLastPocketedBall()
+    {
+        List<GameObject> lastPocketedBalls = new List<GameObject>();
+        
+        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        {
+            if (ball.Value == GameManager.instance.getTurnNumber() - 1)
+            {
+                lastPocketedBalls.Add(ball.Key);
+            }
+        }
+
+        Debug.Log("number of ball pocketed last turn : " + lastPocketedBalls.Count);
+        return lastPocketedBalls;
+    }
+
+    
+
+    public void RemovePocketedBall(GameObject ball)
+    {
+        pocketedBalls.Remove(ball);
     }
 
     public void clearPocketedBalls()
@@ -154,21 +196,33 @@ public class BallStateManager : MonoBehaviour
     
     public bool isLastPocketedBallMatchPlayerBall()
     {
-        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        
+        foreach (GameObject ball in GetLastPocketedBall())
         {
-            if (ball.Value != GameManager.instance.getTurnNumber() - 1)
+            Debug.Log("ball type : " + ball.GetComponent<BallStateManager>().GetBallType() + " player ball type : " + GameManager.instance.getCurrentPlayer().ballType);
+            if (ball.GetComponent<BallStateManager>().GetBallType() != GameManager.instance.getCurrentPlayer().ballType)
             {
                 return false;
             }
-
-            if (ball.Key.GetComponent<BallStateManager>().GetBallType() == GameManager.instance.getCurrentPlayer().ballType)
-            {
-                Debug.Log("Last pocketed ball is the same as the player's ball");
-                return true;
-            }
         }
 
-        return false;
+        return true;
+
+        //foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        //{
+        //    if (ball.Value != GameManager.instance.getTurnNumber() - 1)
+        //    {
+        //        return false;
+        //    }
+
+        //    if (ball.Key.GetComponent<BallStateManager>().GetBallType() == GameManager.instance.getCurrentPlayer().ballType)
+        //    {
+        //        Debug.Log("Last pocketed ball is the same as the player's ball");
+        //        return true;
+        //    }
+        //}
+
+        //return false;
     }
 
     public bool isPocketedBallContainWhiteBall()
@@ -183,6 +237,25 @@ public class BallStateManager : MonoBehaviour
         return false;
     }
 
+    public bool IsBallPocketed()
+    {
+        return pocketedBalls.Count > 0;
+    }
+
+    public bool IsBallPocketedLastTurn()
+    {
+        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        {
+            Debug.Log("ball turn : " + ball.Value + " current turn : " + GameManager.instance.getTurnNumber());
+            if (ball.Value == GameManager.instance.getTurnNumber() -1)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void resetWhiteBallFromPocket()
     {
         GameObject temp = new GameObject();
@@ -190,7 +263,7 @@ public class BallStateManager : MonoBehaviour
         {
             if (ball.Key.gameObject.tag == "white")
             {
-                ball.Key.gameObject.transform.position = new Vector3(-0.635f, 1, 0);
+                ball.Key.gameObject.transform.position = new Vector3(-9.52f, 20, 0);
                 ball.Key.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
                 ball.Key.gameObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
                 temp = ball.Key;

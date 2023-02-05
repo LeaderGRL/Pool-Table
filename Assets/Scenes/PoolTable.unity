@@ -138,9 +138,9 @@ GameObject:
   - component: {fileID: 39856146}
   - component: {fileID: 39856151}
   - component: {fileID: 39856150}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (3)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -283,6 +283,7 @@ GameObject:
   - component: {fileID: 86719735}
   - component: {fileID: 86719734}
   - component: {fileID: 86719739}
+  - component: {fileID: 86719740}
   - component: {fileID: 86719738}
   m_Layer: 0
   m_Name: Sphere
@@ -415,6 +416,18 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 958d4ef2f47b7fe489e4645ab61fff2e, type: 3}
   - {fileID: 8300000, guid: 83406e45105a0a04997ffe56935dcc8c, type: 3}
   - {fileID: 8300000, guid: a39579f38a969f948b42499a79328175, type: 3}
+--- !u!114 &86719740
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 86719732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b2168d91b92b6c4ab67ffb73c4ade72, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &138793834
 GameObject:
   m_ObjectHideFlags: 0
@@ -430,9 +443,9 @@ GameObject:
   - component: {fileID: 138793836}
   - component: {fileID: 138793841}
   - component: {fileID: 138793840}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (6)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -595,7 +608,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 665, y: 20.199951}
+  m_AnchoredPosition: {x: 590, y: 20.199951}
   m_SizeDelta: {x: 185, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &229226240
@@ -944,9 +957,9 @@ GameObject:
   - component: {fileID: 466467920}
   - component: {fileID: 466467925}
   - component: {fileID: 466467924}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (4)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1090,9 +1103,9 @@ GameObject:
   - component: {fileID: 506606835}
   - component: {fileID: 506606840}
   - component: {fileID: 506606839}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (14)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1362,9 +1375,9 @@ GameObject:
   - component: {fileID: 589692454}
   - component: {fileID: 589692459}
   - component: {fileID: 589692458}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (12)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1798,9 +1811,9 @@ GameObject:
   - component: {fileID: 726879714}
   - component: {fileID: 726879719}
   - component: {fileID: 726879718}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (5)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1944,9 +1957,9 @@ GameObject:
   - component: {fileID: 728835050}
   - component: {fileID: 728835055}
   - component: {fileID: 728835054}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (15)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2090,9 +2103,9 @@ GameObject:
   - component: {fileID: 752744632}
   - component: {fileID: 752744637}
   - component: {fileID: 752744636}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (7)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2236,9 +2249,9 @@ GameObject:
   - component: {fileID: 795021683}
   - component: {fileID: 795021688}
   - component: {fileID: 795021687}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (13)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2471,7 +2484,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -665, y: 20.199951}
+  m_AnchoredPosition: {x: -590, y: 20.199951}
   m_SizeDelta: {x: 185, y: 60}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &798109568
@@ -2805,8 +2818,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   state: 0
-  UI_PlayerTurn: {fileID: 1532381071}
-  UI_PlayerBallType: {fileID: 1343272612}
+  UI_Player1Turn: {fileID: 1289538527}
+  UI_Player2Turn: {fileID: 2024197572}
+  UI_Player1BallType: {fileID: 2080755198}
+  UI_Player2BallType: {fileID: 1678041036}
   UI_Message: {fileID: 1989891876}
   ballPrefab: {fileID: 1362464028}
   ballSpacing: 2
@@ -2870,9 +2885,9 @@ GameObject:
   - component: {fileID: 1019706803}
   - component: {fileID: 1019706808}
   - component: {fileID: 1019706807}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (1)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3016,9 +3031,9 @@ GameObject:
   - component: {fileID: 1062358938}
   - component: {fileID: 1062358943}
   - component: {fileID: 1062358942}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (8)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3162,9 +3177,9 @@ GameObject:
   - component: {fileID: 1072184235}
   - component: {fileID: 1072184240}
   - component: {fileID: 1072184239}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (10)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3424,6 +3439,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -8801686605614064071, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
       propertyPath: m_RootOrder
       value: 3
@@ -3484,6 +3503,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: cue
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
 --- !u!1 &1289538527
@@ -3520,7 +3543,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -810, y: 21}
+  m_AnchoredPosition: {x: -730, y: 21}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1289538529
@@ -4359,7 +4382,7 @@ MeshCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1598627957}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 654f2cff4023cb0408f14b2e9b165ba8, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 4
@@ -4381,9 +4404,9 @@ GameObject:
   - component: {fileID: 1640636882}
   - component: {fileID: 1640636887}
   - component: {fileID: 1640636886}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (11)
-  m_TagString: black
+  m_TagString: striped
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4546,8 +4569,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 676.76, y: -2}
-  m_SizeDelta: {x: 275, y: 45}
+  m_AnchoredPosition: {x: 660, y: -2}
+  m_SizeDelta: {x: 290, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1678041038
 MonoBehaviour:
@@ -4576,13 +4599,15 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 8
     m_MaxSize: 40
-    m_Alignment: 2
+    m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Playing as \n"
+  m_Text: 'Playing as filled
+
+'
 --- !u!222 &1678041039
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4702,9 +4727,9 @@ GameObject:
   - component: {fileID: 1722692145}
   - component: {fileID: 1722692150}
   - component: {fileID: 1722692149}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (2)
-  m_TagString: black
+  m_TagString: filled
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -4986,7 +5011,7 @@ GameObject:
   - component: {fileID: 1940031937}
   - component: {fileID: 1940031942}
   - component: {fileID: 1940031941}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Sphere (9)
   m_TagString: black
   m_Icon: {fileID: 0}
@@ -5323,7 +5348,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 810, y: 21}
+  m_AnchoredPosition: {x: 730, y: 21}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2024197574
@@ -5398,8 +5423,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -676.4, y: -2}
-  m_SizeDelta: {x: 275, y: 45}
+  m_AnchoredPosition: {x: -540, y: -2}
+  m_SizeDelta: {x: 290, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2080755200
 MonoBehaviour:
@@ -5434,7 +5459,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Playing as \n"
+  m_Text: 'Playing as striped
+
+'
 --- !u!222 &2080755201
 CanvasRenderer:
   m_ObjectHideFlags: 0
