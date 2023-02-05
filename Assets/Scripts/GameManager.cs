@@ -33,6 +33,7 @@ public class GameManager : MonoBehaviour
     public float ballSpacing;
 
     public int rows;
+    public int turnNumber = 0;
 
 
     private GameState currentPlayerTurn;
@@ -40,7 +41,6 @@ public class GameManager : MonoBehaviour
     private Player player1;
     private Player player2;
 
-    private int turnNumber = 0;
 
 
     //private Dictionary<BallStateManager, int> pocketedBalls;
@@ -129,7 +129,7 @@ public class GameManager : MonoBehaviour
 
         //Debug.Log("Player One's ball type is " + player1.ballType.ToString());
 
-        turnNumber++;
+        //turnNumber++;
 
         UI_Player1Turn.SetActive(true);
         UI_Player2Turn.SetActive(false);
@@ -147,7 +147,7 @@ public class GameManager : MonoBehaviour
 
         currentPlayerTurn = GameState.PlayerTwoTurn;
 
-        turnNumber++;
+        //turnNumber++;
 
         UI_Player1Turn.SetActive(false);
         UI_Player2Turn.SetActive(true);

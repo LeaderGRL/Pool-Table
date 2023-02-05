@@ -159,7 +159,7 @@ public class BallStateManager : MonoBehaviour
         
         foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
         {
-            if (ball.Value > GameManager.instance.getTurnNumber() - 1)
+            if (ball.Value == GameManager.instance.getTurnNumber() - 1)
             {
                 lastPocketedBalls.Add(ball.Key);
             }
@@ -196,8 +196,10 @@ public class BallStateManager : MonoBehaviour
     
     public bool isLastPocketedBallMatchPlayerBall()
     {
+        
         foreach (GameObject ball in GetLastPocketedBall())
         {
+            Debug.Log("ball type : " + ball.GetComponent<BallStateManager>().GetBallType() + " player ball type : " + GameManager.instance.getCurrentPlayer().ballType);
             if (ball.GetComponent<BallStateManager>().GetBallType() != GameManager.instance.getCurrentPlayer().ballType)
             {
                 return false;
@@ -227,12 +229,30 @@ public class BallStateManager : MonoBehaviour
     {
         foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
         {
-            Debug.Log("Ball : " + ball.Key.name);
             if (ball.Key.gameObject.tag == "white")
             {
                 return true;
             }
         }
+        return false;
+    }
+
+    public bool IsBallPocketed()
+    {
+        return pocketedBalls.Count > 0;
+    }
+
+    public bool IsBallPocketedLastTurn()
+    {
+        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        {
+            Debug.Log("ball turn : " + ball.Value + " current turn : " + GameManager.instance.getTurnNumber());
+            if (ball.Value == GameManager.instance.getTurnNumber() -1)
+            {
+                return true;
+            }
+        }
+
         return false;
     }
 
