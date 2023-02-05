@@ -123,7 +123,7 @@ public class GameManager : MonoBehaviour
 
     private void HandlePlayerOneTurn()
     {
-        //Debug.Log("Player One's Turn" + getTurnNumber());
+       Debug.Log("Player One's Turn" + getTurnNumber());
 
         currentPlayerTurn = GameState.PlayerOneTurn;
 
@@ -142,13 +142,18 @@ public class GameManager : MonoBehaviour
     }
 
     private void HandlePlayerTwoTurn()
-    {   
+    {
+        Debug.Log("Player Two's Turn" + getTurnNumber());
+
         currentPlayerTurn = GameState.PlayerTwoTurn;
 
         turnNumber++;
 
         UI_Player1Turn.SetActive(false);
         UI_Player2Turn.SetActive(true);
+
+        UI_Player1BallType.GetComponent<UnityEngine.UI.Text>().text = "Playing as " + player1.ballType.ToString();
+        UI_Player2BallType.GetComponent<UnityEngine.UI.Text>().text = "Playing as " + player2.ballType.ToString();
     }
 
     public GameState getCurrentPlayerTurn()

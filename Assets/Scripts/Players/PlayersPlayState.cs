@@ -12,16 +12,16 @@ public class PlayersPlayState : PlayersBaseState
 
         if (GameManager.instance.getTurnNumber() == 0)
         {
-            GameManager.instance.updateGameState(GameState.PlayerOneTurn);
+            GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
             return;
         }
 
-        if (BallStateManager.instance.GetPlayAgain())
-        {
-            Debug.Log("Play Again");
-            BallStateManager.instance.SetPlayAgain(false);
-            return;
-        }
+        //if (BallStateManager.instance.GetPlayAgain())
+        //{
+        //    Debug.Log("Play Again");
+        //    BallStateManager.instance.SetPlayAgain(false);
+        //    return;
+        //}
 
         if (BallStateManager.instance.isPocketedBallContainWhiteBall())
         {
@@ -48,9 +48,9 @@ public class PlayersPlayState : PlayersBaseState
             return;
         }
 
-        if (BallStateManager.instance.isLastPocketedBallMatchPlayerBall() == false)
+        if (!BallStateManager.instance.isLastPocketedBallMatchPlayerBall())
         {
-            Debug.Log("OUIIII : " + BallStateManager.instance.getPocketedBalls());
+            //Debug.Log("OUIIII : " + BallStateManager.instance.getPocketedBalls());
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
             BallStateManager.instance.SetPlayAgain(true);
             return;
