@@ -22,25 +22,78 @@ public class BallIdleState : BallBaseState
     
     public override void OnCollisionEnter(BallStateManager ball, Collision collision)
     {
+
+        if (ball.gameObject.tag != "white")
+        {
+            return;
+        }
+
+        if (collision.gameObject.tag != "striped" && collision.gameObject.tag != "filled")
+        {
+            return;
+        }
+
+        if (ball.gameObject.GetComponent<BallStateManager>().hasCollide)
+        {
+            return;
+        }
+
+        Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+        ball.gameObject.GetComponent<BallStateManager>().hasCollide = true;
+
+        if (GameManager.instance.getCurrentPlayer().ballType.ToString() != collision.gameObject.tag)
+        {
+            Debug.Log(GameManager.instance.getCurrentPlayer().ballType.ToString() + " collide with " + collision.gameObject.tag + " that is not the same type");
+            return;
+        }
+
+        PlayersStateManagement.Instance.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = true;
+
         //Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
-        
-        if (collision.gameObject.tag == "white")
-        {
-            if (ball.gameObject.tag == "stripe" || ball.gameObject.tag == "filled")
-            {
-                Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
-                collision.gameObject.GetComponent<BallStateManager>().hasCollide = true;
-            }
-        }
-        
-        if (ball.gameObject.tag == "white")
-        {
-            if (collision.gameObject.tag == "stripe" || collision.gameObject.tag == "filled")
-            {
-                Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
-                ball.gameObject.GetComponent<BallStateManager>().hasCollide = true;
-            }
-        }
+
+        //if (collision.gameObject.tag != "white")
+        //{
+        //    return;
+        //}
+
+        //if (ball.gameObject.tag != "striped" || ball.gameObject.tag != "filled")
+        //{
+        //    return;
+        //}
+
+        //Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+        //collision.gameObject.GetComponent<BallStateManager>().hasCollide = true;
+
+        //if (GameManager.instance.getCurrentPlayer().ballType.ToString() != collision.gameObject.tag)
+        //{
+        //    Debug.Log(GameManager.instance.getCurrentPlayer().ballType.ToString() + " collide with " + collision.gameObject.tag + " that is not the same type");
+        //    return;
+        //}
+
+        //PlayersStateManagement.Instance.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = true;
+
+
+
+
+        //if (ball.gameObject.tag == "white")
+        //{
+        //    if (collision.gameObject.tag == "striped" || collision.gameObject.tag == "filled")
+        //    {
+        //        Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+        //        ball.gameObject.GetComponent<BallStateManager>().hasCollide = true;
+        //    }
+        //}
+
+        //if (PlayersStateManagement.Instance.WhiteBall.GetComponent<BallStateManager>().hasCollide)
+        //{
+        //    if (GameManager.instance.getCurrentPlayer().ballType.ToString() == ball.gameObject.tag.ToString() || GameManager.instance.getCurrentPlayer().ballType.ToString() == collision.gameObject.tag.ToString())
+        //    {
+        //        PlayersStateManagement.Instance.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = true;
+        //        return;
+        //    }
+        //}
+
+
 
 
 

@@ -13,6 +13,55 @@ public class BallRollState : BallBaseState
 
     public override void OnCollisionEnter(BallStateManager ball, Collision collision)
     {
+
+        if (ball.gameObject.tag != "white")
+        {
+            return;
+        }
+
+        if (collision.gameObject.tag != "striped" && collision.gameObject.tag != "filled")
+        {
+            return;
+        }
+
+        if (ball.gameObject.GetComponent<BallStateManager>().hasCollide)
+        {
+            return;
+        }
+
+        Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+        ball.gameObject.GetComponent<BallStateManager>().hasCollide = true;
+
+        if (GameManager.instance.getCurrentPlayer().ballType.ToString() != collision.gameObject.tag)
+        {
+            Debug.Log(GameManager.instance.getCurrentPlayer().ballType.ToString() + " collide with " + collision.gameObject.tag + " that is not the same type");
+            return;
+        }
+
+        PlayersStateManagement.Instance.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = true;
+
+
+
+
+
+        //if (collision.gameObject.tag == "white")
+        //{
+        //    if (ball.gameObject.tag == "striped" || ball.gameObject.tag == "filled")
+        //    {
+        //        Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+        //        collision.gameObject.GetComponent<BallStateManager>().hasCollide = true;
+        //    }
+        //}
+
+        //if (ball.gameObject.tag == "white")
+        //{
+        //    if (collision.gameObject.tag == "striped" || collision.gameObject.tag == "filled")
+        //    {
+        //        Debug.Log(ball.gameObject.name + " collide with " + collision.gameObject.tag);
+        //        ball.gameObject.GetComponent<BallStateManager>().hasCollide = true;
+        //    }
+        //}
+
         //Debug.Log("Hello from the roll State");
 
         // Get the Rigidbody of the first collider
