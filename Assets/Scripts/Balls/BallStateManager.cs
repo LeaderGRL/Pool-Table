@@ -153,6 +153,29 @@ public class BallStateManager : MonoBehaviour
         pocketedBalls.Add(ball, turn);
     }
 
+    public List<GameObject> GetLastPocketedBall()
+    {
+        List<GameObject> lastPocketedBalls = new List<GameObject>();
+        
+        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        {
+            if (ball.Value > GameManager.instance.getTurnNumber() - 1)
+            {
+                lastPocketedBalls.Add(ball.Key);
+            }
+        }
+
+        Debug.Log("number of ball pocketed last turn : " + lastPocketedBalls.Count);
+        return lastPocketedBalls;
+    }
+
+    
+
+    public void RemovePocketedBall(GameObject ball)
+    {
+        pocketedBalls.Remove(ball);
+    }
+
     public void clearPocketedBalls()
     {
         pocketedBalls.Clear();
@@ -173,21 +196,31 @@ public class BallStateManager : MonoBehaviour
     
     public bool isLastPocketedBallMatchPlayerBall()
     {
-        foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        foreach (GameObject ball in GetLastPocketedBall())
         {
-            if (ball.Value != GameManager.instance.getTurnNumber() - 1)
+            if (ball.GetComponent<BallStateManager>().GetBallType() != GameManager.instance.getCurrentPlayer().ballType)
             {
                 return false;
             }
-
-            if (ball.Key.GetComponent<BallStateManager>().GetBallType() == GameManager.instance.getCurrentPlayer().ballType)
-            {
-                Debug.Log("Last pocketed ball is the same as the player's ball");
-                return true;
-            }
         }
 
-        return false;
+        return true;
+
+        //foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
+        //{
+        //    if (ball.Value != GameManager.instance.getTurnNumber() - 1)
+        //    {
+        //        return false;
+        //    }
+
+        //    if (ball.Key.GetComponent<BallStateManager>().GetBallType() == GameManager.instance.getCurrentPlayer().ballType)
+        //    {
+        //        Debug.Log("Last pocketed ball is the same as the player's ball");
+        //        return true;
+        //    }
+        //}
+
+        //return false;
     }
 
     public bool isPocketedBallContainWhiteBall()
