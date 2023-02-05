@@ -10,6 +10,7 @@ public class PlayersShootState : PlayersBaseState
     public override void EnterState(PlayersStateManagement player)
     {
         player.WhiteBall.GetComponent<BallStateManager>().hasCollide = false; //reset the collide state
+        player.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = false; //reset the hitTheGoodBall state
     }
 
     public override void UpdateState(PlayersStateManagement player)
