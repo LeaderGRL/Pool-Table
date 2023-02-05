@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\Raycast.cs" />
     <Compile Include="Assets\Scripts\Stick_Raycast.cs" />
+    <Compile Include="Assets\Scripts\Audio\SoundManager.cs" />
     <Compile Include="Assets\Scripts\UI\PlayerInformations.cs" />
     <Compile Include="Assets\Scripts\Balls.cs" />
     <Compile Include="Assets\Scripts\Balls\BallBaseState.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="Assets\Scripts\Players\PlayersShootState.cs" />
     <Compile Include="Assets\Scripts\Players\PlayersSpectateState.cs" />
     <Compile Include="Assets\Scripts\Balls\BallStateManager.cs" />
+    <Compile Include="Assets\Scripts\Audio\PlaySoundOnBallCollision.cs" />
     <Compile Include="Assets\Scripts\Pocket.cs" />
     <Compile Include="Assets\Scripts\Balls\BallRollState.cs" />
     <Compile Include="Assets\Scripts\Score.cs" />
@@ -73,8 +75,7 @@
     <Compile Include="Assets\Scripts\Cue.cs" />
     <Compile Include="Assets\Scripts\Players\PlayersStateManagement.cs" />
     <Compile Include="Assets\Scripts\Balls\BallPocketedState.cs" />
-    <Compile Include="Assets\Scripts\Audio\SoundManager.cs" />
-    <Compile Include="Assets\Scripts\Audio\PlaySoundOnBallCollision.cs" />
+    <Compile Include="Assets\Scripts\Balls\WhiteBallCollision.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

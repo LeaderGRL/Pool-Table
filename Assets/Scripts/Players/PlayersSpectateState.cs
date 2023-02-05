@@ -66,7 +66,6 @@ public class PlayersSpectateState : PlayersBaseState
     private void CheckIfBallIsMoving(PlayersStateManagement player)
     {
         //yield return new WaitForSeconds(1);
-
         if (balls.GetComponentInChildren<BallStateManager>().isBallMoving() == false)
         {
             player.SwitchState(player.playState);
