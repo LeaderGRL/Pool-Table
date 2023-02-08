@@ -13,6 +13,7 @@ public class PlayersStateManagement : MonoBehaviour
 
     public GameObject WhiteBall;
     public GameObject Cam;
+    public GameObject Cue_Camera;
     public float distance;
     public float force;
     public float spin;

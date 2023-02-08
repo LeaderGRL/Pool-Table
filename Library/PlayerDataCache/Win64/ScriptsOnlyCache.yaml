@@ -5,10 +5,13 @@ ScriptsOnlyBuild:
     - Cue
     - GameManager
     - Ground
+    - PlaySoundOnBallCollision
     - PlayerInformations
     - PlayersStateManagement
     - Pocket
+    - SoundManager
     - Stick_Raycast
+    - WhiteBallCollision
     Unity.CollabProxy.Editor.dll:
     - Unity.Cloud.Collaborate.UserInterface.CollaborateWindow
     Unity.PlasticSCM.Editor.dll:
@@ -24,6 +27,8 @@ ScriptsOnlyBuild:
     - UnityEngine.EventSystems.StandaloneInputModule
     - UnityEngine.UI.CanvasScaler
     - UnityEngine.UI.GraphicRaycaster
+    - UnityEngine.UI.Image
+    - UnityEngine.UI.Outline
     - UnityEngine.UI.Text
   sceneClasses:
     Assets/Scenes/PoolTable.unity:
@@ -53,40 +58,52 @@ ScriptsOnlyBuild:
       Script: {instanceID: 0}
     - Class: 81
       Script: {instanceID: 0}
+    - Class: 82
+      Script: {instanceID: 0}
+    - Class: 83
+      Script: {instanceID: 0}
     - Class: 89
       Script: {instanceID: 0}
     - Class: 104
       Script: {instanceID: 0}
     - Class: 108
       Script: {instanceID: 0}
-    - Class: 111
-      Script: {instanceID: 0}
+    - Class: 114
+      Script: {instanceID: 1480}
     - Class: 114
       Script: {instanceID: 1956}
     - Class: 114
       Script: {instanceID: 2088}
     - Class: 114
-      Script: {instanceID: 2240}
+      Script: {instanceID: 2210}
     - Class: 114
-      Script: {instanceID: 2292}
+      Script: {instanceID: 2242}
     - Class: 114
-      Script: {instanceID: 2344}
+      Script: {instanceID: 2294}
     - Class: 114
-      Script: {instanceID: 2494}
+      Script: {instanceID: 2346}
     - Class: 114
-      Script: {instanceID: 2678}
+      Script: {instanceID: 2416}
     - Class: 114
-      Script: {instanceID: 3312}
+      Script: {instanceID: 2498}
     - Class: 114
-      Script: {instanceID: 3414}
+      Script: {instanceID: 2682}
     - Class: 114
-      Script: {instanceID: 3726}
+      Script: {instanceID: 2946}
     - Class: 114
-      Script: {instanceID: 3964}
+      Script: {instanceID: 3316}
     - Class: 114
-      Script: {instanceID: 4114}
+      Script: {instanceID: 3418}
     - Class: 114
-      Script: {instanceID: 4168}
+      Script: {instanceID: 3630}
+    - Class: 114
+      Script: {instanceID: 3732}
+    - Class: 114
+      Script: {instanceID: 3970}
+    - Class: 114
+      Script: {instanceID: 4120}
+    - Class: 114
+      Script: {instanceID: 4174}
     - Class: 115
       Script: {instanceID: 0}
     - Class: 128
@@ -98,6 +115,8 @@ ScriptsOnlyBuild:
     - Class: 157
       Script: {instanceID: 0}
     - Class: 196
+      Script: {instanceID: 0}
+    - Class: 213
       Script: {instanceID: 0}
     - Class: 222
       Script: {instanceID: 0}
@@ -216,6 +235,12 @@ ScriptsOnlyBuild:
     className: Stick_Raycast
   - hash:
       serializedVersion: 2
+      Hash: a4973cbb5b6fff39c44ddf418720e25c
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: 
+    className: SoundManager
+  - hash:
+      serializedVersion: 2
       Hash: a1aa98c78061c6f03a8c124cda576e67
     assemblyName: UnityEngine.UI.dll
     namespaceName: UnityEngine.UI
@@ -262,6 +287,12 @@ ScriptsOnlyBuild:
     assemblyName: Unity.TextMeshPro.dll
     namespaceName: TMPro
     className: TextMeshProUGUI
+  - hash:
+      serializedVersion: 2
+      Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: 
+    className: WhiteBallCollision
   - hash:
       serializedVersion: 2
       Hash: 71bb6a6b6c8f052f948db64c7dd3ca4f
@@ -510,6 +541,12 @@ ScriptsOnlyBuild:
     className: ControlPlayableAsset
   - hash:
       serializedVersion: 2
+      Hash: 1bb179e646a43d04142db468edd908b9
+    assemblyName: Assembly-CSharp.dll
+    namespaceName: 
+    className: PlaySoundOnBallCollision
+  - hash:
+      serializedVersion: 2
       Hash: ef5c43f921427d03730f6ea4c848f07d
     assemblyName: UnityEngine.UI.dll
     namespaceName: UnityEngine.UI
@@ -546,7 +583,7 @@ ScriptsOnlyBuild:
     className: TMP_ScrollbarEventHandler
   - hash:
       serializedVersion: 2
-      Hash: ac2bbcefdb7a8eafda88cbd584e9421d
+      Hash: 3e2148b36f2dcbcfa06e5d6b9325a702
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: GameManager

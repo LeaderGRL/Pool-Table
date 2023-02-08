@@ -99,7 +99,7 @@ public class PlayersSpectateState : PlayersBaseState
 
     private void moveCamera(PlayersStateManagement player)
     {
-        player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.up * 2, ref velocity, 1f);
+        player.Cam.transform.position = Vector3.SmoothDamp(player.Cam.transform.position, player.WhiteBall.transform.position + Vector3.up * 40, ref velocity, 1f);
 
         switch (checkWhiteBallPosition(player))
         {

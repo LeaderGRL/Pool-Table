@@ -94,12 +94,13 @@ public class PlayersPlayState : PlayersBaseState
 
     public override void LateUpdateState(PlayersStateManagement player)
     {
-        player.Cam.transform.LookAt(player.WhiteBall.transform);
-        
+        //player.Cam.transform.LookAt(player.WhiteBall.transform);
 
-        TurnArround(player);
 
-        player.Cam.transform.position = (player.transform.position + player.WhiteBall.transform.position) / 2 + player.CameraOffset;
+        //TurnArround(player);
+
+        //player.Cam.transform.position = (player.transform.position + player.WhiteBall.transform.position) / 2 + player.CameraOffset;
+        player.Cue_Camera.transform.position = (player.transform.position + player.WhiteBall.transform.position) / 2 + player.CameraOffset;
 
         //player.Cam.transform.position = player.transform.position + player.Cam.transform.forward * player.CameraDistance;
 
