@@ -76,7 +76,7 @@ namespace PoolTable.Core.Match
             return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, phase);
         }
 
-        public MatchState WithAssignedGroups(MatchPlayerId solidsPlayer)
+        internal MatchState WithAssignedGroups(MatchPlayerId solidsPlayer)
         {
             MatchPlayerState.ValidatePlayerId(solidsPlayer);
 
