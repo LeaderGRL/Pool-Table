@@ -165,7 +165,7 @@ public class BallRollState : BallBaseState
         Vector3 velocity = collider.GetPointVelocity(collisionPoint);
 
         // Calculate the rolling friction torque applied to the collider
-        float torque = mass * radius * Vector3.Dot(velocity, collisionNormal) / collider.angularDrag;
+        float torque = mass * radius * Vector3.Dot(velocity, collisionNormal) / collider.angularDamping;
 
         return torque;
     }

@@ -82,7 +82,7 @@ public class PlayersStateManagement : MonoBehaviour
 
     public Vector3 getVelocity()
     {
-        return transform.GetComponent<Rigidbody>().velocity;
+        return transform.GetComponent<Rigidbody>().linearVelocity;
     }
 
     public Vector3 getDirection()

@@ -25,11 +25,11 @@ public class Ballls : MonoBehaviour
     void FixedUpdate()
     {
         var rigidbody = GetComponent<Rigidbody>();
-        if (rigidbody.velocity.y > 0)
+        if (rigidbody.linearVelocity.y > 0)
         {
-            var velocity = rigidbody.velocity;
+            var velocity = rigidbody.linearVelocity;
             velocity.y *= 0.3f;
-            rigidbody.velocity = velocity;
+            rigidbody.linearVelocity = velocity;
         }
     }
 
@@ -45,12 +45,12 @@ public class Ballls : MonoBehaviour
 
     protected Vector3 getVelocity()
     {
-        return rb.velocity;
+        return rb.linearVelocity;
     }
 
     protected bool isHit()
     {
-        return rb.velocity.magnitude > 0.1f;
+        return rb.linearVelocity.magnitude > 0.1f;
     }
 
     private void OnCollisionEnter(Collision collision)

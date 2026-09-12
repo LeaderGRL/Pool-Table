@@ -54,17 +54,17 @@ public class BallStateManager : MonoBehaviour
     private void FixedUpdate()
     {
         var rigidbody = GetComponent<Rigidbody>();
-        if (rigidbody.velocity.y > 0)
+        if (rigidbody.linearVelocity.y > 0)
         {
-            var velocity = rigidbody.velocity;
+            var velocity = rigidbody.linearVelocity;
             velocity.y *= 0.3f;
-            rigidbody.velocity = velocity;
+            rigidbody.linearVelocity = velocity;
         }
     }
 
     void OnCollisionEnter(Collision collision)
     {
-        if((collision.gameObject.tag == "ball" || collision.gameObject.tag == "striped" || collision.gameObject.tag == "filled" || collision.gameObject.tag == "white") && collision.gameObject.GetComponent<Rigidbody>().velocity.magnitude > 0.1f)
+        if((collision.gameObject.tag == "ball" || collision.gameObject.tag == "striped" || collision.gameObject.tag == "filled" || collision.gameObject.tag == "white") && collision.gameObject.GetComponent<Rigidbody>().linearVelocity.magnitude > 0.1f)
         {
             currentState.OnCollisionEnter(this, collision);
         }
@@ -78,13 +78,13 @@ public class BallStateManager : MonoBehaviour
     
     public float GetVelocity()
     {
-        return GetComponent<Rigidbody>().velocity.magnitude;
+        return GetComponent<Rigidbody>().linearVelocity.magnitude;
     }
 
     public bool isBallMoving(){
         //Debug.Log(GetComponent<Rigidbody>().velocity.magnitude);
         //return GetComponent<Rigidbody>().velocity.magnitude > 0.1f;
-        if (GetComponent<Rigidbody>().velocity.magnitude > 0.1f)
+        if (GetComponent<Rigidbody>().linearVelocity.magnitude > 0.1f)
         {
             return true;
         }
@@ -264,7 +264,7 @@ public class BallStateManager : MonoBehaviour
             if (ball.Key.gameObject.tag == "white")
             {
                 ball.Key.gameObject.transform.position = new Vector3(-9.52f, 20, 0);
-                ball.Key.gameObject.GetComponent<Rigidbody>().velocity = Vector3.zero;
+                ball.Key.gameObject.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
                 ball.Key.gameObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
                 temp = ball.Key;
             }
@@ -278,7 +278,7 @@ public class BallStateManager : MonoBehaviour
     public void resetBall(GameObject ball)
     {
         ball.transform.position = new Vector3(-0.635f, 1, 0);
-        ball.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        ball.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
         ball.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
     }
 
