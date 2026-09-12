@@ -47,7 +47,7 @@ public class Cue : MonoBehaviour
 
     protected Vector3 getVelocity()
     {
-        return transform.GetComponent<Rigidbody>().velocity;
+        return transform.GetComponent<Rigidbody>().linearVelocity;
     }
 
     protected Vector3 getDirection()
