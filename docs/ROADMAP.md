@@ -34,7 +34,7 @@ Work already completed in support of this backlog:
 - `DONE` Repository cleanup / Git LFS / history rewrite.
 - `DONE` Project migration to Unity `6000.5.1f1` while keeping the Built-in Render Pipeline.
 - `DONE` Credential-free repository validation CI (PR #9).
-- `PR` First Unity EditMode smoke test for `PoolTable.unity` (issue #10 / PR #11).
+- `DONE` First Unity EditMode smoke test for `PoolTable.unity` (issue #10 / PR #11).
 
 ## Phase 0 — restore repository health
 
@@ -74,7 +74,7 @@ Work already completed in support of this backlog:
 
 10. `PARTIAL` **Testing: Establish Unity 6 migration baseline**
     Clean compilation, zero console errors, scene opening, and first PlayMode smoke test.
-    Compilation and scene opening are validated. PR #11 adds an EditMode smoke test; the PlayMode smoke test is still pending.
+    Compilation and scene opening are validated. PR #11 added an EditMode smoke test; the PlayMode smoke test is still pending.
 
 ## Phase 2 — modern foundations
 
