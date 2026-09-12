@@ -58,9 +58,9 @@ Work already completed in support of this backlog:
    Open and reserialize the project while temporarily keeping the Built-in Render Pipeline.
    Reference: GitHub issue #6 / PR #7.
 
-6. `PARTIAL` **Upgrade: Remove obsolete Unity editor integrations**
+6. `PR` **Upgrade: Remove obsolete Unity editor integrations**
    Remove legacy Collab/Plastic integrations and old editor extensions with no runtime value, including ERP if incompatible.
-   ERP/Discord SDK was removed during migration; the remaining legacy integrations still need to be reviewed.
+   ERP/Discord SDK was removed during migration. Issue #16 removes the remaining Collab/Plastic package and empty ERP asset-folder residue.
 
 7. `DONE` **Upgrade: Update Unity packages for Unity 6.5**
    Update Cinemachine and the other packages to published compatible versions and pin their versions.
@@ -73,9 +73,9 @@ Work already completed in support of this backlog:
    Recreate the build settings because `EditorBuildSettings` currently contains no scenes.
    `PoolTable.unity` is restored as the player entry scene and a Windows x64 player build was validated in PR #13.
 
-10. `PARTIAL` **Testing: Establish Unity 6 migration baseline**
+10. `DONE` **Testing: Establish Unity 6 migration baseline**
     Clean compilation, zero console errors, scene opening, and first PlayMode smoke test.
-    Compilation, scene opening, EditMode scene validation, and player build settings are validated. Issue #14 tracks the first PlayMode smoke test.
+    Compilation, scene opening, EditMode validation, player build settings, and the first PlayMode smoke test are validated. Reference: issue #14 / PR #15.
 
 ## Phase 2 — modern foundations
 
