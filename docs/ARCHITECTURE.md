@@ -61,6 +61,14 @@ Legacy `white`, `black`, `filled`, and `striped` tags remain temporarily as a co
 
 The legacy `GameManager` remains the active scene controller for now. Connecting it to `MatchState` is intentionally deferred to a focused migration issue so this domain slice does not mix state modeling with MonoBehaviour lifecycle, UI, or WPA rule resolution.
 
+## Shot intent and observed facts
+
+`PoolTable.Core.Shots` separates player commands from physics observations. `ShotIntent` records which match player is acting, a normalized table-plane `ShotDirection`, and normalized shot power. It contains no Unity input or physics types, so the same intent can later be produced by local input or a network client.
+
+`ShotFacts` records what was actually observed after a shot: the first object-ball contact, pocketed balls, and the distinct balls that contacted a rail after first object-ball contact. Its collections are defensively copied and exposed read-only so WPA rule evaluation can consume a stable snapshot.
+
+Legacy `PlayersShootState`, `WhiteBallCollision`, and `BallStateManager` remain unchanged for now. Later focused issues will translate Unity input into `ShotIntent`, collect physics observations into `ShotFacts`, and evaluate those facts through the Core rules layer.
+
 ## Tests
 
 `PoolTable.EditMode.Tests` and `PoolTable.PlayMode.Tests` explicitly reference all modern runtime assemblies. EditMode architecture tests validate the asmdef graph and the Unity-free `Core` boundary so accidental dependency changes fail early.

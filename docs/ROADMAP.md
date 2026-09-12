@@ -96,8 +96,9 @@ Work already completed in support of this backlog:
     Introduce `MatchState`, players, groups, current turn, and match phase.
     The Unity-independent immutable domain model now covers players, group assignment, current turn, and match phase. Legacy `GameManager` integration is intentionally handled by later focused migration work. Reference: GitHub issue #28.
 
-15. `TODO` **Architecture: Model shot intent and shot facts**
+15. `DONE` **Architecture: Model shot intent and shot facts**
     Separate player commands from the events that are actually observed during a shot.
+    Unity-independent `ShotIntent`, normalized shot direction/power, and immutable observed `ShotFacts` now define the command/fact boundary for future physics, WPA rules, and networking. Legacy shooting integration is intentionally deferred. Reference: GitHub issue #30.
 
 ## Phase 3 — WPA 8-ball rules
 
