@@ -75,6 +75,10 @@ Legacy `PlayersShootState`, `WhiteBallCollision`, and `BallStateManager` remain 
 
 The legal-break evaluator intentionally does not decide scratch penalties, ball-in-hand, re-rack choices, or incoming-player options. Those decisions belong to later focused WPA-rule issues so break legality can remain a small deterministic rule that is reusable by local gameplay and host-authoritative networking.
 
+`OpenTableRule` owns the next match-state transition. After a completed break, it moves an immutable `MatchState` from `Break` to `OpenTable` while preserving the current player and keeping both groups unassigned. `MatchState.IsTableOpen` exposes that domain state without forcing callers to compare phase enums themselves.
+
+Group assignment, legal first-contact evaluation, foul handling, and turn resolution remain separate rules. This follows WPA 8-Ball rules 4.3(c) and 4.4: the table remains open after the break until groups are determined.
+
 ## Tests
 
 `PoolTable.EditMode.Tests` and `PoolTable.PlayMode.Tests` explicitly reference all modern runtime assemblies. EditMode architecture tests validate the asmdef graph and the Unity-free `Core` boundary so accidental dependency changes fail early.
