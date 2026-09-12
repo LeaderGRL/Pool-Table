@@ -75,6 +75,10 @@ Legacy `PlayersShootState`, `WhiteBallCollision`, and `BallStateManager` remain 
 
 The legal-break evaluator intentionally does not decide scratch penalties, ball-in-hand, re-rack choices, or incoming-player options. Those decisions belong to later focused WPA-rule issues so break legality can remain a small deterministic rule that is reusable by local gameplay and host-authoritative networking.
 
+`OpenTableRule` owns the `Break` to `OpenTable` transition. `PlayerGroupAssignmentRule` then closes an open table only when the current player is explicitly reported to have legally pocketed a solids or stripes ball. The acting player receives that ball's group, the opponent receives the complementary group, and the immutable match state transitions to `GroupsAssigned`. Cue and eight balls cannot assign a group.
+
+Direct phase and group mutation helpers on `MatchState` are internal to `PoolTable.Core`, so higher-level assemblies must use the rule layer instead of bypassing these domain transitions. Called-shot validation, foul detection, and deciding whether a pocket was legal remain separate rule slices.
+
 `OpenTableRule` owns the next match-state transition. After a completed break, it moves an immutable `MatchState` from `Break` to `OpenTable` while preserving the current player and keeping both groups unassigned. `MatchState.IsTableOpen` exposes that domain state without forcing callers to compare phase enums themselves.
 
 Group assignment, legal first-contact evaluation, foul handling, and turn resolution remain separate rules. This follows WPA 8-Ball rules 4.3(c) and 4.4: the table remains open after the break until groups are determined.
