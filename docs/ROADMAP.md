@@ -1,19 +1,19 @@
 # Pool Table modernization roadmap
 
-Ce document est la source de vérité du plan de modernisation. Avant toute nouvelle issue, branche ou PR, l'étape concernée doit être relue ici et son état doit être vérifié. Une étape n'est marquée terminée qu'après validation réelle et merge de la PR correspondante.
+This document is the source of truth for the modernization plan. Before starting any new issue, branch, or PR, the relevant step must be reviewed here and its status must be verified. A step is marked complete only after real validation and the corresponding PR has been merged.
 
-## Règles d'exécution
+## Execution rules
 
-- Une petite issue par changement cohérent.
-- Une branche par issue.
-- Une PR par issue.
-- Le merge reste manuel : après ouverture d'une PR, le travail s'arrête jusqu'au merge par le propriétaire du repository.
-- Les descriptions d'issues et de PR suivent le niveau de précision de FrogbyteEngine/Frogbyte.
-- Les tests adaptés au changement sont exécutés avant ouverture de la PR.
-- Les commentaires dans le code sont écrits en anglais.
-- Les tâches peuvent être découpées en sous-issues plus petites sans changer l'objectif de la roadmap.
+- One small issue per coherent change.
+- One branch per issue.
+- One PR per issue.
+- Merging remains manual: after a PR is opened, work stops until the repository owner merges it.
+- Issue and PR descriptions should match the level of precision used in FrogbyteEngine/Frogbyte.
+- Tests relevant to the change must be run before opening the PR.
+- Code comments must be written in English.
+- Tasks may be split into smaller sub-issues without changing the roadmap goal.
 
-Branches recommandées :
+Recommended branch names:
 
 - `infrastructure/<issue>-<slug>`
 - `upgrade/<issue>-<slug>`
@@ -25,77 +25,77 @@ Branches recommandées :
 - `tests/<issue>-<slug>`
 - `ci/<issue>-<slug>`
 
-## État actuel
+## Current status
 
-Légende : `DONE` = mergé et vérifié, `PARTIAL` = une partie est déjà couverte mais l'objectif complet reste ouvert, `TODO` = à faire, `PR` = PR ouverte en attente de merge.
+Legend: `DONE` = merged and verified, `PARTIAL` = part of the goal is already covered but the full objective is still open, `TODO` = not started, `PR` = PR open and waiting to be merged.
 
-Travaux déjà réalisés en support du backlog :
+Work already completed in support of this backlog:
 
 - `DONE` Repository cleanup / Git LFS / history rewrite.
-- `DONE` Migration du projet vers Unity `6000.5.1f1` en conservant le Built-in Render Pipeline.
-- `DONE` CI de validation du repository sans licence Unity (PR #9).
-- `PR` Premier smoke test Unity EditMode de `PoolTable.unity` (issue #10 / PR #11).
+- `DONE` Project migration to Unity `6000.5.1f1` while keeping the Built-in Render Pipeline.
+- `DONE` Credential-free repository validation CI (PR #9).
+- `PR` First Unity EditMode smoke test for `PoolTable.unity` (issue #10 / PR #11).
 
-## Phase 0 — remettre le repository en état
+## Phase 0 — restore repository health
 
 1. `DONE` **Infrastructure: Purge generated Unity artifacts from repository history**
-   Purger `Library`, `Logs`, `obj`, `.vs`, `UserSettings`, builds Windows/WebGL, `.csproj`, `.sln` et archives générées. Faire une sauvegarde locale `git bundle` avant réécriture puis réécrire l'historique comme choisi.
-   Référence : issue GitHub #5.
+   Purge `Library`, `Logs`, `obj`, `.vs`, `UserSettings`, Windows/WebGL builds, `.csproj`, `.sln`, and generated archives. Create a local `git bundle` backup before rewriting history, then rewrite history as agreed.
+   Reference: GitHub issue #5.
 
 2. `DONE` **Infrastructure: Define Unity repository ignore rules**
-   Ajouter un `.gitignore` Unity propre et supprimer les anciens systèmes `.collabignore` / `ignore.conf`.
+   Add a clean Unity `.gitignore` and remove the old `.collabignore` / `ignore.conf` systems.
 
 3. `DONE` **Infrastructure: Define Git LFS asset policy**
-   Configurer `.gitattributes`, normalisation des fichiers et LFS pour les gros fichiers source binaires réellement nécessaires.
-   Référence : issue GitHub #2.
+   Configure `.gitattributes`, file normalization, and LFS for large binary source assets that are genuinely required.
+   Reference: GitHub issue #2.
 
 4. `TODO` **Infrastructure: Add repository contribution workflow**
-   Ajouter conventions de branches, commits, issues et PR.
+   Add branch, commit, issue, and PR conventions.
 
-## Phase 1 — migration Unity sans toucher au rendu
+## Phase 1 — Unity migration without changing rendering
 
 5. `DONE` **Upgrade: Migrate project to Unity 6000.5.1f1**
-   Ouvrir et resérialiser le projet tout en conservant temporairement le Built-in Render Pipeline.
-   Référence : issue GitHub #6 / PR #7.
+   Open and reserialize the project while temporarily keeping the Built-in Render Pipeline.
+   Reference: GitHub issue #6 / PR #7.
 
 6. `PARTIAL` **Upgrade: Remove obsolete Unity editor integrations**
-   Retirer Collab/Plastic legacy et les extensions editor anciennes sans utilité runtime, notamment ERP si elle est incompatible.
-   ERP/Discord SDK a été retiré pendant la migration ; les autres intégrations legacy doivent encore être vérifiées.
+   Remove legacy Collab/Plastic integrations and old editor extensions with no runtime value, including ERP if incompatible.
+   ERP/Discord SDK was removed during migration; the remaining legacy integrations still need to be reviewed.
 
 7. `DONE` **Upgrade: Update Unity packages for Unity 6.5**
-   Mettre Cinemachine et les autres packages aux versions publiées compatibles et figer leurs versions.
+   Update Cinemachine and the other packages to published compatible versions and pin their versions.
 
 8. `PARTIAL` **Upgrade: Restore the playable PoolTable scene**
-   Corriger références cassées, scripts manquants et sérialisation.
-   La scène s'ouvre et ne contient pas de script manquant ; le caractère réellement jouable reste à valider.
+   Fix broken references, missing scripts, and serialization issues.
+   The scene opens and contains no missing scripts; whether it is fully playable still needs to be validated.
 
 9. `TODO` **Upgrade: Restore Windows and Web build targets**
-   Recréer les paramètres de build puisque `EditorBuildSettings` ne contient actuellement aucune scène.
+   Recreate the build settings because `EditorBuildSettings` currently contains no scenes.
 
 10. `PARTIAL` **Testing: Establish Unity 6 migration baseline**
-    Compilation propre, zéro erreur console, ouverture de scène et premier PlayMode smoke test.
-    Compilation et ouverture de scène sont validées. PR #11 ajoute un smoke test EditMode ; le PlayMode smoke test reste à faire.
+    Clean compilation, zero console errors, scene opening, and first PlayMode smoke test.
+    Compilation and scene opening are validated. PR #11 adds an EditMode smoke test; the PlayMode smoke test is still pending.
 
-## Phase 2 — fondations modernes
+## Phase 2 — modern foundations
 
 11. `TODO` **Architecture: Introduce project assembly boundaries**
-    Ajouter les asmdef Core, Gameplay, Physics, Input, Networking, Presentation et Tests.
+    Add Core, Gameplay, Physics, Input, Networking, Presentation, and Tests asmdefs.
 
 12. `TODO` **Architecture: Introduce application composition root**
-    Remplacer progressivement les singletons globaux par un bootstrap explicite.
+    Gradually replace global singletons with an explicit bootstrap/composition root.
 
 13. `TODO` **Architecture: Introduce typed ball identity**
-    Remplacer les tags `white`, `black`, `filled`, `striped`, `ball` par `BallId` et `BallGroup`.
+    Replace the `white`, `black`, `filled`, `striped`, and `ball` tags with `BallId` and `BallGroup`.
 
 14. `TODO` **Architecture: Model immutable match state**
-    Introduire `MatchState`, joueurs, groupes, tour courant et phase de match.
+    Introduce `MatchState`, players, groups, current turn, and match phase.
 
 15. `TODO` **Architecture: Model shot intent and shot facts**
-    Séparer les commandes du joueur des événements réellement observés pendant le tir.
+    Separate player commands from the events that are actually observed during a shot.
 
-## Phase 3 — règles 8-ball WPA
+## Phase 3 — WPA 8-ball rules
 
-Chaque règle aura ses tests EditMode avant d'être branchée au gameplay.
+Every rule must have EditMode tests before being connected to gameplay.
 
 16. `TODO` **Rules: Implement legal break resolution**
 17. `TODO` **Rules: Implement open-table state**
@@ -107,13 +107,13 @@ Chaque règle aura ses tests EditMode avant d'être branchée au gameplay.
 23. `TODO` **Rules: Implement called-shot information**
 24. `TODO` **Rules: Implement eight-ball win and loss conditions**
 
-## Phase 4 — nouvelle physique de billard
+## Phase 4 — new billiards physics
 
 25. `TODO` **Physics: Normalize table and ball physical scale**
-    Utiliser des dimensions physiques cohérentes, avec une boule standard d'environ 57,15 mm.
+    Use physically coherent dimensions, with a standard ball diameter of approximately 57.15 mm.
 
 26. `TODO` **Physics: Rebuild ball rigidbody configuration**
-    Masse, collision detection, solver, sleep thresholds et fixed timestep adaptés au billard.
+    Configure mass, collision detection, solver settings, sleep thresholds, and fixed timestep for billiards.
 
 27. `TODO` **Physics: Rebuild cloth friction model**
 28. `TODO` **Physics: Implement sliding-to-rolling transition**
@@ -121,11 +121,11 @@ Chaque règle aura ses tests EditMode avant d'être branchée au gameplay.
 30. `TODO` **Physics: Implement rail collision response**
 31. `TODO` **Physics: Rebuild pocket detection and capture**
 32. `TODO` **Physics: Add shot simulation instrumentation**
-    Mesurer trajectoires, énergie, temps d'arrêt et collisions afin de calibrer le gameplay.
+    Measure trajectories, energy, stopping time, and collisions to calibrate gameplay.
 
-L'objectif n'est pas de rendre PhysX déterministe entre machines. En multijoueur, seule la simulation de l'hôte fera autorité.
+The goal is not to make PhysX deterministic across machines. In multiplayer, only the host simulation will be authoritative.
 
-## Phase 5 — contrôle du joueur
+## Phase 5 — player controls
 
 33. `TODO` **Input: Migrate project to Unity Input System**
 34. `TODO` **Gameplay: Implement aiming state**
@@ -136,7 +136,7 @@ L'objectif n'est pas de rendre PhysX déterministe entre machines. En multijoueu
 39. `TODO` **Camera: Rebuild aiming camera**
 40. `TODO` **Camera: Implement shot and spectate cameras**
 
-## Phase 6 — conversion URP
+## Phase 6 — URP conversion
 
 41. `TODO` **Rendering: Install and configure URP**
 42. `TODO` **Rendering: Convert legacy materials to URP**
@@ -145,9 +145,9 @@ L'objectif n'est pas de rendre PhysX déterministe entre machines. En multijoueu
 45. `TODO` **Rendering: Add post-processing quality profile**
 46. `TODO` **Rendering: Add Windows and Web quality profiles**
 
-URP introduira aussi les particularités de Render Graph de Unity 6, qui devront être prises en compte pour tout futur custom render feature.
+URP will also introduce Unity 6 Render Graph considerations, which must be taken into account for any future custom render feature.
 
-## Phase 7 — présentation et juice
+## Phase 7 — presentation and juice
 
 47. `TODO` **Audio: Rebuild impact audio from collision energy**
 48. `TODO` **Audio: Add rail, pocket and cue impact layers**
@@ -158,9 +158,9 @@ URP introduira aussi les particularités de Render Graph de Unity 6, qui devront
 53. `TODO` **UI: Add called-shot interaction**
 54. `TODO` **UI: Add turn and foul feedback**
 
-Le juice pourra être prononcé visuellement sans altérer la trajectoire physique réelle.
+Visual juice may be pronounced as long as it does not alter the real physical trajectory of the balls.
 
-## Phase 8 — multijoueur
+## Phase 8 — multiplayer
 
 55. `TODO` **Networking: Install Multiplayer Services and NGO**
 56. `TODO` **Networking: Add anonymous Unity authentication**
@@ -175,22 +175,22 @@ Le juice pourra être prononcé visuellement sans altérer la trajectoire physiq
 65. `TODO` **Networking: Add WebGL WSS transport configuration**
 66. `TODO` **Networking: Add multiplayer latency simulation tests**
 
-Relay est prévu pour un modèle listen-server : l'hôte crée la session et les joueurs communiquent via Relay sans exposer leurs adresses. Pour la première version, si l'hôte quitte la partie, la partie se termine. La migration d'hôte est une fonctionnalité ultérieure : migrer le propriétaire de session ne suffit pas à reconstruire automatiquement l'état PhysX autoritaire.
+Relay is intended for a listen-server model: the host creates the session and players communicate through Relay without exposing their addresses. For the first version, if the host leaves the match, the match ends. Host migration is a later feature: migrating session ownership alone is not enough to automatically reconstruct the authoritative PhysX state.
 
-## Phase 9 — qualité et livraison
+## Phase 9 — quality and delivery
 
 67. `TODO` **Testing: Add Core EditMode test suite**
 68. `TODO` **Testing: Add gameplay PlayMode tests**
 69. `TODO` **Testing: Add physics calibration tests**
 70. `TODO` **Testing: Add two-player Multiplayer Play Mode tests**
 71. `PARTIAL` **CI: Add Unity pull-request validation**
-    La validation structurelle du repository existe déjà. L'exécution Unity hébergée et la gestion de licence restent à ajouter.
+    Structural repository validation already exists. Hosted Unity execution and license handling still need to be added.
 72. `TODO` **CI: Add Windows build validation**
 73. `TODO` **CI: Add WebGL build validation**
 74. `TODO` **CI: Add automated artifact builds from main**
 75. `TODO` **Performance: Establish Windows performance budget**
 76. `TODO` **Performance: Establish WebGL performance budget**
 
-## Ordre de reprise
+## Resume order
 
-Après merge de la PR #11, relire cette roadmap et choisir la prochaine petite issue qui complète la Phase 1 avant d'entamer le refactor d'architecture. Les statuts ci-dessus doivent être mis à jour uniquement à partir d'éléments vérifiés dans le repository, les tests ou les PR mergées.
+After PR #11 is merged, review this roadmap and choose the next small issue that completes Phase 1 before starting the architecture refactor. The statuses above must only be updated from evidence verified in the repository, tests, or merged PRs.
