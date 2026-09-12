@@ -3,6 +3,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace PoolTable.Tests.EditMode
 {
@@ -16,29 +17,46 @@ namespace PoolTable.Tests.EditMode
             var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(PoolTableScenePath);
             Assert.That(sceneAsset, Is.Not.Null, $"Scene asset not found at {PoolTableScenePath}.");
 
-            var scene = EditorSceneManager.OpenScene(PoolTableScenePath, OpenSceneMode.Single);
-            Assert.That(scene.IsValid(), Is.True, $"Failed to open {PoolTableScenePath}.");
+            var scene = SceneManager.GetSceneByPath(PoolTableScenePath);
+            var sceneWasAlreadyLoaded = scene.IsValid() && scene.isLoaded;
 
-            var missingScriptEntries = new List<string>();
-
-            foreach (var rootObject in scene.GetRootGameObjects())
+            if (!sceneWasAlreadyLoaded)
             {
-                foreach (var transform in rootObject.GetComponentsInChildren<Transform>(true))
-                {
-                    var gameObject = transform.gameObject;
-                    var missingScriptCount = GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(gameObject);
-
-                    if (missingScriptCount > 0)
-                    {
-                        missingScriptEntries.Add($"{GetHierarchyPath(transform)} ({missingScriptCount})");
-                    }
-                }
+                scene = EditorSceneManager.OpenScene(PoolTableScenePath, OpenSceneMode.Additive);
             }
 
-            Assert.That(
-                missingScriptEntries,
-                Is.Empty,
-                "Missing MonoBehaviour script references found:\n" + string.Join("\n", missingScriptEntries));
+            try
+            {
+                Assert.That(scene.IsValid(), Is.True, $"Failed to open {PoolTableScenePath}.");
+
+                var missingScriptEntries = new List<string>();
+
+                foreach (var rootObject in scene.GetRootGameObjects())
+                {
+                    foreach (var transform in rootObject.GetComponentsInChildren<Transform>(true))
+                    {
+                        var gameObject = transform.gameObject;
+                        var missingScriptCount = GameObjectUtility.GetMonoBehavioursWithMissingScriptCount(gameObject);
+
+                        if (missingScriptCount > 0)
+                        {
+                            missingScriptEntries.Add($"{GetHierarchyPath(transform)} ({missingScriptCount})");
+                        }
+                    }
+                }
+
+                Assert.That(
+                    missingScriptEntries,
+                    Is.Empty,
+                    "Missing MonoBehaviour script references found:\n" + string.Join("\n", missingScriptEntries));
+            }
+            finally
+            {
+                if (!sceneWasAlreadyLoaded && scene.IsValid())
+                {
+                    EditorSceneManager.CloseScene(scene, true);
+                }
+            }
         }
 
         private static string GetHierarchyPath(Transform transform)
