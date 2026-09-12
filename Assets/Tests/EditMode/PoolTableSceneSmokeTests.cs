@@ -3,7 +3,6 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace PoolTable.Tests.EditMode
 {
@@ -17,17 +16,11 @@ namespace PoolTable.Tests.EditMode
             var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(PoolTableScenePath);
             Assert.That(sceneAsset, Is.Not.Null, $"Scene asset not found at {PoolTableScenePath}.");
 
-            var scene = SceneManager.GetSceneByPath(PoolTableScenePath);
-            var sceneWasAlreadyLoaded = scene.IsValid() && scene.isLoaded;
-
-            if (!sceneWasAlreadyLoaded)
-            {
-                scene = EditorSceneManager.OpenScene(PoolTableScenePath, OpenSceneMode.Additive);
-            }
+            var scene = EditorSceneManager.OpenPreviewScene(PoolTableScenePath);
 
             try
             {
-                Assert.That(scene.IsValid(), Is.True, $"Failed to open {PoolTableScenePath}.");
+                Assert.That(scene.IsValid(), Is.True, $"Failed to open preview scene for {PoolTableScenePath}.");
 
                 var missingScriptEntries = new List<string>();
 
@@ -52,9 +45,9 @@ namespace PoolTable.Tests.EditMode
             }
             finally
             {
-                if (!sceneWasAlreadyLoaded && scene.IsValid())
+                if (scene.IsValid())
                 {
-                    EditorSceneManager.CloseScene(scene, true);
+                    EditorSceneManager.ClosePreviewScene(scene);
                 }
             }
         }
