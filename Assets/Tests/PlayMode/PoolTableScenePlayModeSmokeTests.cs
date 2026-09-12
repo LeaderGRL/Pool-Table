@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using PoolTable.Presentation;
+using PoolTable.Presentation.Audio;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -110,14 +112,19 @@ namespace PoolTable.Tests.PlayMode
                 Is.Not.Null,
                 "Stick_Raycast.pt must remain wired for aiming hits.");
 
-            var soundManager = FindActiveMonoBehaviourByTypeName(activeScene, "SoundManager");
-            Assert.That(soundManager, Is.Not.Null, "The gameplay scene must keep an active SoundManager.");
-            Assert.That(
-                GetPublicStaticPropertyValue(soundManager.GetType(), "Instance"),
-                Is.SameAs(soundManager),
-                "SoundManager.Instance must resolve to the active scene SoundManager.");
+            var compositionRoot = Object.FindFirstObjectByType<PoolTableSceneCompositionRoot>();
+            Assert.That(compositionRoot, Is.Not.Null, "The gameplay scene must keep an active composition root.");
+            Assert.That(compositionRoot.gameObject.scene, Is.EqualTo(activeScene));
 
-            var soundEffectSource = GetPrivateFieldValue<AudioSource>(soundManager, "SFX_SoundEffect");
+            var soundManager = compositionRoot.SoundManager;
+            Assert.That(soundManager, Is.Not.Null, "The composition root must keep its SoundManager reference.");
+            Assert.That(soundManager.isActiveAndEnabled, Is.True, "The composed SoundManager must be active and enabled.");
+            Assert.That(
+                typeof(SoundManager).GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic),
+                Is.Null,
+                "SoundManager must not expose a static singleton instance after composition-root migration.");
+
+            var soundEffectSource = soundManager.SoundEffectSource;
             Assert.That(soundEffectSource, Is.Not.Null, "SoundManager must keep its SFX AudioSource reference.");
             Assert.That(soundEffectSource.gameObject.activeInHierarchy, Is.True, "The SFX AudioSource object must be active.");
             Assert.That(soundEffectSource.enabled, Is.True, "The SFX AudioSource must be enabled.");
@@ -141,7 +148,7 @@ namespace PoolTable.Tests.PlayMode
                 var rigidbody = ball.GetComponent<Rigidbody>();
                 var collider = ball.GetComponent<SphereCollider>();
                 var ballStateManager = FindMonoBehaviourByTypeName(ball, "BallStateManager");
-                var collisionAudio = FindMonoBehaviourByTypeName(ball, "PlaySoundOnBallCollision");
+                var collisionAudio = ball.GetComponent<PlaySoundOnBallCollision>();
                 var renderer = ball.GetComponentsInChildren<Renderer>(true)
                     .FirstOrDefault(candidate => candidate.enabled && candidate.gameObject.activeInHierarchy);
 
@@ -156,6 +163,10 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(ballStateManager.enabled, Is.True, $"{ball.name} BallStateManager must be enabled.");
                 Assert.That(collisionAudio, Is.Not.Null, $"{ball.name} must keep PlaySoundOnBallCollision.");
                 Assert.That(collisionAudio.enabled, Is.True, $"{ball.name} PlaySoundOnBallCollision must be enabled.");
+                Assert.That(
+                    collisionAudio.SoundManager,
+                    Is.SameAs(soundManager),
+                    $"{ball.name} collision audio must receive the scene SoundManager from the composition root.");
                 Assert.That(renderer, Is.Not.Null, $"{ball.name} must keep an active enabled Renderer in its hierarchy.");
 
                 var collisionClips = GetPrivateFieldValue<AudioClip[]>(collisionAudio, "SFX_BallCollision");
@@ -313,14 +324,6 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(property, Is.Not.Null, $"{component.GetType().Name}.{propertyName} must remain a public property during migration.");
 
             return property.GetValue(component);
-        }
-
-        private static object GetPublicStaticPropertyValue(System.Type type, string propertyName)
-        {
-            var property = type.GetProperty(propertyName, BindingFlags.Static | BindingFlags.Public);
-            Assert.That(property, Is.Not.Null, $"{type.Name}.{propertyName} must remain a public static property during migration.");
-
-            return property.GetValue(null);
         }
 
         private static Transform GetPublicTransformProperty(MonoBehaviour component, string propertyName)

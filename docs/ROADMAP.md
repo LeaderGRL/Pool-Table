@@ -84,8 +84,9 @@ Work already completed in support of this backlog:
     Add Core, Gameplay, Physics, Input, Networking, Presentation, and Tests asmdefs.
     The modern runtime dependency graph and Unity-free Core boundary are enforced by EditMode architecture tests while legacy gameplay remains isolated in `Assembly-CSharp`. Reference: GitHub issue #22.
 
-12. `TODO` **Architecture: Introduce application composition root**
+12. `PARTIAL` **Architecture: Introduce application composition root**
     Gradually replace global singletons with an explicit bootstrap/composition root.
+    The scene composition root now explicitly wires collision audio and removes `SoundManager.Instance`; remaining legacy globals are intentionally deferred. Reference: GitHub issue #24.
 
 13. `TODO` **Architecture: Introduce typed ball identity**
     Replace the `white`, `black`, `filled`, `striped`, and `ball` tags with `BallId` and `BallGroup`.
