@@ -1,7 +1,14 @@
 {
     "name": "PoolTable.EditMode.Tests",
     "rootNamespace": "PoolTable.Tests.EditMode",
-    "references": [],
+    "references": [
+        "PoolTable.Core",
+        "PoolTable.Physics",
+        "PoolTable.Input",
+        "PoolTable.Gameplay",
+        "PoolTable.Networking",
+        "PoolTable.Presentation"
+    ],
     "includePlatforms": [
         "Editor"
     ],

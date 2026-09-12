@@ -1,13 +1,10 @@
 {
-    "name": "PoolTable.PlayMode.Tests",
-    "rootNamespace": "PoolTable.Tests.PlayMode",
+    "name": "PoolTable.Gameplay",
+    "rootNamespace": "PoolTable.Gameplay",
     "references": [
         "PoolTable.Core",
         "PoolTable.Physics",
-        "PoolTable.Input",
-        "PoolTable.Gameplay",
-        "PoolTable.Networking",
-        "PoolTable.Presentation"
+        "PoolTable.Input"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -17,8 +14,5 @@
     "autoReferenced": false,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": false,
-    "optionalUnityReferences": [
-        "TestAssemblies"
-    ]
+    "noEngineReferences": false
 }
