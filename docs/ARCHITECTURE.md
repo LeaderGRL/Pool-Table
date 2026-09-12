@@ -91,6 +91,10 @@ Group assignment, legal first-contact evaluation, foul handling, and turn resolu
 
 This evaluator does not decide whether the complete shot is legal. A cue-ball scratch can satisfy the rail-or-pocket condition because a ball was pocketed while still being a foul under the separate scratch rule. Wrong-first-ball, scratch, ball-in-hand, called-shot, and turn resolution remain separate rule slices.
 
+`FoulResolutionRule` composes the first-contact and rail-or-pocket evaluators for normal shots and adds cue-ball scratch detection. Its `ShotFoul` flags preserve simultaneous faults instead of collapsing them into one reason. A no-object-contact shot is reported once rather than also inventing a rail-after-contact foul, while a wrong first contact can legitimately coexist with a missing rail/pocket foul.
+
+During the break this resolver only reports cue-ball scratch; legal versus illegal break structure remains owned by `LegalBreakRule`. Applying ball-in-hand, changing turns, and presenting incoming-player options are intentionally left to later rule/orchestration slices. Physical infractions that are not yet represented by `ShotFacts`, such as an object ball leaving the table, must be added when the physics observation layer can produce those facts reliably.
+
 ## Tests
 
 `PoolTable.EditMode.Tests` and `PoolTable.PlayMode.Tests` explicitly reference all modern runtime assemblies. EditMode architecture tests validate the asmdef graph and the Unity-free `Core` boundary so accidental dependency changes fail early.
