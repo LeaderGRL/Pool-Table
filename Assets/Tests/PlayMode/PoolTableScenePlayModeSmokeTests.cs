@@ -42,23 +42,45 @@ namespace PoolTable.Tests.PlayMode
             yield return LoadPoolTableScene();
 
             var activeScene = SceneManager.GetActiveScene();
-            var gameManager = FindMonoBehaviourByTypeName(activeScene, "GameManager");
-            var playerController = FindMonoBehaviourByTypeName(activeScene, "PlayersStateManagement");
+            var gameManager = FindActiveMonoBehaviourByTypeName(activeScene, "GameManager");
+            var playerController = FindActiveMonoBehaviourByTypeName(activeScene, "PlayersStateManagement");
 
             Assert.That(gameManager, Is.Not.Null, "GameManager must be initialized in the gameplay scene.");
             Assert.That(playerController, Is.Not.Null, "PlayersStateManagement must be initialized in the gameplay scene.");
+            Assert.That(gameManager.isActiveAndEnabled, Is.True);
+            Assert.That(playerController.isActiveAndEnabled, Is.True);
+
+            var playerRigidbody = playerController.GetComponent<Rigidbody>();
+            var playerCollider = playerController.GetComponent<Collider>();
+
+            Assert.That(playerRigidbody, Is.Not.Null, "The active player controller must keep its Rigidbody.");
+            Assert.That(playerCollider, Is.Not.Null, "The active player controller must keep its collision shape.");
+            Assert.That(playerCollider.enabled, Is.True, "The active player controller collider must be enabled.");
 
             var cueBall = GetPublicGameObjectField(playerController, "WhiteBall");
+            var spectateCamera = GetPublicGameObjectField(playerController, "Cam");
             var cueCamera = GetPublicGameObjectField(playerController, "Cue_Camera");
 
             Assert.That(cueBall, Is.Not.Null);
             Assert.That(cueBall.CompareTag("white"), Is.True);
             Assert.That(cueBall.GetComponent<Rigidbody>(), Is.Not.Null);
             Assert.That(cueBall.GetComponent<SphereCollider>(), Is.Not.Null);
-            Assert.That(HasMonoBehaviourType(cueBall, "BallStateManager"), Is.True);
+
+            var cueBallStateManager = FindMonoBehaviourByTypeName(cueBall, "BallStateManager");
+            var cueBallCollision = FindMonoBehaviourByTypeName(cueBall, "WhiteBallCollision");
+
+            Assert.That(cueBallStateManager, Is.Not.Null);
+            Assert.That(cueBallStateManager.enabled, Is.True);
+            Assert.That(cueBallCollision, Is.Not.Null, "The cue ball must keep WhiteBallCollision.");
+            Assert.That(cueBallCollision.enabled, Is.True, "WhiteBallCollision must be enabled on the cue ball.");
+
+            Assert.That(spectateCamera, Is.Not.Null, "PlayersStateManagement.Cam must remain wired.");
+            Assert.That(spectateCamera.activeInHierarchy, Is.True, "The spectate camera must be active in the scene hierarchy.");
+            Assert.That(spectateCamera.GetComponent<Camera>(), Is.Not.Null, "PlayersStateManagement.Cam must reference a camera object.");
 
             Assert.That(cueCamera, Is.Not.Null);
             Assert.That(cueCamera.name, Is.EqualTo("Camera_Cue"));
+            Assert.That(cueCamera.activeInHierarchy, Is.True, "Camera_Cue must be active in the scene hierarchy.");
 
             var cueVirtualCamera = FindMonoBehaviourByTypeName(cueCamera, "CinemachineFreeLook");
             Assert.That(cueVirtualCamera, Is.Not.Null, "Camera_Cue must keep its CinemachineFreeLook component.");
@@ -91,11 +113,25 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(ballStateManager.enabled, Is.True, $"{ball.name} BallStateManager must be enabled.");
             }
 
+            var pocket = FindActiveMonoBehaviourByTypeName(activeScene, "Pocket");
+            Assert.That(pocket, Is.Not.Null, "The gameplay scene must keep an active Pocket capture behavior.");
+
+            var pocketCollider = pocket.GetComponent<Collider>();
+            Assert.That(pocketCollider, Is.Not.Null, "Pocket must keep its trigger collider.");
+            Assert.That(pocketCollider.enabled, Is.True, "Pocket trigger collider must be enabled.");
+            Assert.That(pocketCollider.isTrigger, Is.True, "Pocket collider must remain configured as a trigger.");
+
             var playerOneTurn = GetPublicGameObjectField(gameManager, "UI_Player1Turn");
             var playerTwoTurn = GetPublicGameObjectField(gameManager, "UI_Player2Turn");
+            var playerOneBallType = GetPublicGameObjectField(gameManager, "UI_Player1BallType");
+            var playerTwoBallType = GetPublicGameObjectField(gameManager, "UI_Player2BallType");
 
             Assert.That(playerOneTurn, Is.Not.Null);
             Assert.That(playerTwoTurn, Is.Not.Null);
+            Assert.That(playerOneBallType, Is.Not.Null);
+            Assert.That(playerTwoBallType, Is.Not.Null);
+            Assert.That(FindMonoBehaviourByTypeName(playerOneBallType, "Text"), Is.Not.Null, "Player 1 ball-type UI must keep its Text component.");
+            Assert.That(FindMonoBehaviourByTypeName(playerTwoBallType, "Text"), Is.Not.Null, "Player 2 ball-type UI must keep its Text component.");
             Assert.That(
                 playerOneTurn.activeInHierarchy,
                 Is.Not.EqualTo(playerTwoTurn.activeInHierarchy),
@@ -135,23 +171,20 @@ namespace PoolTable.Tests.PlayMode
             }
         }
 
-        private static MonoBehaviour FindMonoBehaviourByTypeName(Scene scene, string typeName)
+        private static MonoBehaviour FindActiveMonoBehaviourByTypeName(Scene scene, string typeName)
         {
             return EnumerateSceneObjects(scene)
                 .SelectMany(gameObject => gameObject.GetComponents<MonoBehaviour>())
-                .FirstOrDefault(component => component != null && component.GetType().Name == typeName);
+                .FirstOrDefault(component =>
+                    component != null
+                    && component.GetType().Name == typeName
+                    && component.isActiveAndEnabled);
         }
 
         private static MonoBehaviour FindMonoBehaviourByTypeName(GameObject gameObject, string typeName)
         {
             return gameObject.GetComponents<MonoBehaviour>()
                 .FirstOrDefault(component => component != null && component.GetType().Name == typeName);
-        }
-
-        private static bool HasMonoBehaviourType(GameObject gameObject, string typeName)
-        {
-            return gameObject.GetComponents<MonoBehaviour>()
-                .Any(component => component != null && component.GetType().Name == typeName);
         }
 
         private static GameObject GetPublicGameObjectField(MonoBehaviour component, string fieldName)
