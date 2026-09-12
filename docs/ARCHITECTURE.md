@@ -69,6 +69,12 @@ The legacy `GameManager` remains the active scene controller for now. Connecting
 
 Legacy `PlayersShootState`, `WhiteBallCollision`, and `BallStateManager` remain unchanged for now. Later focused issues will translate Unity input into `ShotIntent`, collect physics observations into `ShotFacts`, and evaluate those facts through the Core rules layer.
 
+## WPA rules core
+
+`PoolTable.Core.Rules` contains Unity-independent rule evaluators that consume immutable domain facts. `LegalBreakRule` is the first slice: a break satisfies the WPA legal-break requirement when at least one object ball is pocketed, or when at least four distinct object balls reach a rail after first object-ball contact. Cue-ball pocketing or rail contact never satisfies those object-ball requirements.
+
+The legal-break evaluator intentionally does not decide scratch penalties, ball-in-hand, re-rack choices, or incoming-player options. Those decisions belong to later focused WPA-rule issues so break legality can remain a small deterministic rule that is reusable by local gameplay and host-authoritative networking.
+
 ## Tests
 
 `PoolTable.EditMode.Tests` and `PoolTable.PlayMode.Tests` explicitly reference all modern runtime assemblies. EditMode architecture tests validate the asmdef graph and the Unity-free `Core` boundary so accidental dependency changes fail early.
