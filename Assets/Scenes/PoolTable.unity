@@ -4149,6 +4149,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1008307703}
   - component: {fileID: 1008307702}
+  - component: {fileID: 1008307704}
   m_Layer: 0
   m_Name: SoundManager
   m_TagString: Untagged
@@ -4169,6 +4170,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   SFX_SoundEffect: {fileID: 1362464030}
+--- !u!114 &1008307704
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1008307701}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3b860881f5e41babcc63fc63ee5921f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  soundManager: {fileID: 1008307702}
+  ballsRoot: {fileID: 1362464029}
 --- !u!4 &1008307703
 Transform:
   m_ObjectHideFlags: 0
