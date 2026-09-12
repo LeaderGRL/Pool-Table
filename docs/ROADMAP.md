@@ -110,7 +110,8 @@ Every rule must have EditMode tests before being connected to gameplay.
     The Core rules layer now owns the immutable `Break` to `OpenTable` transition and exposes an explicit open-table query while preserving unassigned groups. Group assignment and turn/foul resolution remain separate follow-up rules. Reference: GitHub issue #34.
 18. `DONE` **Rules: Implement player group assignment**
     The Core rules layer now assigns complementary solids/stripes groups only from an open table when the current player is explicitly reported to have legally pocketed a grouped object ball. Direct group mutation is restricted to Core so higher-level systems cannot bypass the rule. Reference: GitHub issue #36.
-19. `TODO` **Rules: Implement legal first-contact validation**
+19. `DONE` **Rules: Implement legal first-contact validation**
+    Core now validates first object-ball contact for break, open-table, assigned-group, and cleared-group states using immutable match state plus a validated pre-shot object-ball snapshot. Reference: GitHub issue #38.
 20. `TODO` **Rules: Implement rail and pocket requirements**
 21. `TODO` **Rules: Implement scratch and foul resolution**
 22. `TODO` **Rules: Implement ball-in-hand state**
