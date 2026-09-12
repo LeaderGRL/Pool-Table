@@ -40,6 +40,8 @@ namespace PoolTable.Core.Match
 
         public MatchPhase Phase { get; }
 
+        public bool IsTableOpen => Phase == MatchPhase.OpenTable;
+
         public static MatchState CreateInitial(MatchPlayerId startingPlayer = MatchPlayerId.PlayerOne)
         {
             return new MatchState(
@@ -69,7 +71,7 @@ namespace PoolTable.Core.Match
             return WithCurrentPlayer(nextPlayer);
         }
 
-        public MatchState WithPhase(MatchPhase phase)
+        internal MatchState WithPhase(MatchPhase phase)
         {
             return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, phase);
         }
