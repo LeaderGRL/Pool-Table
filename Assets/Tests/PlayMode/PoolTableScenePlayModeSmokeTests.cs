@@ -101,7 +101,11 @@ namespace PoolTable.Tests.PlayMode
                 .Where(gameObject => BilliardBallTags.Contains(gameObject.tag))
                 .ToArray();
 
+            var ballsContainer = EnumerateSceneObjects(activeScene)
+                .FirstOrDefault(gameObject => gameObject.name == "Balls" && gameObject.activeInHierarchy);
+
             Assert.That(billiardBalls, Has.Length.EqualTo(16));
+            Assert.That(ballsContainer, Is.Not.Null, "The active runtime Balls container must remain available.");
             Assert.That(billiardBalls.Count(ball => ball.CompareTag("white")), Is.EqualTo(1));
             Assert.That(billiardBalls.Count(ball => ball.CompareTag("black")), Is.EqualTo(1));
             Assert.That(billiardBalls.Count(ball => ball.CompareTag("filled")), Is.EqualTo(7));
@@ -109,11 +113,14 @@ namespace PoolTable.Tests.PlayMode
 
             foreach (var ball in billiardBalls)
             {
+                var rigidbody = ball.GetComponent<Rigidbody>();
                 var collider = ball.GetComponent<SphereCollider>();
                 var ballStateManager = FindMonoBehaviourByTypeName(ball, "BallStateManager");
 
                 Assert.That(ball.activeInHierarchy, Is.True, $"{ball.name} must be active in the scene hierarchy.");
-                Assert.That(ball.GetComponent<Rigidbody>(), Is.Not.Null, $"{ball.name} must keep its Rigidbody.");
+                Assert.That(ball.transform.IsChildOf(ballsContainer.transform), Is.True, $"{ball.name} must remain under the runtime Balls container.");
+                Assert.That(rigidbody, Is.Not.Null, $"{ball.name} must keep its Rigidbody.");
+                Assert.That(rigidbody.isKinematic, Is.False, $"{ball.name} Rigidbody must remain dynamic.");
                 Assert.That(collider, Is.Not.Null, $"{ball.name} must keep its SphereCollider.");
                 Assert.That(collider.enabled, Is.True, $"{ball.name} SphereCollider must be enabled.");
                 Assert.That(collider.isTrigger, Is.False, $"{ball.name} SphereCollider must remain a solid collider.");
@@ -141,6 +148,14 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(pocketCollider, Is.Not.Null, "Pocket must keep its trigger collider.");
             Assert.That(pocketCollider.enabled, Is.True, "Pocket trigger collider must be enabled.");
             Assert.That(pocketCollider.isTrigger, Is.True, "Pocket collider must remain configured as a trigger.");
+
+            var ground = FindActiveMonoBehaviourWithCollider(activeScene, "Ground", requireTrigger: true);
+            Assert.That(ground, Is.Not.Null, "The gameplay scene must keep an active Ground recovery trigger.");
+
+            var groundCollider = ground.GetComponent<Collider>();
+            Assert.That(groundCollider, Is.Not.Null, "Ground must keep its recovery collider.");
+            Assert.That(groundCollider.enabled, Is.True, "Ground recovery collider must be enabled.");
+            Assert.That(groundCollider.isTrigger, Is.True, "Ground recovery collider must remain configured as a trigger.");
 
             var playerOneTurn = GetPublicGameObjectField(gameManager, "UI_Player1Turn");
             var playerTwoTurn = GetPublicGameObjectField(gameManager, "UI_Player2Turn");
@@ -213,7 +228,30 @@ namespace PoolTable.Tests.PlayMode
             return EnumerateSceneObjects(scene)
                 .Where(gameObject => gameObject.activeInHierarchy && gameObject.name.ToLowerInvariant().Contains(nameFragment))
                 .Select(gameObject => gameObject.GetComponent<MeshCollider>())
-                .FirstOrDefault(collider => collider != null && collider.enabled && !collider.isTrigger);
+                .FirstOrDefault(collider =>
+                    collider != null
+                    && collider.enabled
+                    && !collider.isTrigger
+                    && collider.sharedMesh != null);
+        }
+
+        private static MonoBehaviour FindActiveMonoBehaviourWithCollider(Scene scene, string typeName, bool requireTrigger)
+        {
+            return EnumerateSceneObjects(scene)
+                .Where(gameObject => gameObject.activeInHierarchy)
+                .Select(gameObject => new
+                {
+                    Behaviour = FindMonoBehaviourByTypeName(gameObject, typeName),
+                    Collider = gameObject.GetComponent<Collider>(),
+                })
+                .Where(entry =>
+                    entry.Behaviour != null
+                    && entry.Behaviour.enabled
+                    && entry.Collider != null
+                    && entry.Collider.enabled
+                    && entry.Collider.isTrigger == requireTrigger)
+                .Select(entry => entry.Behaviour)
+                .FirstOrDefault();
         }
 
         private static GameObject GetPublicGameObjectField(MonoBehaviour component, string fieldName)
