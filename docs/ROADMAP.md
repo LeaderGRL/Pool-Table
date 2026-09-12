@@ -104,7 +104,8 @@ Work already completed in support of this backlog:
 
 Every rule must have EditMode tests before being connected to gameplay.
 
-16. `TODO` **Rules: Implement legal break resolution**
+16. `DONE` **Rules: Implement legal break resolution**
+    The pure Core rules layer now evaluates the WPA legal-break requirement from immutable `ShotFacts`: pocketing any object ball satisfies the break requirement, otherwise at least four distinct object balls must reach a rail. Scratch/foul penalties and player options remain in their dedicated follow-up rules issues. Reference: GitHub issue #32.
 17. `TODO` **Rules: Implement open-table state**
 18. `TODO` **Rules: Implement player group assignment**
 19. `TODO` **Rules: Implement legal first-contact validation**
