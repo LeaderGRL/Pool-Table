@@ -76,7 +76,14 @@ namespace PoolTable.Tests.PlayMode
 
             Assert.That(spectateCamera, Is.Not.Null, "PlayersStateManagement.Cam must remain wired.");
             Assert.That(spectateCamera.activeInHierarchy, Is.True, "The spectate camera must be active in the scene hierarchy.");
-            Assert.That(spectateCamera.GetComponent<Camera>(), Is.Not.Null, "PlayersStateManagement.Cam must reference a camera object.");
+
+            var outputCamera = spectateCamera.GetComponent<Camera>();
+            var cinemachineBrain = FindMonoBehaviourByTypeName(spectateCamera, "CinemachineBrain");
+
+            Assert.That(outputCamera, Is.Not.Null, "PlayersStateManagement.Cam must reference a camera object.");
+            Assert.That(outputCamera.enabled, Is.True, "The output Camera component must be enabled.");
+            Assert.That(cinemachineBrain, Is.Not.Null, "The output camera must keep its CinemachineBrain.");
+            Assert.That(cinemachineBrain.enabled, Is.True, "The output camera CinemachineBrain must be enabled.");
 
             Assert.That(cueCamera, Is.Not.Null);
             Assert.That(cueCamera.name, Is.EqualTo("Camera_Cue"));
@@ -109,9 +116,23 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(ball.GetComponent<Rigidbody>(), Is.Not.Null, $"{ball.name} must keep its Rigidbody.");
                 Assert.That(collider, Is.Not.Null, $"{ball.name} must keep its SphereCollider.");
                 Assert.That(collider.enabled, Is.True, $"{ball.name} SphereCollider must be enabled.");
+                Assert.That(collider.isTrigger, Is.False, $"{ball.name} SphereCollider must remain a solid collider.");
                 Assert.That(ballStateManager, Is.Not.Null, $"{ball.name} must keep BallStateManager.");
                 Assert.That(ballStateManager.enabled, Is.True, $"{ball.name} BallStateManager must be enabled.");
             }
+
+            Assert.That(
+                FindActiveSolidMeshColliderByName(activeScene, "tabletop"),
+                Is.Not.Null,
+                "The pool table must keep active solid tabletop collision geometry.");
+            Assert.That(
+                FindActiveSolidMeshColliderByName(activeScene, "rubber"),
+                Is.Not.Null,
+                "The pool table must keep active solid cushion collision geometry.");
+            Assert.That(
+                FindActiveSolidMeshColliderByName(activeScene, "sides"),
+                Is.Not.Null,
+                "The pool table must keep active solid side-rail collision geometry.");
 
             var pocket = FindActiveMonoBehaviourByTypeName(activeScene, "Pocket");
             Assert.That(pocket, Is.Not.Null, "The gameplay scene must keep an active Pocket capture behavior.");
@@ -185,6 +206,14 @@ namespace PoolTable.Tests.PlayMode
         {
             return gameObject.GetComponents<MonoBehaviour>()
                 .FirstOrDefault(component => component != null && component.GetType().Name == typeName);
+        }
+
+        private static MeshCollider FindActiveSolidMeshColliderByName(Scene scene, string nameFragment)
+        {
+            return EnumerateSceneObjects(scene)
+                .Where(gameObject => gameObject.activeInHierarchy && gameObject.name.ToLowerInvariant().Contains(nameFragment))
+                .Select(gameObject => gameObject.GetComponent<MeshCollider>())
+                .FirstOrDefault(collider => collider != null && collider.enabled && !collider.isTrigger);
         }
 
         private static GameObject GetPublicGameObjectField(MonoBehaviour component, string fieldName)
