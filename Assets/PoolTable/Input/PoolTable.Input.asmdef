@@ -1,0 +1,16 @@
+{
+    "name": "PoolTable.Input",
+    "rootNamespace": "PoolTable.Input",
+    "references": [
+        "PoolTable.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

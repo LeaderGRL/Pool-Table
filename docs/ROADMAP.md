@@ -80,8 +80,9 @@ Work already completed in support of this backlog:
 
 ## Phase 2 — modern foundations
 
-11. `TODO` **Architecture: Introduce project assembly boundaries**
+11. `DONE` **Architecture: Introduce project assembly boundaries**
     Add Core, Gameplay, Physics, Input, Networking, Presentation, and Tests asmdefs.
+    The modern runtime dependency graph and Unity-free Core boundary are enforced by EditMode architecture tests while legacy gameplay remains isolated in `Assembly-CSharp`. Reference: GitHub issue #22.
 
 12. `TODO` **Architecture: Introduce application composition root**
     Gradually replace global singletons with an explicit bootstrap/composition root.
