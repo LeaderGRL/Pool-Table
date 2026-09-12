@@ -55,27 +55,20 @@ namespace PoolTable.Core.Rules
 
             if (state.Phase == MatchPhase.OpenTable)
             {
-                return EvaluateOpenTable(firstContact, tableBeforeShot);
+                return EvaluateOpenTable(firstContact);
             }
 
             return EvaluateAssignedGroups(state, firstContact, tableBeforeShot);
         }
 
-        private static FirstContactEvaluation EvaluateOpenTable(
-            BallId firstContact,
-            ObjectBallTableSnapshot tableBeforeShot)
+        private static FirstContactEvaluation EvaluateOpenTable(BallId firstContact)
         {
             if (!firstContact.IsEightBall)
             {
                 return Legal(firstContact, FirstContactEvaluationReason.OpenTableGroupedBallContact);
             }
 
-            var solidsRemain = tableBeforeShot.HasRemainingBalls(BallGroup.Solids);
-            var stripesRemain = tableBeforeShot.HasRemainingBalls(BallGroup.Stripes);
-
-            return solidsRemain && stripesRemain
-                ? Illegal(firstContact, FirstContactEvaluationReason.OpenTableEightBallTooEarly)
-                : Legal(firstContact, FirstContactEvaluationReason.OpenTableEightBallAfterClearedGroup);
+            return Illegal(firstContact, FirstContactEvaluationReason.OpenTableEightBallTooEarly);
         }
 
         private static FirstContactEvaluation EvaluateAssignedGroups(

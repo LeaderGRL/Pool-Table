@@ -5,7 +5,6 @@ namespace PoolTable.Core.Rules
         NoObjectBallContact = 0,
         BreakObjectBallContact = 1,
         OpenTableGroupedBallContact = 2,
-        OpenTableEightBallAfterClearedGroup = 3,
         OpenTableEightBallTooEarly = 4,
         AssignedGroupBallContact = 5,
         EightBallAfterAssignedGroupCleared = 6,

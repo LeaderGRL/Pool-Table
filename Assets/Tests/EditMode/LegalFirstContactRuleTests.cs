@@ -42,7 +42,7 @@ namespace PoolTable.Tests.EditMode
 
         [TestCase(BallGroup.Solids)]
         [TestCase(BallGroup.Stripes)]
-        public void Evaluate_OpenTableAllowsEightBallWhenAGroupIsCleared(BallGroup clearedGroup)
+        public void Evaluate_OpenTableRejectsEightBallEvenWhenAGroupIsCleared(BallGroup clearedGroup)
         {
             var table = clearedGroup == BallGroup.Solids
                 ? Balls(8, 9, 10, 11, 12, 13, 14, 15)
@@ -50,8 +50,8 @@ namespace PoolTable.Tests.EditMode
 
             var evaluation = Evaluate(OpenTableState(), 8, table);
 
-            Assert.That(evaluation.IsLegal, Is.True);
-            Assert.That(evaluation.Reason, Is.EqualTo(FirstContactEvaluationReason.OpenTableEightBallAfterClearedGroup));
+            Assert.That(evaluation.IsLegal, Is.False);
+            Assert.That(evaluation.Reason, Is.EqualTo(FirstContactEvaluationReason.OpenTableEightBallTooEarly));
         }
 
         [Test]
