@@ -92,8 +92,9 @@ Work already completed in support of this backlog:
     Replace the `white`, `black`, `filled`, `striped`, and `ball` tags with `BallId` and `BallGroup`.
     Typed `BallId` / `BallGroup` metadata now exists on all 16 scene balls with compatibility validation against legacy tags. Tag consumers remain intentionally unchanged until follow-up migration issues. Reference: GitHub issue #26.
 
-14. `TODO` **Architecture: Model immutable match state**
+14. `DONE` **Architecture: Model immutable match state**
     Introduce `MatchState`, players, groups, current turn, and match phase.
+    The Unity-independent immutable domain model now covers players, group assignment, current turn, and match phase. Legacy `GameManager` integration is intentionally handled by later focused migration work. Reference: GitHub issue #28.
 
 15. `TODO` **Architecture: Model shot intent and shot facts**
     Separate player commands from the events that are actually observed during a shot.
