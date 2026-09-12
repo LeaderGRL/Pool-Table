@@ -56,6 +56,7 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(playerRigidbody, Is.Not.Null, "The active player controller must keep its Rigidbody.");
             Assert.That(playerCollider, Is.Not.Null, "The active player controller must keep its collision shape.");
             Assert.That(playerCollider.enabled, Is.True, "The active player controller collider must be enabled.");
+            Assert.That(playerCollider.isTrigger, Is.False, "The active player controller collider must remain solid.");
 
             var cueBall = GetPublicGameObjectField(playerController, "WhiteBall");
             var spectateCamera = GetPublicGameObjectField(playerController, "Cam");
@@ -141,6 +142,8 @@ namespace PoolTable.Tests.PlayMode
                 var collider = ball.GetComponent<SphereCollider>();
                 var ballStateManager = FindMonoBehaviourByTypeName(ball, "BallStateManager");
                 var collisionAudio = FindMonoBehaviourByTypeName(ball, "PlaySoundOnBallCollision");
+                var renderer = ball.GetComponentsInChildren<Renderer>(true)
+                    .FirstOrDefault(candidate => candidate.enabled && candidate.gameObject.activeInHierarchy);
 
                 Assert.That(ball.activeInHierarchy, Is.True, $"{ball.name} must be active in the scene hierarchy.");
                 Assert.That(ball.transform.IsChildOf(ballsContainer.transform), Is.True, $"{ball.name} must remain under the runtime Balls container.");
@@ -153,6 +156,7 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(ballStateManager.enabled, Is.True, $"{ball.name} BallStateManager must be enabled.");
                 Assert.That(collisionAudio, Is.Not.Null, $"{ball.name} must keep PlaySoundOnBallCollision.");
                 Assert.That(collisionAudio.enabled, Is.True, $"{ball.name} PlaySoundOnBallCollision must be enabled.");
+                Assert.That(renderer, Is.Not.Null, $"{ball.name} must keep an active enabled Renderer in its hierarchy.");
 
                 var collisionClips = GetPrivateFieldValue<AudioClip[]>(collisionAudio, "SFX_BallCollision");
                 Assert.That(collisionClips, Is.Not.Null.And.Not.Empty, $"{ball.name} must keep collision audio clips.");
