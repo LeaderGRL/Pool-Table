@@ -27,7 +27,7 @@ namespace PoolTable.Tests.EditMode
         {
             foreach (var assemblyName in RuntimeAssemblyNames)
             {
-                var definition = LoadAssemblyDefinition(GetRuntimeAssemblyPath(assemblyName));
+                var definition = LoadAssemblyDefinition(GetRuntimeAssemblyPath(assemblyName), "autoReferenced");
 
                 Assert.That(definition.name, Is.EqualTo(assemblyName));
                 Assert.That(definition.autoReferenced, Is.False, $"{assemblyName} must require explicit references.");
@@ -41,7 +41,7 @@ namespace PoolTable.Tests.EditMode
         [Test]
         public void CoreAssembly_RemainsIndependentFromUnityEngine()
         {
-            var definition = LoadAssemblyDefinition(GetRuntimeAssemblyPath("PoolTable.Core"));
+            var definition = LoadAssemblyDefinition(GetRuntimeAssemblyPath("PoolTable.Core"), "autoReferenced", "noEngineReferences");
 
             Assert.That(definition.noEngineReferences, Is.True);
             Assert.That(definition.references, Is.Empty);
@@ -67,11 +67,21 @@ namespace PoolTable.Tests.EditMode
             return Path.Combine(Application.dataPath, "PoolTable", moduleName, $"{assemblyName}.asmdef");
         }
 
-        private static AssemblyDefinitionData LoadAssemblyDefinition(string path)
+        private static AssemblyDefinitionData LoadAssemblyDefinition(string path, params string[] requiredProperties)
         {
             Assert.That(File.Exists(path), Is.True, $"Assembly definition not found at {path}.");
 
-            var definition = JsonUtility.FromJson<AssemblyDefinitionData>(File.ReadAllText(path));
+            var json = File.ReadAllText(path);
+
+            foreach (var property in requiredProperties)
+            {
+                Assert.That(
+                    json.Contains($"\"{property}\""),
+                    Is.True,
+                    $"Assembly definition at {path} must explicitly declare {property}.");
+            }
+
+            var definition = JsonUtility.FromJson<AssemblyDefinitionData>(json);
             Assert.That(definition, Is.Not.Null, $"Unable to parse assembly definition at {path}.");
 
             return definition;
