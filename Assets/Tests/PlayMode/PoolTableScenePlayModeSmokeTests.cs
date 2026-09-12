@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using PoolTable.Core.Balls;
+using PoolTable.Gameplay.Balls;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
 using UnityEngine;
@@ -143,11 +145,24 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(billiardBalls.Count(ball => ball.CompareTag("filled")), Is.EqualTo(7));
             Assert.That(billiardBalls.Count(ball => ball.CompareTag("striped")), Is.EqualTo(7));
 
+            var ballIds = billiardBalls
+                .Select(ball => ball.GetComponent<BallIdentity>())
+                .Where(identity => identity != null)
+                .Select(identity => identity.Id.Number)
+                .OrderBy(number => number)
+                .ToArray();
+
+            Assert.That(
+                ballIds,
+                Is.EqualTo(Enumerable.Range(BallId.MinimumNumber, BallId.MaximumNumber - BallId.MinimumNumber + 1)),
+                "Typed ball identities must cover IDs 0 through 15 exactly once.");
+
             foreach (var ball in billiardBalls)
             {
                 var rigidbody = ball.GetComponent<Rigidbody>();
                 var collider = ball.GetComponent<SphereCollider>();
                 var ballStateManager = FindMonoBehaviourByTypeName(ball, "BallStateManager");
+                var identities = ball.GetComponents<BallIdentity>();
                 var collisionAudio = ball.GetComponent<PlaySoundOnBallCollision>();
                 var renderer = ball.GetComponentsInChildren<Renderer>(true)
                     .FirstOrDefault(candidate => candidate.enabled && candidate.gameObject.activeInHierarchy);
@@ -161,6 +176,9 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(collider.isTrigger, Is.False, $"{ball.name} SphereCollider must remain a solid collider.");
                 Assert.That(ballStateManager, Is.Not.Null, $"{ball.name} must keep BallStateManager.");
                 Assert.That(ballStateManager.enabled, Is.True, $"{ball.name} BallStateManager must be enabled.");
+                Assert.That(identities, Has.Length.EqualTo(1), $"{ball.name} must have exactly one BallIdentity.");
+                Assert.That(identities[0].isActiveAndEnabled, Is.True, $"{ball.name} BallIdentity must be active and enabled.");
+                AssertLegacyBallIdentityMatchesTag(ball, identities[0]);
                 Assert.That(collisionAudio, Is.Not.Null, $"{ball.name} must keep PlaySoundOnBallCollision.");
                 Assert.That(collisionAudio.enabled, Is.True, $"{ball.name} PlaySoundOnBallCollision must be enabled.");
                 Assert.That(
@@ -333,6 +351,36 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(property.PropertyType, Is.EqualTo(typeof(Transform)));
 
             return property.GetValue(component) as Transform;
+        }
+
+        private static void AssertLegacyBallIdentityMatchesTag(GameObject ball, BallIdentity identity)
+        {
+            if (ball.CompareTag("white"))
+            {
+                Assert.That(identity.Id.Number, Is.EqualTo(BallId.CueBallNumber));
+                Assert.That(identity.IsCueBall, Is.True);
+                Assert.That(identity.Group, Is.EqualTo(BallGroup.None));
+                return;
+            }
+
+            if (ball.CompareTag("black"))
+            {
+                Assert.That(identity.Id.Number, Is.EqualTo(BallId.EightBallNumber));
+                Assert.That(identity.IsEightBall, Is.True);
+                Assert.That(identity.Group, Is.EqualTo(BallGroup.None));
+                return;
+            }
+
+            if (ball.CompareTag("filled"))
+            {
+                Assert.That(identity.Id.Number, Is.InRange(1, 7));
+                Assert.That(identity.Group, Is.EqualTo(BallGroup.Solids));
+                return;
+            }
+
+            Assert.That(ball.CompareTag("striped"), Is.True, $"{ball.name} must keep a supported legacy billiard-ball tag during migration.");
+            Assert.That(identity.Id.Number, Is.InRange(9, 15));
+            Assert.That(identity.Group, Is.EqualTo(BallGroup.Stripes));
         }
     }
 }

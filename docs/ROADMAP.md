@@ -88,8 +88,9 @@ Work already completed in support of this backlog:
     Gradually replace global singletons with an explicit bootstrap/composition root.
     The scene composition root now explicitly wires collision audio and removes `SoundManager.Instance`; remaining legacy globals are intentionally deferred. Reference: GitHub issue #24.
 
-13. `TODO` **Architecture: Introduce typed ball identity**
+13. `PARTIAL` **Architecture: Introduce typed ball identity**
     Replace the `white`, `black`, `filled`, `striped`, and `ball` tags with `BallId` and `BallGroup`.
+    Typed `BallId` / `BallGroup` metadata now exists on all 16 scene balls with compatibility validation against legacy tags. Tag consumers remain intentionally unchanged until follow-up migration issues. Reference: GitHub issue #26.
 
 14. `TODO` **Architecture: Model immutable match state**
     Introduce `MatchState`, players, groups, current turn, and match phase.
