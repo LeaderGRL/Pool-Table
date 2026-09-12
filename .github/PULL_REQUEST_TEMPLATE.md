@@ -17,7 +17,7 @@ Closes #ISSUE_NUMBER
 <!-- Replace or remove checks that do not apply and include concrete results. -->
 
 - [ ] `pwsh ./scripts/ci/Validate-Repository.ps1`
-- [ ] `git diff --check`
+- [ ] `git fetch origin main && git diff --check origin/main...HEAD`
 - [ ] Relevant Unity EditMode tests were run, when required.
 - [ ] Relevant Unity PlayMode tests were run, when required.
 - [ ] Player build or manual runtime validation was performed, when required.

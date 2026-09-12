@@ -1,6 +1,6 @@
-# Contributing to Pool Table
+# Pool Table development workflow
 
-Pool Table is being modernized incrementally. The repository workflow is designed to keep each change small, reviewable, testable, and easy to revert.
+Pool Table is a personal project maintained through an issue, branch, pull-request, and review workflow. The repository is not intended to accept external contributions. This document exists to keep the modernization work small, reviewable, testable, and easy to revert.
 
 `docs/ROADMAP.md` is the source of truth for the modernization order. Review it before starting a new issue.
 
@@ -13,7 +13,7 @@ Pool Table is being modernized incrementally. The repository workflow is designe
 
 Do not commit generated Unity folders, IDE files, local settings, player builds, or other paths excluded by `.gitignore`.
 
-## Contribution workflow
+## Development workflow
 
 Every coherent change follows the same lifecycle:
 
@@ -50,7 +50,7 @@ Create branches from an up-to-date `main` and include the GitHub issue number:
 
 | Change type | Pattern | Example |
 | --- | --- | --- |
-| Infrastructure | `infrastructure/<issue>-<slug>` | `infrastructure/20-contribution-workflow` |
+| Infrastructure | `infrastructure/<issue>-<slug>` | `infrastructure/20-development-workflow` |
 | Unity upgrade | `upgrade/<issue>-<slug>` | `upgrade/6-unity-6000-5` |
 | Architecture | `architecture/<issue>-<slug>` | `architecture/21-assembly-boundaries` |
 | Feature | `feature/<issue>-<slug>` | `feature/42-called-shot` |
@@ -102,7 +102,8 @@ Every pull request must run:
 
 ```powershell
 pwsh ./scripts/ci/Validate-Repository.ps1
-git diff --check
+git fetch origin main
+git diff --check origin/main...HEAD
 ```
 
 Run additional validation according to the files and behavior changed:
@@ -137,12 +138,12 @@ The intended repository settings are:
 - changes reach `main` through pull requests;
 - `Repository validation` is required before merge;
 - force pushes and branch deletion are blocked on `main`;
-- no mandatory approving review is required while the repository has a single owner;
+- no mandatory approving review is required while this remains a solo-maintained repository;
 - the repository owner performs the final merge;
 - squash merge is preferred for new work;
 - merged task branches can be deleted after the merge.
 
-If repository ownership or team size changes, review these settings before increasing the required approval count.
+If the project later becomes collaborative, review this workflow and the branch-protection settings before accepting contributions from other maintainers.
 
 ## Unity and assets
 

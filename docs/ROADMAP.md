@@ -49,9 +49,9 @@ Work already completed in support of this backlog:
    Configure `.gitattributes`, file normalization, and LFS for large binary source assets that are genuinely required.
    Reference: GitHub issue #2.
 
-4. `PR` **Infrastructure: Add repository contribution workflow**
+4. `DONE` **Infrastructure: Add repository development workflow**
    Add branch, commit, issue, and PR conventions.
-   Reference: GitHub issue #20.
+   The workflow is documented for this personal, solo-maintained repository and supported by reusable GitHub issue and pull-request templates. Reference: GitHub issue #20 / PR #21.
 
 ## Phase 1 — Unity migration without changing rendering
 
@@ -195,4 +195,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-After the contribution-workflow PR is merged, begin Phase 2 with **Architecture: Introduce project assembly boundaries**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+After PR #21 is merged, begin Phase 2 with **Architecture: Introduce project assembly boundaries**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.

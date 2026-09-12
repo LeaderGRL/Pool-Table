@@ -29,4 +29,4 @@ assignees: ""
 <!-- List the automated checks, Unity tests, builds, and manual scenarios required for this issue. -->
 
 - [ ] `pwsh ./scripts/ci/Validate-Repository.ps1`
-- [ ] `git diff --check`
+- [ ] `git fetch origin main && git diff --check origin/main...HEAD`
