@@ -1,0 +1,57 @@
+# Unity generated folders
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# Build outputs
+[Bb]uild/
+[Bb]uilds/
+Game/
+Web_Realease/
+Game.rar
+
+# IDE generated files
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.opendb
+*.VC.db
+
+# Unity/IDE generated debug symbols and temporary files
+*.pdb
+*.mdb
+*.tmp
+*.svd
+sysinfo.txt
+
+# Unity package/build artifacts
+*.apk
+*.aab
+*.unitypackage
+.gradle/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Legacy source-control/editor integrations
+.plastic/
+.collabignore
+ignore.conf
