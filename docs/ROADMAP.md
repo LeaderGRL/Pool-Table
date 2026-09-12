@@ -114,7 +114,8 @@ Every rule must have EditMode tests before being connected to gameplay.
     Core now validates first object-ball contact for break, open-table, assigned-group, and cleared-group states using immutable match state plus a validated pre-shot object-ball snapshot. The 8-ball remains illegal as a first contact while the table is open and only becomes legal after groups are assigned and the shooter's group is cleared. Reference: GitHub issue #38.
 20. `DONE` **Rules: Implement rail and pocket requirements**
     Core now evaluates WPA rule 3.3 for normal shots: any pocketed ball satisfies the narrow rail-or-pocket requirement; otherwise an object-ball contact must be followed by at least one cue-ball or object-ball rail contact. Break validation remains under `LegalBreakRule`, while scratch and combined foul resolution remain separate. Reference: GitHub issue #40.
-21. `TODO` **Rules: Implement scratch and foul resolution**
+21. `DONE` **Rules: Implement scratch and foul resolution**
+    Core now composes first-contact and rail/pocket evaluations with cue-ball scratch detection into a multi-foul result for all currently modeled shot facts. Break scratch is detected without duplicating `LegalBreakRule`; ball-in-hand and other consequences remain separate. Reference: GitHub issue #42.
 22. `TODO` **Rules: Implement ball-in-hand state**
 23. `TODO` **Rules: Implement called-shot information**
 24. `TODO` **Rules: Implement eight-ball win and loss conditions**
