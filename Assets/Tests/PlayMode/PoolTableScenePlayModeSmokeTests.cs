@@ -96,6 +96,30 @@ namespace PoolTable.Tests.PlayMode
                 GetPublicTransformProperty(cueVirtualCamera, "LookAt"),
                 Is.EqualTo(cueBall.transform),
                 "Camera_Cue must keep the cue ball as its LookAt target.");
+            Assert.That(
+                GetPublicPropertyValue(cinemachineBrain, "ActiveVirtualCamera"),
+                Is.SameAs(cueVirtualCamera),
+                "The output CinemachineBrain must render Camera_Cue after startup.");
+
+            var aimingRaycast = FindMonoBehaviourByTypeName(playerController.gameObject, "Stick_Raycast");
+            Assert.That(aimingRaycast, Is.Not.Null, "The active player controller must keep Stick_Raycast.");
+            Assert.That(aimingRaycast.enabled, Is.True, "Stick_Raycast must be enabled on the active player controller.");
+            Assert.That(
+                GetPublicGameObjectField(aimingRaycast, "pt"),
+                Is.Not.Null,
+                "Stick_Raycast.pt must remain wired for aiming hits.");
+
+            var soundManager = FindActiveMonoBehaviourByTypeName(activeScene, "SoundManager");
+            Assert.That(soundManager, Is.Not.Null, "The gameplay scene must keep an active SoundManager.");
+            Assert.That(
+                GetPublicStaticPropertyValue(soundManager.GetType(), "Instance"),
+                Is.SameAs(soundManager),
+                "SoundManager.Instance must resolve to the active scene SoundManager.");
+
+            var soundEffectSource = GetPrivateFieldValue<AudioSource>(soundManager, "SFX_SoundEffect");
+            Assert.That(soundEffectSource, Is.Not.Null, "SoundManager must keep its SFX AudioSource reference.");
+            Assert.That(soundEffectSource.gameObject.activeInHierarchy, Is.True, "The SFX AudioSource object must be active.");
+            Assert.That(soundEffectSource.enabled, Is.True, "The SFX AudioSource must be enabled.");
 
             var billiardBalls = EnumerateSceneObjects(activeScene)
                 .Where(gameObject => BilliardBallTags.Contains(gameObject.tag))
@@ -116,6 +140,7 @@ namespace PoolTable.Tests.PlayMode
                 var rigidbody = ball.GetComponent<Rigidbody>();
                 var collider = ball.GetComponent<SphereCollider>();
                 var ballStateManager = FindMonoBehaviourByTypeName(ball, "BallStateManager");
+                var collisionAudio = FindMonoBehaviourByTypeName(ball, "PlaySoundOnBallCollision");
 
                 Assert.That(ball.activeInHierarchy, Is.True, $"{ball.name} must be active in the scene hierarchy.");
                 Assert.That(ball.transform.IsChildOf(ballsContainer.transform), Is.True, $"{ball.name} must remain under the runtime Balls container.");
@@ -126,6 +151,12 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(collider.isTrigger, Is.False, $"{ball.name} SphereCollider must remain a solid collider.");
                 Assert.That(ballStateManager, Is.Not.Null, $"{ball.name} must keep BallStateManager.");
                 Assert.That(ballStateManager.enabled, Is.True, $"{ball.name} BallStateManager must be enabled.");
+                Assert.That(collisionAudio, Is.Not.Null, $"{ball.name} must keep PlaySoundOnBallCollision.");
+                Assert.That(collisionAudio.enabled, Is.True, $"{ball.name} PlaySoundOnBallCollision must be enabled.");
+
+                var collisionClips = GetPrivateFieldValue<AudioClip[]>(collisionAudio, "SFX_BallCollision");
+                Assert.That(collisionClips, Is.Not.Null.And.Not.Empty, $"{ball.name} must keep collision audio clips.");
+                Assert.That(collisionClips.All(clip => clip != null), Is.True, $"{ball.name} collision audio clips must all be assigned.");
             }
 
             Assert.That(
@@ -261,6 +292,31 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(field.FieldType, Is.EqualTo(typeof(GameObject)));
 
             return field.GetValue(component) as GameObject;
+        }
+
+        private static T GetPrivateFieldValue<T>(MonoBehaviour component, string fieldName)
+        {
+            var field = component.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(field, Is.Not.Null, $"{component.GetType().Name}.{fieldName} must remain a private serialized field during migration.");
+            Assert.That(field.FieldType, Is.EqualTo(typeof(T)));
+
+            return (T)field.GetValue(component);
+        }
+
+        private static object GetPublicPropertyValue(MonoBehaviour component, string propertyName)
+        {
+            var property = component.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
+            Assert.That(property, Is.Not.Null, $"{component.GetType().Name}.{propertyName} must remain a public property during migration.");
+
+            return property.GetValue(component);
+        }
+
+        private static object GetPublicStaticPropertyValue(System.Type type, string propertyName)
+        {
+            var property = type.GetProperty(propertyName, BindingFlags.Static | BindingFlags.Public);
+            Assert.That(property, Is.Not.Null, $"{type.Name}.{propertyName} must remain a public static property during migration.");
+
+            return property.GetValue(null);
         }
 
         private static Transform GetPublicTransformProperty(MonoBehaviour component, string propertyName)
