@@ -1,5 +1,4 @@
 * text=auto eol=lf
-
 # Unity YAML/text assets
 *.meta text eol=lf
 *.unity text eol=lf
@@ -17,7 +16,6 @@
 *.shader text eol=lf
 *.hlsl text eol=lf
 *.cginc text eol=lf
-
 # Binary assets
 *.png binary
 *.jpg binary
@@ -36,3 +34,7 @@
 *.dylib binary
 *.rar binary
 *.zip binary
+Assets/Billiard[[:space:]]Balls/Textures/*.png filter=lfs diff=lfs merge=lfs -text
+Assets/3D/**/*.png filter=lfs diff=lfs merge=lfs -text
+Assets/3D/**/*.ai filter=lfs diff=lfs merge=lfs -text
+Assets/3D/**/*.obj filter=lfs diff=lfs merge=lfs -text
