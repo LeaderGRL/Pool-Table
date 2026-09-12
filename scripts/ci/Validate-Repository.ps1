@@ -76,12 +76,12 @@ try {
         $failures.Add("Git LFS is not available.")
     }
     else {
-        git lfs fsck --pointers HEAD
+        git -c lfs.fetchexclude= lfs fsck --pointers HEAD
         if ($LASTEXITCODE -ne 0) {
             $failures.Add("Git LFS pointer validation failed for HEAD.")
         }
 
-        git lfs fsck --objects HEAD
+        git -c lfs.fetchexclude= lfs fsck --objects HEAD
         if ($LASTEXITCODE -ne 0) {
             $failures.Add("Git LFS object validation failed for HEAD.")
         }
