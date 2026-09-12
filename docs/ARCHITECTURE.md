@@ -83,6 +83,10 @@ Direct phase and group mutation helpers on `MatchState` are internal to `PoolTab
 
 Group assignment, legal first-contact evaluation, foul handling, and turn resolution remain separate rules. This follows WPA 8-Ball rules 4.3(c) and 4.4: the table remains open after the break until groups are determined.
 
+`LegalFirstContactRule` validates the first object-ball contact against immutable match state and an `ObjectBallTableSnapshot` captured before the shot. During the break any object-ball may be contacted first. On an open table, solids or stripes may be contacted first and the 8-ball is never a legal first contact because no shooter group has been assigned yet. Once groups are assigned, the shooter must contact their own group first until it is cleared, after which the 8-ball becomes the required first contact.
+
+`ObjectBallTableSnapshot` defensively copies and validates the object balls present before a shot. This keeps rule evaluation independent from Unity scene queries and gives future foul resolution and host-authoritative networking a stable description of table occupancy.
+
 ## Tests
 
 `PoolTable.EditMode.Tests` and `PoolTable.PlayMode.Tests` explicitly reference all modern runtime assemblies. EditMode architecture tests validate the asmdef graph and the Unity-free `Core` boundary so accidental dependency changes fail early.
