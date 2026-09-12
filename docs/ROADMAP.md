@@ -49,8 +49,9 @@ Work already completed in support of this backlog:
    Configure `.gitattributes`, file normalization, and LFS for large binary source assets that are genuinely required.
    Reference: GitHub issue #2.
 
-4. `TODO` **Infrastructure: Add repository contribution workflow**
+4. `DONE` **Infrastructure: Add repository development workflow**
    Add branch, commit, issue, and PR conventions.
+   The workflow is documented for this personal, solo-maintained repository and supported by reusable GitHub issue and pull-request templates. Reference: GitHub issue #20 / PR #21.
 
 ## Phase 1 — Unity migration without changing rendering
 
@@ -65,9 +66,9 @@ Work already completed in support of this backlog:
 7. `DONE` **Upgrade: Update Unity packages for Unity 6.5**
    Update Cinemachine and the other packages to published compatible versions and pin their versions.
 
-8. `PR` **Upgrade: Restore the playable PoolTable scene**
+8. `DONE` **Upgrade: Restore the playable PoolTable scene**
    Fix broken references, missing scripts, and serialization issues.
-   The scene opens with no missing scripts and passes the runtime startup smoke test. Issue #18 validates the remaining legacy gameplay wiring before Phase 2 begins.
+   The scene opens with no missing scripts and passes the runtime startup smoke test. The remaining legacy gameplay wiring was validated in issue #18 / PR #19.
 
 9. `DONE` **Upgrade: Restore Windows and Web build targets**
    Recreate the build settings because `EditorBuildSettings` currently contains no scenes.
@@ -194,4 +195,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-After PR #11 is merged, review this roadmap and choose the next small issue that completes Phase 1 before starting the architecture refactor. The statuses above must only be updated from evidence verified in the repository, tests, or merged PRs.
+After PR #21 is merged, begin Phase 2 with **Architecture: Introduce project assembly boundaries**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
