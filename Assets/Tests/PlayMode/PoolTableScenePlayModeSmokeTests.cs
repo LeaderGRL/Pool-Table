@@ -60,17 +60,35 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cueCamera, Is.Not.Null);
             Assert.That(cueCamera.name, Is.EqualTo("Camera_Cue"));
 
+            var cueVirtualCamera = FindMonoBehaviourByTypeName(cueCamera, "CinemachineFreeLook");
+            Assert.That(cueVirtualCamera, Is.Not.Null, "Camera_Cue must keep its CinemachineFreeLook component.");
+            Assert.That(cueVirtualCamera.enabled, Is.True, "Camera_Cue CinemachineFreeLook must be enabled.");
+            Assert.That(
+                GetPublicTransformProperty(cueVirtualCamera, "LookAt"),
+                Is.EqualTo(cueBall.transform),
+                "Camera_Cue must keep the cue ball as its LookAt target.");
+
             var billiardBalls = EnumerateSceneObjects(activeScene)
                 .Where(gameObject => BilliardBallTags.Contains(gameObject.tag))
                 .ToArray();
 
             Assert.That(billiardBalls, Has.Length.EqualTo(16));
+            Assert.That(billiardBalls.Count(ball => ball.CompareTag("white")), Is.EqualTo(1));
+            Assert.That(billiardBalls.Count(ball => ball.CompareTag("black")), Is.EqualTo(1));
+            Assert.That(billiardBalls.Count(ball => ball.CompareTag("filled")), Is.EqualTo(7));
+            Assert.That(billiardBalls.Count(ball => ball.CompareTag("striped")), Is.EqualTo(7));
 
             foreach (var ball in billiardBalls)
             {
+                var collider = ball.GetComponent<SphereCollider>();
+                var ballStateManager = FindMonoBehaviourByTypeName(ball, "BallStateManager");
+
+                Assert.That(ball.activeInHierarchy, Is.True, $"{ball.name} must be active in the scene hierarchy.");
                 Assert.That(ball.GetComponent<Rigidbody>(), Is.Not.Null, $"{ball.name} must keep its Rigidbody.");
-                Assert.That(ball.GetComponent<SphereCollider>(), Is.Not.Null, $"{ball.name} must keep its SphereCollider.");
-                Assert.That(HasMonoBehaviourType(ball, "BallStateManager"), Is.True, $"{ball.name} must keep BallStateManager.");
+                Assert.That(collider, Is.Not.Null, $"{ball.name} must keep its SphereCollider.");
+                Assert.That(collider.enabled, Is.True, $"{ball.name} SphereCollider must be enabled.");
+                Assert.That(ballStateManager, Is.Not.Null, $"{ball.name} must keep BallStateManager.");
+                Assert.That(ballStateManager.enabled, Is.True, $"{ball.name} BallStateManager must be enabled.");
             }
 
             var playerOneTurn = GetPublicGameObjectField(gameManager, "UI_Player1Turn");
@@ -78,7 +96,10 @@ namespace PoolTable.Tests.PlayMode
 
             Assert.That(playerOneTurn, Is.Not.Null);
             Assert.That(playerTwoTurn, Is.Not.Null);
-            Assert.That(playerOneTurn.activeSelf, Is.Not.EqualTo(playerTwoTurn.activeSelf), "Exactly one turn indicator must be active after startup.");
+            Assert.That(
+                playerOneTurn.activeInHierarchy,
+                Is.Not.EqualTo(playerTwoTurn.activeInHierarchy),
+                "Exactly one turn indicator must be active in the scene hierarchy after startup.");
         }
 
         private static IEnumerator LoadPoolTableScene()
@@ -121,6 +142,12 @@ namespace PoolTable.Tests.PlayMode
                 .FirstOrDefault(component => component != null && component.GetType().Name == typeName);
         }
 
+        private static MonoBehaviour FindMonoBehaviourByTypeName(GameObject gameObject, string typeName)
+        {
+            return gameObject.GetComponents<MonoBehaviour>()
+                .FirstOrDefault(component => component != null && component.GetType().Name == typeName);
+        }
+
         private static bool HasMonoBehaviourType(GameObject gameObject, string typeName)
         {
             return gameObject.GetComponents<MonoBehaviour>()
@@ -134,6 +161,15 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(field.FieldType, Is.EqualTo(typeof(GameObject)));
 
             return field.GetValue(component) as GameObject;
+        }
+
+        private static Transform GetPublicTransformProperty(MonoBehaviour component, string propertyName)
+        {
+            var property = component.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public);
+            Assert.That(property, Is.Not.Null, $"{component.GetType().Name}.{propertyName} must remain a public property during migration.");
+            Assert.That(property.PropertyType, Is.EqualTo(typeof(Transform)));
+
+            return property.GetValue(component) as Transform;
         }
     }
 }
