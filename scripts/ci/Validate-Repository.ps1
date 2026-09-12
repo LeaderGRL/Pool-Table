@@ -15,7 +15,7 @@ try {
         throw "Unable to enumerate tracked files."
     }
 
-    $trackedIgnoredPaths = @(git ls-files -ci --exclude-standard)
+    $trackedIgnoredPaths = @(git ls-files -ci --exclude-per-directory=.gitignore)
     if ($LASTEXITCODE -ne 0) {
         throw "Unable to check tracked files against ignore rules."
     }
@@ -50,7 +50,7 @@ try {
         $projectVersion = Get-Content $projectVersionPath
         $expectedVersionLine = "m_EditorVersion: $ExpectedUnityVersion"
 
-        if ($projectVersion -notcontains $expectedVersionLine) {
+        if ($projectVersion -cnotcontains $expectedVersionLine) {
             $failures.Add("Unity editor version must remain $ExpectedUnityVersion.")
         }
     }
@@ -78,7 +78,12 @@ try {
     else {
         git lfs fsck --pointers HEAD
         if ($LASTEXITCODE -ne 0) {
-            $failures.Add("Git LFS validation failed for HEAD.")
+            $failures.Add("Git LFS pointer validation failed for HEAD.")
+        }
+
+        git lfs fsck --objects HEAD
+        if ($LASTEXITCODE -ne 0) {
+            $failures.Add("Git LFS object validation failed for HEAD.")
         }
     }
 
