@@ -69,12 +69,13 @@ Work already completed in support of this backlog:
    Fix broken references, missing scripts, and serialization issues.
    The scene opens and contains no missing scripts; whether it is fully playable still needs to be validated.
 
-9. `TODO` **Upgrade: Restore Windows and Web build targets**
+9. `DONE` **Upgrade: Restore Windows and Web build targets**
    Recreate the build settings because `EditorBuildSettings` currently contains no scenes.
+   `PoolTable.unity` is restored as the player entry scene and a Windows x64 player build was validated in PR #13.
 
 10. `PARTIAL` **Testing: Establish Unity 6 migration baseline**
     Clean compilation, zero console errors, scene opening, and first PlayMode smoke test.
-    Compilation and scene opening are validated. PR #11 added an EditMode smoke test; the PlayMode smoke test is still pending.
+    Compilation, scene opening, EditMode scene validation, and player build settings are validated. Issue #14 tracks the first PlayMode smoke test.
 
 ## Phase 2 — modern foundations
 
