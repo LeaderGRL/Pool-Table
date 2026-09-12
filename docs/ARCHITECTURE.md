@@ -87,6 +87,10 @@ Group assignment, legal first-contact evaluation, foul handling, and turn resolu
 
 `ObjectBallTableSnapshot` defensively copies and validates the object balls present before a shot. This keeps rule evaluation independent from Unity scene queries and gives future foul resolution and host-authoritative networking a stable description of table occupancy.
 
+`RailOrPocketRequirementRule` implements WPA rule 3.3 for normal shots. In `OpenTable` and `GroupsAssigned` phases, pocketing any ball satisfies this narrow requirement; otherwise an object-ball must be contacted and at least one ball, including the cue-ball, must reach a rail after that contact. Break shots are rejected by this evaluator because `LegalBreakRule` owns the stricter four-object-ball break requirement.
+
+This evaluator does not decide whether the complete shot is legal. A cue-ball scratch can satisfy the rail-or-pocket condition because a ball was pocketed while still being a foul under the separate scratch rule. Wrong-first-ball, scratch, ball-in-hand, called-shot, and turn resolution remain separate rule slices.
+
 ## Tests
 
 `PoolTable.EditMode.Tests` and `PoolTable.PlayMode.Tests` explicitly reference all modern runtime assemblies. EditMode architecture tests validate the asmdef graph and the Unity-free `Core` boundary so accidental dependency changes fail early.
