@@ -1,4 +1,5 @@
 using UnityEngine;
+using PoolTable.Physics.Configuration;
 
 namespace PoolTable.Physics.Cloth
 {
@@ -14,15 +15,21 @@ namespace PoolTable.Physics.Cloth
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody>();
+            _rigidbody.maxAngularVelocity =
+                BilliardsSimulationConfiguration.BallMaxAngularVelocityRadiansPerSecond;
         }
 
         private void FixedUpdate()
         {
             if (_hasSupportingContact)
             {
-                _rigidbody.linearVelocity = ClothResistanceModel.CalculateVelocityAfterStep(
+                var motion = ClothResistanceModel.CalculateMotionAfterStep(
                     _rigidbody.linearVelocity,
+                    _rigidbody.angularVelocity,
+                    BilliardsPhysicalSpecification.BallRadiusMeters,
                     Time.fixedDeltaTime);
+                _rigidbody.linearVelocity = motion.LinearVelocity;
+                _rigidbody.angularVelocity = motion.AngularVelocity;
             }
 
             _hasSupportingContact = false;

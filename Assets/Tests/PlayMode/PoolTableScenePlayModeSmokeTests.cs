@@ -252,6 +252,10 @@ namespace PoolTable.Tests.PlayMode
                     Is.EqualTo(BilliardsSimulationConfiguration.BallAngularDamping).Within(0.000001f),
                     $"Ball {identity.Id.Number} must not hide rotational resistance in Rigidbody angular damping.");
                 Assert.That(
+                    rigidbody.maxAngularVelocity,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallMaxAngularVelocityRadiansPerSecond).Within(0.000001f),
+                    $"Ball {identity.Id.Number} must allow regulation-radius rolling angular speeds.");
+                Assert.That(
                     identity.GetComponent<BallClothResistance>(),
                     Is.Not.Null,
                     $"Ball {identity.Id.Number} must use the explicit cloth-resistance component.");
