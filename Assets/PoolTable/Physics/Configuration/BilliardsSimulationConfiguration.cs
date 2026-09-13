@@ -10,11 +10,15 @@ namespace PoolTable.Physics.Configuration
 
         public const float BallAngularDamping = 0f;
 
-        public const float BallMaxAngularVelocityRadiansPerSecond = 200f;
+        public const float BallMaxAngularVelocityRadiansPerSecond = 400f;
+
+        public const float CueTipMaximumContactOffsetRatio = 0.5f;
 
         public const float ClothSlidingDecelerationMetersPerSecondSquared = 1.962f;
 
         public const float ClothRollingDecelerationMetersPerSecondSquared = 0.2f;
+
+        public const float ClothSideSpinDecelerationRadiansPerSecondSquared = 5f;
 
         public const CollisionDetectionMode BallCollisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 

@@ -6,7 +6,7 @@ namespace PoolTable.Core.Shots
     public readonly struct ShotIntent : IEquatable<ShotIntent>
     {
         public ShotIntent(MatchPlayerId player, ShotDirection direction, float normalizedPower)
-            : this(player, direction, normalizedPower, null)
+            : this(player, direction, normalizedPower, default, null)
         {
         }
 
@@ -14,6 +14,25 @@ namespace PoolTable.Core.Shots
             MatchPlayerId player,
             ShotDirection direction,
             float normalizedPower,
+            CalledShot? calledShot)
+            : this(player, direction, normalizedPower, default, calledShot)
+        {
+        }
+
+        public ShotIntent(
+            MatchPlayerId player,
+            ShotDirection direction,
+            float normalizedPower,
+            CueBallSpin spin)
+            : this(player, direction, normalizedPower, spin, null)
+        {
+        }
+
+        public ShotIntent(
+            MatchPlayerId player,
+            ShotDirection direction,
+            float normalizedPower,
+            CueBallSpin spin,
             CalledShot? calledShot)
         {
             if (player != MatchPlayerId.PlayerOne && player != MatchPlayerId.PlayerTwo)
@@ -39,6 +58,7 @@ namespace PoolTable.Core.Shots
             Player = player;
             Direction = direction;
             NormalizedPower = normalizedPower;
+            Spin = spin;
             CalledShot = calledShot;
         }
 
@@ -47,6 +67,10 @@ namespace PoolTable.Core.Shots
         public ShotDirection Direction { get; }
 
         public float NormalizedPower { get; }
+
+        public CueBallSpin Spin { get; }
+
+        public bool HasSpin => !Spin.IsCentered;
 
         public CalledShot? CalledShot { get; }
 
@@ -57,6 +81,7 @@ namespace PoolTable.Core.Shots
             return Player == other.Player
                 && Direction.Equals(other.Direction)
                 && NormalizedPower.Equals(other.NormalizedPower)
+                && Spin.Equals(other.Spin)
                 && Nullable.Equals(CalledShot, other.CalledShot);
         }
 
@@ -69,6 +94,7 @@ namespace PoolTable.Core.Shots
                 var hashCode = (int)Player;
                 hashCode = (hashCode * 397) ^ Direction.GetHashCode();
                 hashCode = (hashCode * 397) ^ NormalizedPower.GetHashCode();
+                hashCode = (hashCode * 397) ^ Spin.GetHashCode();
                 hashCode = (hashCode * 397) ^ (CalledShot?.GetHashCode() ?? 0);
                 return hashCode;
             }

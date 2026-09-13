@@ -323,20 +323,6 @@ public class BallStateManager : MonoBehaviour
         return velocity1 + impulse / mass1 * normal;
     }
 
-    // Applies spin to a ball based on the direction and strength of the shot
-    public void ApplySpin(Rigidbody ball, Vector3 direction, float strength)
-    {
-        // Clamp the strength to the maximum allowed spin
-        strength = Mathf.Clamp(strength, 0, 100);
-
-        // Calculate the spin to apply based on the direction and strength of the shot
-        Vector3 spin = Vector3.Cross(direction, Vector3.up) * strength * ball.mass * getBallRadius();
-
-        // Apply the spin to the ball
-        ball.AddTorque(spin, ForceMode.Impulse);
-    }
-
-
     // Calculates the impulse applied to two colliders based on their mass, velocity, and collision normal
     public float CalculateImpulse(Rigidbody collider1, Rigidbody collider2, Vector3 relativeVelocity, Vector3 collisionNormal)
     {
