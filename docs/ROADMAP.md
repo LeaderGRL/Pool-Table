@@ -123,6 +123,11 @@ Every rule must have EditMode tests before being connected to gameplay.
 24. `DONE` **Rules: Implement eight-ball win and loss conditions**
     Core now resolves terminal WPA 8-ball outcomes into immutable `MatchResult` data with winner, loser, and preserved end reasons. A legal called 8-ball after the shooter's group is cleared wins; foul, early pocket, wrong/uncalled pocket, or 8-ball off-table loses. `ShotFacts` now records balls driven off the table, foul resolution reports cue/object-ball off-table faults, finished match states require a result and reject later turn changes, and break-shot 8-ball outcomes remain intentionally non-terminal for separate break handling. Reference: GitHub issue #48.
 
+### Gameplay integration checkpoint
+
+- `PR` **Gameplay: Add Core rules integration checkpoint**
+  `MatchShotResolver` composes immutable shot intent/facts with the Core rules into one authoritative next `MatchState`. Terminal 8-ball outcomes are handled before non-terminal consequences, standard fouls advance the turn with ball-in-hand, clean successful calls can assign an open table and continue the shooter's turn, and unresolved break choices are surfaced explicitly instead of guessed. The resolver remains independent from legacy gameplay singletons and is covered by deterministic EditMode tests plus a scene PlayMode smoke using typed ball identities. Reference: GitHub issue #50.
+
 ## Phase 4 — new billiards physics
 
 25. `TODO` **Physics: Normalize table and ball physical scale**
@@ -209,4 +214,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-After PR #21 is merged, begin Phase 2 with **Architecture: Introduce project assembly boundaries**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+After the gameplay integration checkpoint for issue #50 is merged, begin Phase 4 with **Physics: Normalize table and ball physical scale**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.

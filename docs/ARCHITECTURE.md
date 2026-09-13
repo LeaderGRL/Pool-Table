@@ -101,6 +101,16 @@ During the break this resolver reports directly observable scratch/off-table fou
 
 `EightBallRule` owns terminal WPA 8-ball resolution outside the break. It composes `FoulResolutionRule` from the same immutable shot facts and pre-shot table snapshot instead of trusting a caller-supplied foul result. A shooter wins only by pocketing the 8-ball in the called pocket after their assigned group was already cleared and with no foul. Pocketing the 8-ball with a foul, too early, or in an uncalled/wrong pocket loses the rack; driving the 8-ball off the table also loses. Multiple loss reasons are preserved in `MatchResult`, while break-shot 8-ball outcomes remain non-terminal for the separate break-choice flow.
 
+## Gameplay shot orchestration
+
+`PoolTable.Gameplay.Match.MatchShotResolver` is the vertical integration boundary between observed shot data and authoritative match progression. It accepts only the immutable `MatchState`, `ShotIntent`, `ShotFacts`, and pre-shot `ObjectBallTableSnapshot`; it has no dependency on `GameManager`, `PlayersStateManagement`, scene tags, or other legacy globals.
+
+The resolver owns rule ordering rather than reimplementing individual Core rules. It resolves terminal 8-ball outcomes first. For non-terminal normal shots it evaluates the composed foul result, applies standard foul ball-in-hand when required, assigns groups only from a clean successfully called solids/stripes ball on an open table, and then either preserves or advances the turn from called-shot success. Input validation also rejects calls and pocket observations for object balls that were not present in the pre-shot snapshot, which makes the boundary suitable for future local and network adapters.
+
+Break shots intentionally return a resolution that requires explicit break follow-up. The result carries both `LegalBreakRule`'s structural break evaluation and the currently modeled break fouls, but the resolver does not invent re-rack, spotting, or incoming-player choices that the Core domain does not model yet.
+
+Future physics code should produce observations that can be translated into `ShotFacts`; it should not decide WPA outcomes itself. Presentation and networking adapters consume the `ShotResolution` / resulting `MatchState` from Gameplay instead of reading legacy singleton state.
+
 ## Tests
 
-`PoolTable.EditMode.Tests` and `PoolTable.PlayMode.Tests` explicitly reference all modern runtime assemblies. EditMode architecture tests validate the asmdef graph and the Unity-free `Core` boundary so accidental dependency changes fail early.
+`PoolTable.EditMode.Tests` and `PoolTable.PlayMode.Tests` explicitly reference all modern runtime assemblies. EditMode architecture tests validate the asmdef graph and the Unity-free `Core` boundary so accidental dependency changes fail early. Gameplay orchestration is exercised deterministically in EditMode, while the PoolTable scene PlayMode smoke builds a pre-shot snapshot from the real typed `BallIdentity` components and passes it through `MatchShotResolver` without relying on uncontrolled real-time PhysX outcomes.
