@@ -282,6 +282,66 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RailCollisionResponse_ReboundsRenewedImpactDuringPersistentContact()
+        {
+            var railObject = new GameObject("PersistentRailCollisionResponseTestRail");
+            var ballObject = new GameObject("PersistentRailCollisionResponseTestBall");
+            var material = new PhysicsMaterial("PersistentRailCollisionResponseTestMaterial")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+
+            try
+            {
+                const float railCenterX = 0.2f;
+                const float railHalfWidth = 0.05f;
+                var railCollider = railObject.AddComponent<BoxCollider>();
+                railCollider.size = new Vector3(railHalfWidth * 2f, 0.2f, 0.5f);
+                railCollider.sharedMaterial = material;
+                railObject.AddComponent<RailSurface>();
+                railObject.transform.position = new Vector3(railCenterX, 0f, 0f);
+
+                var ballCollider = ballObject.AddComponent<SphereCollider>();
+                ballCollider.radius = BilliardsPhysicalSpecification.BallRadiusMeters;
+                ballCollider.sharedMaterial = material;
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+                rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+                rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                ballObject.AddComponent<BallRailCollisionResponse>();
+                ballObject.transform.position = new Vector3(
+                    railCenterX - railHalfWidth - BilliardsPhysicalSpecification.BallRadiusMeters,
+                    0f,
+                    0f);
+
+                yield return new WaitForFixedUpdate();
+                yield return new WaitForFixedUpdate();
+
+                rigidbody.linearVelocity = Vector3.right * 2f;
+                yield return new WaitForFixedUpdate();
+
+                Assert.That(
+                    rigidbody.linearVelocity.x,
+                    Is.LessThan(-1f),
+                    "A renewed inward impact while contact persists must use the configured rail rebound.");
+                Assert.That(
+                    Mathf.Abs(rigidbody.linearVelocity.x),
+                    Is.LessThan(2f),
+                    "The renewed rail rebound must retain controlled energy loss.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(ballObject);
+                Object.DestroyImmediate(railObject);
+                Object.DestroyImmediate(material);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator PoolTableScene_UsesBilliardsRigidbodySimulationConfiguration()
         {
             yield return LoadPoolTableScene();

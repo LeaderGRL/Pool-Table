@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PoolTable.Physics.Configuration;
 using UnityEngine;
 
@@ -7,14 +8,37 @@ namespace PoolTable.Physics.Rails
     [RequireComponent(typeof(Rigidbody))]
     public sealed class BallRailCollisionResponse : MonoBehaviour
     {
+        private readonly Dictionary<EntityId, int> _lastProcessedStepByCollider = new();
+        private readonly List<Vector3> _railNormals = new(4);
         private Rigidbody _rigidbody;
+        private int _physicsStep;
 
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody>();
         }
 
+        private void FixedUpdate()
+        {
+            _physicsStep++;
+        }
+
         private void OnCollisionEnter(Collision collision)
+        {
+            ProcessCollision(collision);
+        }
+
+        private void OnCollisionStay(Collision collision)
+        {
+            ProcessCollision(collision);
+        }
+
+        private void OnCollisionExit(Collision collision)
+        {
+            _lastProcessedStepByCollider.Remove(collision.collider.GetEntityId());
+        }
+
+        private void ProcessCollision(Collision collision)
         {
             if (!collision.collider.TryGetComponent<RailSurface>(out _)
                 || collision.contactCount == 0)
@@ -22,15 +46,30 @@ namespace PoolTable.Physics.Rails
                 return;
             }
 
+            var colliderId = collision.collider.GetEntityId();
+            if (_lastProcessedStepByCollider.TryGetValue(colliderId, out var processedStep)
+                && processedStep == _physicsStep)
+            {
+                return;
+            }
+
+            _lastProcessedStepByCollider[colliderId] = _physicsStep;
+
             // Unity reports the contacted body's velocity relative to this Rigidbody.
             // The response model needs the ball velocity relative to the static rail.
             var incomingLinearVelocity = -collision.relativeVelocity;
             var incomingAngularVelocity = _rigidbody.angularVelocity;
-            var railNormal = FindMostOpposingPlanarNormal(collision, incomingLinearVelocity);
-            var response = RailCollisionResponseModel.CalculateResponse(
+
+            _railNormals.Clear();
+            for (var index = 0; index < collision.contactCount; index++)
+            {
+                _railNormals.Add(collision.GetContact(index).normal);
+            }
+
+            var response = RailCollisionResponseModel.CalculateManifoldResponse(
                 incomingLinearVelocity,
                 incomingAngularVelocity,
-                railNormal,
+                _railNormals,
                 BilliardsPhysicalSpecification.BallRadiusMeters);
             if (!response.WasApplied)
             {
@@ -58,30 +97,6 @@ namespace PoolTable.Physics.Rails
             var customRailVelocityChange = response.LinearVelocity - incomingLinearVelocity;
             rigidbody.linearVelocity += customRailVelocityChange - nativeRailVelocityChange;
             rigidbody.angularVelocity += response.AngularVelocity - incomingAngularVelocity;
-        }
-
-        private static Vector3 FindMostOpposingPlanarNormal(Collision collision, Vector3 incomingLinearVelocity)
-        {
-            var selectedNormal = collision.GetContact(0).normal;
-            var selectedDot = PlanarDot(incomingLinearVelocity, selectedNormal);
-
-            for (var index = 1; index < collision.contactCount; index++)
-            {
-                var candidateNormal = collision.GetContact(index).normal;
-                var candidateDot = PlanarDot(incomingLinearVelocity, candidateNormal);
-                if (candidateDot < selectedDot)
-                {
-                    selectedNormal = candidateNormal;
-                    selectedDot = candidateDot;
-                }
-            }
-
-            return selectedNormal;
-        }
-
-        private static float PlanarDot(Vector3 velocity, Vector3 normal)
-        {
-            return (velocity.x * normal.x) + (velocity.z * normal.z);
         }
     }
 }

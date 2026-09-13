@@ -144,6 +144,62 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void CalculateManifoldResponse_TwoDistinctNormalsReboundFromBothFaces()
+        {
+            var result = RailCollisionResponseModel.CalculateManifoldResponse(
+                new Vector3(2f, 0f, 2f),
+                Vector3.zero,
+                new[] { Vector3.left, Vector3.back },
+                Radius);
+
+            Assert.That(result.WasApplied, Is.True);
+            Assert.That(result.LinearVelocity.x, Is.LessThan(0f));
+            Assert.That(result.LinearVelocity.z, Is.LessThan(0f));
+        }
+
+        [Test]
+        public void CalculateManifoldResponse_DuplicateNormalsAreAppliedOnlyOnce()
+        {
+            var linearVelocity = new Vector3(2f, 0f, 0.75f);
+            var angularVelocity = Vector3.up * 4f;
+            var singleResponse = RailCollisionResponseModel.CalculateResponse(
+                linearVelocity,
+                angularVelocity,
+                Vector3.left,
+                Radius);
+            var manifoldResponse = RailCollisionResponseModel.CalculateManifoldResponse(
+                linearVelocity,
+                angularVelocity,
+                new[] { Vector3.left, Vector3.left, Vector3.left },
+                Radius);
+
+            Assert.That(manifoldResponse.WasApplied, Is.True);
+            Assert.That(manifoldResponse.LinearVelocity, Is.EqualTo(singleResponse.LinearVelocity));
+            Assert.That(manifoldResponse.AngularVelocity, Is.EqualTo(singleResponse.AngularVelocity));
+        }
+
+        [Test]
+        public void CalculateManifoldResponse_IsIndependentOfContactOrdering()
+        {
+            var linearVelocity = new Vector3(2f, 0f, 1.5f);
+            var angularVelocity = Vector3.up * 2f;
+            var forwardOrder = RailCollisionResponseModel.CalculateManifoldResponse(
+                linearVelocity,
+                angularVelocity,
+                new[] { Vector3.left, Vector3.back },
+                Radius);
+            var reverseOrder = RailCollisionResponseModel.CalculateManifoldResponse(
+                linearVelocity,
+                angularVelocity,
+                new[] { Vector3.back, Vector3.left },
+                Radius);
+
+            Assert.That(reverseOrder.WasApplied, Is.EqualTo(forwardOrder.WasApplied));
+            Assert.That(reverseOrder.LinearVelocity, Is.EqualTo(forwardOrder.LinearVelocity));
+            Assert.That(reverseOrder.AngularVelocity, Is.EqualTo(forwardOrder.AngularVelocity));
+        }
+
+        [Test]
         public void ApplyRailCorrection_PreservesOtherResolvedVelocityContributions()
         {
             var ballObject = new GameObject("RailCorrectionTestBall");

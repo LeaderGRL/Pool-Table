@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PoolTable.Physics.Configuration;
 using UnityEngine;
 
@@ -91,6 +92,105 @@ namespace PoolTable.Physics.Rails
                 nextPlanarVelocity.z);
 
             return new RailCollisionResponse(nextLinearVelocity, nextAngularVelocity, true);
+        }
+
+        internal static RailCollisionResponse CalculateManifoldResponse(
+            Vector3 linearVelocity,
+            Vector3 angularVelocity,
+            IReadOnlyList<Vector3> railNormals,
+            float ballRadiusMeters)
+        {
+            var unchanged = new RailCollisionResponse(linearVelocity, angularVelocity, false);
+            if (railNormals == null || railNormals.Count == 0)
+            {
+                return unchanged;
+            }
+
+            var distinctNormals = new List<Vector3>(railNormals.Count);
+            for (var index = 0; index < railNormals.Count; index++)
+            {
+                var planarNormal = new Vector3(railNormals[index].x, 0f, railNormals[index].z);
+                if (!IsFinite(planarNormal)
+                    || planarNormal.sqrMagnitude < MinimumPlanarNormalSquaredMagnitude)
+                {
+                    continue;
+                }
+
+                planarNormal.Normalize();
+                if (!ContainsEquivalentNormal(distinctNormals, planarNormal))
+                {
+                    distinctNormals.Add(planarNormal);
+                }
+            }
+
+            SortByOpposition(distinctNormals, linearVelocity);
+
+            var currentLinearVelocity = linearVelocity;
+            var currentAngularVelocity = angularVelocity;
+            var wasApplied = false;
+            for (var index = 0; index < distinctNormals.Count; index++)
+            {
+                var response = CalculateResponse(
+                    currentLinearVelocity,
+                    currentAngularVelocity,
+                    distinctNormals[index],
+                    ballRadiusMeters);
+                if (!response.WasApplied)
+                {
+                    continue;
+                }
+
+                currentLinearVelocity = response.LinearVelocity;
+                currentAngularVelocity = response.AngularVelocity;
+                wasApplied = true;
+            }
+
+            return new RailCollisionResponse(currentLinearVelocity, currentAngularVelocity, wasApplied);
+        }
+
+        private static bool ContainsEquivalentNormal(List<Vector3> normals, Vector3 candidate)
+        {
+            const float equivalentNormalDotThreshold = 0.9999f;
+            for (var index = 0; index < normals.Count; index++)
+            {
+                if (Vector3.Dot(normals[index], candidate) >= equivalentNormalDotThreshold)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void SortByOpposition(List<Vector3> normals, Vector3 incomingLinearVelocity)
+        {
+            for (var index = 1; index < normals.Count; index++)
+            {
+                var candidate = normals[index];
+                var insertionIndex = index;
+                while (insertionIndex > 0
+                       && CompareNormals(candidate, normals[insertionIndex - 1], incomingLinearVelocity) < 0)
+                {
+                    normals[insertionIndex] = normals[insertionIndex - 1];
+                    insertionIndex--;
+                }
+
+                normals[insertionIndex] = candidate;
+            }
+        }
+
+        private static int CompareNormals(Vector3 left, Vector3 right, Vector3 incomingLinearVelocity)
+        {
+            var leftDot = Vector3.Dot(incomingLinearVelocity, left);
+            var rightDot = Vector3.Dot(incomingLinearVelocity, right);
+            var dotComparison = leftDot.CompareTo(rightDot);
+            if (dotComparison != 0)
+            {
+                return dotComparison;
+            }
+
+            var xComparison = left.x.CompareTo(right.x);
+            return xComparison != 0 ? xComparison : left.z.CompareTo(right.z);
         }
 
         private static bool IsFinite(Vector3 value)
