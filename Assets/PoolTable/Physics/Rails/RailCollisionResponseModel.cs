@@ -25,6 +25,7 @@ namespace PoolTable.Physics.Rails
         private const float SolidSphereInertiaFactor = 0.4f;
         private const float MinimumPlanarNormalSquaredMagnitude = 0.000001f;
         private const float MinimumApproachSpeedMetersPerSecond = 0.000001f;
+        private const int MaximumManifoldSolverPasses = 8;
 
         internal static RailCollisionResponse CalculateResponse(
             Vector3 linearVelocity,
@@ -145,7 +146,75 @@ namespace PoolTable.Physics.Rails
                 wasApplied = true;
             }
 
+            for (var pass = 0; pass < MaximumManifoldSolverPasses; pass++)
+            {
+                var adjustedDuringPass = false;
+                for (var index = 0; index < distinctNormals.Count; index++)
+                {
+                    var normal = distinctNormals[index];
+                    var normalSpeed = Vector3.Dot(currentLinearVelocity, normal);
+                    if (normalSpeed >= -MinimumApproachSpeedMetersPerSecond)
+                    {
+                        continue;
+                    }
+
+                    // Stabilization only removes renewed penetration. Restitution and tangential
+                    // friction were already applied once for this contact manifold above.
+                    currentLinearVelocity -= normal * normalSpeed;
+                    adjustedDuringPass = true;
+                }
+
+                if (!adjustedDuringPass)
+                {
+                    break;
+                }
+            }
+
+            if (HasApproachingNormal(currentLinearVelocity, distinctNormals))
+            {
+                currentLinearVelocity = ProjectOntoSeparatingCone(currentLinearVelocity, distinctNormals);
+            }
+
             return new RailCollisionResponse(currentLinearVelocity, currentAngularVelocity, wasApplied);
+        }
+
+        private static bool HasApproachingNormal(Vector3 linearVelocity, List<Vector3> normals)
+        {
+            for (var index = 0; index < normals.Count; index++)
+            {
+                if (Vector3.Dot(linearVelocity, normals[index]) < -MinimumApproachSpeedMetersPerSecond)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static Vector3 ProjectOntoSeparatingCone(Vector3 linearVelocity, List<Vector3> normals)
+        {
+            var planarVelocity = new Vector3(linearVelocity.x, 0f, linearVelocity.z);
+            var bestPlanarVelocity = Vector3.zero;
+            var bestDistanceSquared = planarVelocity.sqrMagnitude;
+
+            for (var index = 0; index < normals.Count; index++)
+            {
+                var normal = normals[index];
+                var candidate = planarVelocity - (normal * Vector3.Dot(planarVelocity, normal));
+                if (HasApproachingNormal(candidate, normals))
+                {
+                    continue;
+                }
+
+                var distanceSquared = (candidate - planarVelocity).sqrMagnitude;
+                if (distanceSquared < bestDistanceSquared)
+                {
+                    bestPlanarVelocity = candidate;
+                    bestDistanceSquared = distanceSquared;
+                }
+            }
+
+            return new Vector3(bestPlanarVelocity.x, linearVelocity.y, bestPlanarVelocity.z);
         }
 
         private static bool ContainsEquivalentNormal(List<Vector3> normals, Vector3 candidate)

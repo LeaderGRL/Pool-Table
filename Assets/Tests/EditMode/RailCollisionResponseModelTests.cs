@@ -200,6 +200,52 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void CalculateManifoldResponse_WideAngleFacesEndSeparatingFromEveryFace()
+        {
+            var firstNormal = Vector3.left;
+            var secondNormal = new Vector3(0.5f, 0f, Mathf.Sqrt(3f) * 0.5f);
+            var result = RailCollisionResponseModel.CalculateManifoldResponse(
+                new Vector3(1f, 0f, -Mathf.Sqrt(3f)),
+                Vector3.zero,
+                new[] { firstNormal, secondNormal },
+                Radius);
+
+            Assert.That(result.WasApplied, Is.True);
+            Assert.That(Vector3.Dot(result.LinearVelocity, firstNormal), Is.GreaterThanOrEqualTo(0f));
+            Assert.That(Vector3.Dot(result.LinearVelocity, secondNormal), Is.GreaterThanOrEqualTo(0f));
+        }
+
+        [Test]
+        public void CalculateManifoldResponse_WideAngleStabilizationDoesNotReapplyTangentialImpulse()
+        {
+            var firstNormal = Vector3.left;
+            var secondNormal = new Vector3(0.5f, 0f, Mathf.Sqrt(3f) * 0.5f);
+            var linearVelocity = new Vector3(1.2f, 0f, -1.5f);
+            var angularVelocity = new Vector3(0f, 2f, 0f);
+            var firstResponse = RailCollisionResponseModel.CalculateResponse(
+                linearVelocity,
+                angularVelocity,
+                firstNormal,
+                Radius);
+            var secondResponse = RailCollisionResponseModel.CalculateResponse(
+                firstResponse.LinearVelocity,
+                firstResponse.AngularVelocity,
+                secondNormal,
+                Radius);
+
+            var result = RailCollisionResponseModel.CalculateManifoldResponse(
+                linearVelocity,
+                angularVelocity,
+                new[] { firstNormal, secondNormal },
+                Radius);
+
+            Assert.That(result.WasApplied, Is.True);
+            Assert.That(result.AngularVelocity, Is.EqualTo(secondResponse.AngularVelocity));
+            Assert.That(Vector3.Dot(result.LinearVelocity, firstNormal), Is.GreaterThanOrEqualTo(0f));
+            Assert.That(Vector3.Dot(result.LinearVelocity, secondNormal), Is.GreaterThanOrEqualTo(0f));
+        }
+
+        [Test]
         public void ApplyRailCorrection_PreservesOtherResolvedVelocityContributions()
         {
             var ballObject = new GameObject("RailCorrectionTestBall");
