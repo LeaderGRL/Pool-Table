@@ -116,7 +116,8 @@ Every rule must have EditMode tests before being connected to gameplay.
     Core now evaluates WPA rule 3.3 for normal shots: any pocketed ball satisfies the narrow rail-or-pocket requirement; otherwise an object-ball contact must be followed by at least one cue-ball or object-ball rail contact. Break validation remains under `LegalBreakRule`, while scratch and combined foul resolution remain separate. Reference: GitHub issue #40.
 21. `DONE` **Rules: Implement scratch and foul resolution**
     Core now composes first-contact and rail/pocket evaluations with cue-ball scratch detection into a multi-foul result for all currently modeled shot facts. Break scratch is detected without duplicating `LegalBreakRule`; ball-in-hand and other consequences remain separate. Reference: GitHub issue #42.
-22. `TODO` **Rules: Implement ball-in-hand state**
+22. `DONE` **Rules: Implement ball-in-hand state**
+    Core now models ball-in-hand as immutable match state with an explicit recipient and cue-ball placement area. Standard fouls advance the turn and grant the incoming player placement anywhere, while the restricted above-head-string consequence remains an explicit post-break-foul choice. Placement consumption clears the state without mutating the previous snapshot, and match invariants reject invalid recipients, phases, or placement scopes. Reference: GitHub issue #44.
 23. `TODO` **Rules: Implement called-shot information**
 24. `TODO` **Rules: Implement eight-ball win and loss conditions**
 

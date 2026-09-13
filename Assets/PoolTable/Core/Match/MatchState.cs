@@ -10,6 +10,16 @@ namespace PoolTable.Core.Match
             MatchPlayerState playerTwo,
             MatchPlayerId currentPlayer,
             MatchPhase phase)
+            : this(playerOne, playerTwo, currentPlayer, phase, BallInHandState.None)
+        {
+        }
+
+        internal MatchState(
+            MatchPlayerState playerOne,
+            MatchPlayerState playerTwo,
+            MatchPlayerId currentPlayer,
+            MatchPhase phase,
+            BallInHandState ballInHand)
         {
             if (playerOne.Id != MatchPlayerId.PlayerOne)
             {
@@ -25,11 +35,13 @@ namespace PoolTable.Core.Match
             ValidatePhase(phase);
             ValidateGroupAssignments(playerOne, playerTwo);
             ValidatePhaseConsistency(playerOne, playerTwo, phase);
+            ValidateBallInHand(currentPlayer, phase, ballInHand);
 
             PlayerOne = playerOne;
             PlayerTwo = playerTwo;
             CurrentPlayer = currentPlayer;
             Phase = phase;
+            BallInHand = ballInHand;
         }
 
         public MatchPlayerState PlayerOne { get; }
@@ -39,6 +51,10 @@ namespace PoolTable.Core.Match
         public MatchPlayerId CurrentPlayer { get; }
 
         public MatchPhase Phase { get; }
+
+        public BallInHandState BallInHand { get; }
+
+        public bool HasBallInHand => BallInHand.IsActive;
 
         public bool IsTableOpen => Phase == MatchPhase.OpenTable;
 
@@ -59,7 +75,7 @@ namespace PoolTable.Core.Match
 
         public MatchState WithCurrentPlayer(MatchPlayerId currentPlayer)
         {
-            return new MatchState(PlayerOne, PlayerTwo, currentPlayer, Phase);
+            return new MatchState(PlayerOne, PlayerTwo, currentPlayer, Phase, BallInHand);
         }
 
         public MatchState AdvanceTurn()
@@ -73,7 +89,7 @@ namespace PoolTable.Core.Match
 
         internal MatchState WithPhase(MatchPhase phase)
         {
-            return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, phase);
+            return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, phase, BallInHand);
         }
 
         internal MatchState WithAssignedGroups(MatchPlayerId solidsPlayer)
@@ -91,7 +107,13 @@ namespace PoolTable.Core.Match
                 PlayerOne.WithGroup(playerOneGroup),
                 PlayerTwo.WithGroup(playerTwoGroup),
                 CurrentPlayer,
-                MatchPhase.GroupsAssigned);
+                MatchPhase.GroupsAssigned,
+                BallInHand);
+        }
+
+        internal MatchState WithBallInHand(BallInHandState ballInHand)
+        {
+            return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, Phase, ballInHand);
         }
 
         public bool Equals(MatchState other)
@@ -100,7 +122,8 @@ namespace PoolTable.Core.Match
                 && PlayerOne == other.PlayerOne
                 && PlayerTwo == other.PlayerTwo
                 && CurrentPlayer == other.CurrentPlayer
-                && Phase == other.Phase;
+                && Phase == other.Phase
+                && BallInHand == other.BallInHand;
         }
 
         public override bool Equals(object obj) => Equals(obj as MatchState);
@@ -113,6 +136,7 @@ namespace PoolTable.Core.Match
                 hashCode = (hashCode * 397) ^ PlayerTwo.GetHashCode();
                 hashCode = (hashCode * 397) ^ (int)CurrentPlayer;
                 hashCode = (hashCode * 397) ^ (int)Phase;
+                hashCode = (hashCode * 397) ^ BallInHand.GetHashCode();
                 return hashCode;
             }
         }
@@ -153,6 +177,43 @@ namespace PoolTable.Core.Match
             if ((phase == MatchPhase.Break || phase == MatchPhase.OpenTable) && groupsAssigned)
             {
                 throw new ArgumentException("Break and OpenTable phases require player groups to remain unassigned.");
+            }
+        }
+
+        private static void ValidateBallInHand(
+            MatchPlayerId currentPlayer,
+            MatchPhase phase,
+            BallInHandState ballInHand)
+        {
+            if (!ballInHand.IsActive)
+            {
+                return;
+            }
+
+            if (phase == MatchPhase.Finished)
+            {
+                throw new ArgumentException("Finished matches cannot have active ball-in-hand.", nameof(ballInHand));
+            }
+
+            if (phase == MatchPhase.Break)
+            {
+                throw new ArgumentException("Break phase cannot have active ball-in-hand.", nameof(ballInHand));
+            }
+
+            if (ballInHand.Recipient != currentPlayer)
+            {
+                throw new ArgumentException(
+                    "The active ball-in-hand recipient must be the current player.",
+                    nameof(ballInHand));
+            }
+
+
+            if (ballInHand.PlacementArea == CueBallPlacementArea.AboveHeadString
+                && phase != MatchPhase.OpenTable)
+            {
+                throw new ArgumentException(
+                    "Above-head-string ball-in-hand is only valid immediately after a break foul.",
+                    nameof(ballInHand));
             }
         }
     }

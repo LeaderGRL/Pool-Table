@@ -59,6 +59,8 @@ Legacy `white`, `black`, `filled`, and `striped` tags remain temporarily as a co
 
 `MatchState` is immutable. Turn changes, phase changes, and group assignment return a new state while leaving the previous value untouched. Its constructor enforces structural invariants such as fixed player identities and complementary group assignments so future rules, gameplay orchestration, and network replication can share one valid domain representation.
 
+Ball-in-hand is part of that immutable domain state rather than a gameplay boolean. `BallInHandState` records the current recipient and a `CueBallPlacementArea`: standard fouls use `Anywhere`, while the explicit break-foul option uses `AboveHeadString`. An active recipient must always be the current player, and ball-in-hand cannot exist during `Break` or `Finished`. Active ball-in-hand construction is internal to `PoolTable.Core`, so higher-level assemblies cannot infer a restricted `AboveHeadString` state from the long-lived `OpenTable` phase or inject one into `MatchState`; they must obtain it through the rule transition that owns that consequence.
+
 The legacy `GameManager` remains the active scene controller for now. Connecting it to `MatchState` is intentionally deferred to a focused migration issue so this domain slice does not mix state modeling with MonoBehaviour lifecycle, UI, or WPA rule resolution.
 
 ## Shot intent and observed facts
@@ -94,6 +96,8 @@ This evaluator does not decide whether the complete shot is legal. A cue-ball sc
 `FoulResolutionRule` composes the first-contact and rail-or-pocket evaluators for normal shots and adds cue-ball scratch detection. Its `ShotFoul` flags preserve simultaneous faults instead of collapsing them into one reason. A no-object-contact shot is reported once rather than also inventing a rail-after-contact foul, while a wrong first contact can legitimately coexist with a missing rail/pocket foul.
 
 During the break this resolver only reports cue-ball scratch; legal versus illegal break structure remains owned by `LegalBreakRule`. Applying ball-in-hand, changing turns, and presenting incoming-player options are intentionally left to later rule/orchestration slices. Physical infractions that are not yet represented by `ShotFacts`, such as an object ball leaving the table, must be added when the physics observation layer can produce those facts reliably.
+
+`BallInHandRule` applies the ball-in-hand consequence without introducing Unity physics concerns. A standard non-break foul advances to the incoming player and grants placement anywhere on the playing surface. A break foul exposes the restricted above-head-string path as an explicit choice instead of granting it automatically. Once gameplay confirms a valid cue-ball placement, the rule consumes the ball-in-hand state while preserving the same turn and match phase. Physical placement coordinates, overlap checks, and table-boundary validation remain gameplay/physics responsibilities.
 
 ## Tests
 
