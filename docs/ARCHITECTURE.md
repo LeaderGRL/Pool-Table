@@ -111,6 +111,14 @@ Break shots intentionally return a resolution that requires explicit break follo
 
 Future physics code should produce observations that can be translated into `ShotFacts`; it should not decide WPA outcomes itself. Presentation and networking adapters consume the `ShotResolution` / resulting `MatchState` from Gameplay instead of reading legacy singleton state.
 
+## Metric billiards scale
+
+`PoolTable.Physics.Configuration.BilliardsPhysicalSpecification` is the authoritative dimensional reference for the new simulation. Physics world space uses the Unity convention of one world unit per meter. Regulation pool balls therefore use a 0.05715 m diameter and 0.028575 m radius, while the 9-foot reference playing surface is 2.54 m by 1.27 m.
+
+The reference table-bed height is the midpoint of the WPA equipment range, 0.765175 m. Ball centers start one radius above that bed. The initial cue ball is placed on the head string and the object balls use a touching triangular rack whose apex is on the foot spot. These dimensions are data for later rigidbody, cloth, spin, rail, pocket, instrumentation, and host-authoritative networking work; those systems must not introduce a separate scene-unit conversion.
+
+The legacy table asset is scaled and centered in `PoolTable.unity` so its existing tabletop collision bounds represent the 2.54 m x 1.27 m physical reference. The ball container itself stays at unit scale and every ball collider is validated at the regulation diameter. Exact cushion response and pocket geometry remain separate Phase 4 tasks rather than being inferred from the legacy mesh during this scale migration.
+
 ## Tests
 
 `PoolTable.EditMode.Tests` and `PoolTable.PlayMode.Tests` explicitly reference all modern runtime assemblies. EditMode architecture tests validate the asmdef graph and the Unity-free `Core` boundary so accidental dependency changes fail early. Gameplay orchestration is exercised deterministically in EditMode, while the PoolTable scene PlayMode smoke builds a pre-shot snapshot from the real typed `BallIdentity` components and passes it through `MatchShotResolver` without relying on uncontrolled real-time PhysX outcomes.

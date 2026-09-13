@@ -9,6 +9,7 @@ using PoolTable.Core.Rules;
 using PoolTable.Core.Shots;
 using PoolTable.Gameplay.Balls;
 using PoolTable.Gameplay.Match;
+using PoolTable.Physics.Configuration;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
 using UnityEngine;
@@ -81,6 +82,100 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(resolution.State.PlayerOne.Group, Is.EqualTo(BallGroup.Solids));
             Assert.That(resolution.State.PlayerTwo.Group, Is.EqualTo(BallGroup.Stripes));
             Assert.That(resolution.ShooterContinues, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_UsesMetricBilliardsPhysicalScale()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var identities = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallIdentity>())
+                .Where(identity => identity != null)
+                .OrderBy(identity => identity.Id.Number)
+                .ToArray();
+
+            Assert.That(identities, Has.Length.EqualTo(16));
+
+            var ballsContainer = EnumerateSceneObjects(activeScene)
+                .First(gameObject => gameObject.name == "Balls");
+            Assert.That(ballsContainer.transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(ballsContainer.transform.lossyScale, Is.EqualTo(Vector3.one));
+
+            var tabletop = FindActiveSolidMeshColliderByName(activeScene, "tabletop");
+            Assert.That(tabletop, Is.Not.Null);
+            Assert.That(
+                tabletop.bounds.size.x,
+                Is.EqualTo(BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters).Within(0.001f));
+            Assert.That(
+                tabletop.bounds.size.z,
+                Is.EqualTo(BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters).Within(0.001f));
+            Assert.That(
+                tabletop.bounds.max.y,
+                Is.EqualTo(BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters).Within(0.001f));
+
+            foreach (var identity in identities)
+            {
+                var sphere = identity.GetComponent<SphereCollider>();
+                Assert.That(sphere, Is.Not.Null, $"Ball {identity.Id.Number} must keep a SphereCollider.");
+                Assert.That(
+                    sphere.bounds.size.x,
+                    Is.EqualTo(BilliardsPhysicalSpecification.BallDiameterMeters).Within(0.0001f),
+                    $"Ball {identity.Id.Number} must use the regulation diameter on X.");
+                Assert.That(
+                    sphere.bounds.size.y,
+                    Is.EqualTo(BilliardsPhysicalSpecification.BallDiameterMeters).Within(0.0001f),
+                    $"Ball {identity.Id.Number} must use the regulation diameter on Y.");
+                Assert.That(
+                    sphere.bounds.size.z,
+                    Is.EqualTo(BilliardsPhysicalSpecification.BallDiameterMeters).Within(0.0001f),
+                    $"Ball {identity.Id.Number} must use the regulation diameter on Z.");
+                Assert.That(
+                    identity.transform.position.y,
+                    Is.EqualTo(BilliardsPhysicalSpecification.BallCenterHeightMeters).Within(0.002f),
+                    $"Ball {identity.Id.Number} must rest one radius above the reference bed height.");
+            }
+
+            var cueBall = identities.Single(identity => identity.IsCueBall);
+            Assert.That(
+                cueBall.transform.position.x,
+                Is.EqualTo(BilliardsPhysicalSpecification.HeadStringX).Within(0.001f));
+            Assert.That(cueBall.transform.position.z, Is.EqualTo(0f).Within(0.001f));
+
+            var objectBalls = identities.Where(identity => !identity.IsCueBall).ToArray();
+            var apexX = objectBalls.Min(identity => identity.transform.position.x);
+            Assert.That(apexX, Is.EqualTo(BilliardsPhysicalSpecification.FootSpotX).Within(0.001f));
+
+            for (var firstIndex = 0; firstIndex < objectBalls.Length; firstIndex++)
+            {
+                var first = objectBalls[firstIndex].transform.position;
+                var hasTouchingNeighbor = false;
+
+                for (var secondIndex = 0; secondIndex < objectBalls.Length; secondIndex++)
+                {
+                    if (firstIndex == secondIndex)
+                    {
+                        continue;
+                    }
+
+                    var distance = Vector3.Distance(first, objectBalls[secondIndex].transform.position);
+                    Assert.That(
+                        distance,
+                        Is.GreaterThanOrEqualTo(BilliardsPhysicalSpecification.BallDiameterMeters - 0.0002f),
+                        "The initial rack must not contain overlapping balls.");
+
+                    if (Mathf.Abs(distance - BilliardsPhysicalSpecification.BallDiameterMeters) <= 0.0002f)
+                    {
+                        hasTouchingNeighbor = true;
+                    }
+                }
+
+                Assert.That(
+                    hasTouchingNeighbor,
+                    Is.True,
+                    $"Object ball {objectBalls[firstIndex].Id.Number} must touch the initial triangular rack.");
+            }
         }
 
         [UnityTest]
