@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using PoolTable.Core.Balls;
 using PoolTable.Core.Match;
@@ -198,6 +200,20 @@ namespace PoolTable.Tests.EditMode
         {
             Assert.Throws<ArgumentOutOfRangeException>(() =>
                 new BallInHandState(MatchPlayerId.PlayerOne, placementArea));
+        }
+
+        [Test]
+        public void PublicApi_CannotConstructActiveBallInHandStateDirectly()
+        {
+            Assert.That(typeof(BallInHandState).GetConstructors(), Is.Empty);
+
+            var publicMatchStateConstructors = typeof(MatchState)
+                .GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+
+            Assert.That(
+                publicMatchStateConstructors.Any(constructor =>
+                    constructor.GetParameters().Any(parameter => parameter.ParameterType == typeof(BallInHandState))),
+                Is.False);
         }
 
         private static FoulResolution ScratchFoul()

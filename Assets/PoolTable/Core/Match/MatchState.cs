@@ -14,7 +14,7 @@ namespace PoolTable.Core.Match
         {
         }
 
-        public MatchState(
+        internal MatchState(
             MatchPlayerState playerOne,
             MatchPlayerState playerTwo,
             MatchPlayerId currentPlayer,

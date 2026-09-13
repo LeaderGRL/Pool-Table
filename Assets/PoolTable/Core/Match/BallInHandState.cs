@@ -6,7 +6,7 @@ namespace PoolTable.Core.Match
     {
         private readonly MatchPlayerId recipient;
 
-        public BallInHandState(MatchPlayerId recipient, CueBallPlacementArea placementArea)
+        internal BallInHandState(MatchPlayerId recipient, CueBallPlacementArea placementArea)
         {
             MatchPlayerState.ValidatePlayerId(recipient);
 
