@@ -25,7 +25,8 @@ namespace PoolTable.Gameplay.Match
                     terminalFoul,
                     breakEvaluation: null,
                     requiresBreakFollowUp: false,
-                    calledShotSucceeded: WasCalledShotSuccessful(state, intent, facts, tableBeforeShot),
+                    calledShotSucceeded: terminalFoul.IsClean
+                        && WasCalledShotSuccessful(state, intent, facts, tableBeforeShot),
                     shooterContinues: false,
                     turnAdvanced: false,
                     groupAssigned: false);

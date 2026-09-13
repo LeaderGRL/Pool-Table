@@ -156,6 +156,34 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void Resolve_CalledEightBallWithFoulDoesNotReportSuccessfulCall()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var cueBall = new BallId(BallId.CueBallNumber);
+            var eightBall = new BallId(BallId.EightBallNumber);
+            var snapshot = Snapshot(8, 9, 10);
+            var intent = Intent(MatchPlayerId.PlayerOne, eightBall, PocketOne);
+            var facts = new ShotFacts(
+                eightBall,
+                new[]
+                {
+                    new PocketedBall(eightBall, PocketOne),
+                    new PocketedBall(cueBall, new PocketId(2)),
+                },
+                Array.Empty<BallId>());
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.MatchFinished, Is.True);
+            Assert.That(resolution.State.Result.Value.Winner, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(
+                resolution.State.Result.Value.HasReason(MatchEndReason.EightBallPocketedWithFoul),
+                Is.True);
+            Assert.That(resolution.FoulResolution.Has(ShotFoul.CueBallScratch), Is.True);
+            Assert.That(resolution.CalledShotSucceeded, Is.False);
+        }
+
+        [Test]
         public void Resolve_DoesNotMutateOriginalMatchState()
         {
             var state = OpenTableRule.EnterAfterBreak(MatchState.CreateInitial());
