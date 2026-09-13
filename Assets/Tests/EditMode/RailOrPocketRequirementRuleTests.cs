@@ -153,7 +153,9 @@ namespace PoolTable.Tests.EditMode
                 ? new BallId(firstObjectBallContact.Value)
                 : (BallId?)null;
 
-            var pocketed = Array.ConvertAll(pocketedBallNumbers, number => new BallId(number));
+            var pocketed = Array.ConvertAll(
+                pocketedBallNumbers,
+                number => new PocketedBall(new BallId(number), new PocketId(1)));
             var rails = Array.ConvertAll(railContactBallNumbers, number => new BallId(number));
 
             return new ShotFacts(firstContact, pocketed, rails);

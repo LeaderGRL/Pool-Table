@@ -65,11 +65,11 @@ The legacy `GameManager` remains the active scene controller for now. Connecting
 
 ## Shot intent and observed facts
 
-`PoolTable.Core.Shots` separates player commands from physics observations. `ShotIntent` records which match player is acting, a normalized table-plane `ShotDirection`, and normalized shot power. It contains no Unity input or physics types, so the same intent can later be produced by local input or a network client.
+`PoolTable.Core.Shots` separates player commands from physics observations. `ShotIntent` records which match player is acting, a normalized table-plane `ShotDirection`, normalized shot power, and an optional `CalledShot`. A call contains exactly the intended non-cue object ball and one stable `PocketId` from the table's six pockets. It contains no Unity input or physics types, so the same intent can later be produced by local input or a network client.
 
-`ShotFacts` records what was actually observed after a shot: the first object-ball contact, pocketed balls, and the distinct balls that contacted a rail after first object-ball contact. Its collections are defensively copied and exposed read-only so WPA rule evaluation can consume a stable snapshot.
+`ShotFacts` records what was actually observed after a shot: the first object-ball contact, each `PocketedBall` paired with the pocket that received it, and the distinct balls that contacted a rail after first object-ball contact. It also exposes the derived ball-only `PocketedBalls` list so existing break, foul, and rail rules remain focused on the facts they need. Its collections are defensively copied and exposed read-only so WPA rule evaluation can consume a stable snapshot. `WasPocketedIn` provides the deterministic ball-and-pocket lookup needed by later called-shot and 8-ball resolution.
 
-Legacy `PlayersShootState`, `WhiteBallCollision`, and `BallStateManager` remain unchanged for now. Later focused issues will translate Unity input into `ShotIntent`, collect physics observations into `ShotFacts`, and evaluate those facts through the Core rules layer.
+Legacy `PlayersShootState`, `WhiteBallCollision`, `BallStateManager`, and `Pocket` remain unchanged for now. Later focused issues will translate Unity input and call selection into `ShotIntent`, map the six scene pockets to `PocketId`, collect physics observations into `ShotFacts`, and evaluate those facts through the Core rules layer.
 
 ## WPA rules core
 

@@ -40,6 +40,34 @@ namespace PoolTable.Tests.EditMode
             Assert.That(intent.Player, Is.EqualTo(MatchPlayerId.PlayerTwo));
             Assert.That(intent.Direction, Is.EqualTo(direction));
             Assert.That(intent.NormalizedPower, Is.EqualTo(0.75f));
+            Assert.That(intent.HasCalledShot, Is.False);
+            Assert.That(intent.CalledShot, Is.Null);
+        }
+
+        [Test]
+        public void ShotIntent_CapturesOptionalCalledShot()
+        {
+            var calledShot = new CalledShot(new BallId(8), new PocketId(4));
+
+            var intent = new ShotIntent(
+                MatchPlayerId.PlayerOne,
+                new ShotDirection(1f, 0f),
+                0.6f,
+                calledShot);
+
+            Assert.That(intent.HasCalledShot, Is.True);
+            Assert.That(intent.CalledShot, Is.EqualTo(calledShot));
+        }
+
+        [Test]
+        public void ShotIntent_RejectsDefaultCalledShot()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new ShotIntent(
+                    MatchPlayerId.PlayerOne,
+                    new ShotDirection(1f, 0f),
+                    0.5f,
+                    default(CalledShot)));
         }
 
         [TestCase(0f)]
@@ -70,10 +98,50 @@ namespace PoolTable.Tests.EditMode
         [Test]
         public void ShotIntent_UsesValueEquality()
         {
-            var left = new ShotIntent(MatchPlayerId.PlayerOne, new ShotDirection(2f, 0f), 0.5f);
-            var right = new ShotIntent(MatchPlayerId.PlayerOne, new ShotDirection(1f, 0f), 0.5f);
+            var call = new CalledShot(new BallId(3), new PocketId(2));
+            var left = new ShotIntent(MatchPlayerId.PlayerOne, new ShotDirection(2f, 0f), 0.5f, call);
+            var right = new ShotIntent(MatchPlayerId.PlayerOne, new ShotDirection(1f, 0f), 0.5f, call);
 
             Assert.That(left, Is.EqualTo(right));
+        }
+
+        [Test]
+        public void ShotIntent_DifferentCalledShotsAreNotEqual()
+        {
+            var direction = new ShotDirection(1f, 0f);
+            var left = new ShotIntent(
+                MatchPlayerId.PlayerOne,
+                direction,
+                0.5f,
+                new CalledShot(new BallId(3), new PocketId(2)));
+            var right = new ShotIntent(
+                MatchPlayerId.PlayerOne,
+                direction,
+                0.5f,
+                new CalledShot(new BallId(3), new PocketId(5)));
+
+            Assert.That(left, Is.Not.EqualTo(right));
+        }
+
+        [TestCase(0)]
+        [TestCase(7)]
+        public void PocketId_RejectsUnknownPocket(int index)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new PocketId(index));
+        }
+
+        [Test]
+        public void CalledShot_RejectsCueBall()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new CalledShot(new BallId(BallId.CueBallNumber), new PocketId(1)));
+        }
+
+        [Test]
+        public void CalledShot_RejectsDefaultPocket()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new CalledShot(new BallId(8), default));
         }
 
         [Test]
@@ -81,12 +149,19 @@ namespace PoolTable.Tests.EditMode
         {
             var facts = new ShotFacts(
                 new BallId(3),
-                new[] { new BallId(3), new BallId(11) },
+                new[]
+                {
+                    new PocketedBall(new BallId(3), new PocketId(1)),
+                    new PocketedBall(new BallId(11), new PocketId(6)),
+                },
                 new[] { new BallId(3), new BallId(5), new BallId(3) });
 
             Assert.That(facts.HasObjectBallContact, Is.True);
             Assert.That(facts.FirstObjectBallContact, Is.EqualTo(new BallId(3)));
             Assert.That(facts.PocketedBalls, Is.EqualTo(new[] { new BallId(3), new BallId(11) }));
+            Assert.That(facts.PocketedBallEvents, Has.Count.EqualTo(2));
+            Assert.That(facts.WasPocketedIn(new BallId(3), new PocketId(1)), Is.True);
+            Assert.That(facts.WasPocketedIn(new BallId(3), new PocketId(2)), Is.False);
             Assert.That(facts.RailContactBallsAfterFirstObjectBallContact, Is.EqualTo(new[] { new BallId(3), new BallId(5) }));
             Assert.That(facts.CueBallPocketed, Is.False);
         }
@@ -96,7 +171,7 @@ namespace PoolTable.Tests.EditMode
         {
             var facts = new ShotFacts(
                 null,
-                new[] { new BallId(BallId.CueBallNumber) },
+                new[] { new PocketedBall(new BallId(BallId.CueBallNumber), new PocketId(3)) },
                 Array.Empty<BallId>());
 
             Assert.That(facts.CueBallPocketed, Is.True);
@@ -106,7 +181,7 @@ namespace PoolTable.Tests.EditMode
         public void ShotFacts_RejectsCueBallAsFirstObjectBallContact()
         {
             Assert.Throws<ArgumentException>(() =>
-                new ShotFacts(new BallId(BallId.CueBallNumber), Array.Empty<BallId>(), Array.Empty<BallId>()));
+                new ShotFacts(new BallId(BallId.CueBallNumber), Array.Empty<PocketedBall>(), Array.Empty<BallId>()));
         }
 
         [Test]
@@ -115,7 +190,21 @@ namespace PoolTable.Tests.EditMode
             Assert.Throws<ArgumentException>(() =>
                 new ShotFacts(
                     new BallId(1),
-                    new[] { new BallId(4), new BallId(4) },
+                    new[]
+                    {
+                        new PocketedBall(new BallId(4), new PocketId(1)),
+                        new PocketedBall(new BallId(4), new PocketId(2)),
+                    },
+                    Array.Empty<BallId>()));
+        }
+
+        [Test]
+        public void ShotFacts_RejectsDefaultPocketedBallObservation()
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new ShotFacts(
+                    new BallId(1),
+                    new[] { default(PocketedBall) },
                     Array.Empty<BallId>()));
         }
 
@@ -125,21 +214,25 @@ namespace PoolTable.Tests.EditMode
             Assert.Throws<ArgumentException>(() =>
                 new ShotFacts(
                     null,
-                    Array.Empty<BallId>(),
+                    Array.Empty<PocketedBall>(),
                     new[] { new BallId(4) }));
         }
 
         [Test]
         public void ShotFacts_DefensivelyCopiesObservedCollections()
         {
-            var pocketed = new List<BallId> { new BallId(2) };
+            var pocketed = new List<PocketedBall>
+            {
+                new PocketedBall(new BallId(2), new PocketId(1)),
+            };
             var rails = new List<BallId> { new BallId(6) };
             var facts = new ShotFacts(new BallId(2), pocketed, rails);
 
-            pocketed.Add(new BallId(9));
+            pocketed.Add(new PocketedBall(new BallId(9), new PocketId(2)));
             rails.Add(new BallId(10));
 
             Assert.That(facts.PocketedBalls, Is.EqualTo(new[] { new BallId(2) }));
+            Assert.That(facts.PocketedBallEvents, Has.Count.EqualTo(1));
             Assert.That(facts.RailContactBallsAfterFirstObjectBallContact, Is.EqualTo(new[] { new BallId(6) }));
         }
 
@@ -149,7 +242,18 @@ namespace PoolTable.Tests.EditMode
             Assert.Throws<ArgumentNullException>(() =>
                 new ShotFacts(new BallId(1), null, Array.Empty<BallId>()));
             Assert.Throws<ArgumentNullException>(() =>
-                new ShotFacts(new BallId(1), Array.Empty<BallId>(), null));
+                new ShotFacts(new BallId(1), Array.Empty<PocketedBall>(), null));
+        }
+
+        [Test]
+        public void ShotFacts_RejectsInvalidPocketLookup()
+        {
+            var facts = new ShotFacts(
+                new BallId(1),
+                Array.Empty<PocketedBall>(),
+                Array.Empty<BallId>());
+
+            Assert.Throws<ArgumentException>(() => facts.WasPocketedIn(new BallId(1), default));
         }
     }
 }

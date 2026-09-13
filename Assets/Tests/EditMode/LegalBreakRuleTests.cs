@@ -127,8 +127,20 @@ namespace PoolTable.Tests.EditMode
         {
             return new ShotFacts(
                 new BallId(firstObjectBallContact),
-                CreateBallIds(pocketedBallNumbers),
+                CreatePocketedBalls(pocketedBallNumbers),
                 CreateBallIds(railContactBallNumbers));
+        }
+
+        private static PocketedBall[] CreatePocketedBalls(int[] numbers)
+        {
+            var result = new PocketedBall[numbers.Length];
+
+            for (var index = 0; index < numbers.Length; index++)
+            {
+                result[index] = new PocketedBall(new BallId(numbers[index]), new PocketId(1));
+            }
+
+            return result;
         }
 
         private static BallId[] CreateBallIds(int[] numbers)

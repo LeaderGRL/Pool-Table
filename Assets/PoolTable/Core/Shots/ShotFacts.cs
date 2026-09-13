@@ -8,11 +8,12 @@ namespace PoolTable.Core.Shots
     public sealed class ShotFacts
     {
         private readonly ReadOnlyCollection<BallId> pocketedBalls;
+        private readonly ReadOnlyCollection<PocketedBall> pocketedBallEvents;
         private readonly ReadOnlyCollection<BallId> railContactBallsAfterFirstObjectBallContact;
 
         public ShotFacts(
             BallId? firstObjectBallContact,
-            IEnumerable<BallId> pocketedBalls,
+            IEnumerable<PocketedBall> pocketedBallEvents,
             IEnumerable<BallId> railContactBallsAfterFirstObjectBallContact)
         {
             if (firstObjectBallContact.HasValue && firstObjectBallContact.Value.IsCueBall)
@@ -21,7 +22,8 @@ namespace PoolTable.Core.Shots
             }
 
             FirstObjectBallContact = firstObjectBallContact;
-            this.pocketedBalls = CopyPocketedBalls(pocketedBalls);
+            this.pocketedBallEvents = CopyPocketedBalls(pocketedBallEvents);
+            pocketedBalls = CopyPocketedBallIds(this.pocketedBallEvents);
             this.railContactBallsAfterFirstObjectBallContact = CopyDistinctBalls(
                 railContactBallsAfterFirstObjectBallContact,
                 nameof(railContactBallsAfterFirstObjectBallContact));
@@ -39,6 +41,8 @@ namespace PoolTable.Core.Shots
         public bool HasObjectBallContact => FirstObjectBallContact.HasValue;
 
         public IReadOnlyList<BallId> PocketedBalls => pocketedBalls;
+
+        public IReadOnlyList<PocketedBall> PocketedBallEvents => pocketedBallEvents;
 
         public IReadOnlyList<BallId> RailContactBallsAfterFirstObjectBallContact => railContactBallsAfterFirstObjectBallContact;
 
@@ -58,24 +62,62 @@ namespace PoolTable.Core.Shots
             }
         }
 
-        private static ReadOnlyCollection<BallId> CopyPocketedBalls(IEnumerable<BallId> source)
+        public bool WasPocketedIn(BallId ball, PocketId pocket)
+        {
+            if (!pocket.IsValid)
+            {
+                throw new ArgumentException("Pocket lookup requires a valid table pocket.", nameof(pocket));
+            }
+
+            for (var index = 0; index < pocketedBallEvents.Count; index++)
+            {
+                var pocketedBall = pocketedBallEvents[index];
+                if (pocketedBall.Ball == ball && pocketedBall.Pocket == pocket)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static ReadOnlyCollection<PocketedBall> CopyPocketedBalls(IEnumerable<PocketedBall> source)
         {
             if (source == null)
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            var result = new List<BallId>();
+            var result = new List<PocketedBall>();
             var seenNumbers = new HashSet<int>();
 
-            foreach (var ball in source)
+            foreach (var pocketedBall in source)
             {
-                if (!seenNumbers.Add(ball.Number))
+                if (!pocketedBall.IsValid)
                 {
-                    throw new ArgumentException($"Ball {ball.Number} cannot be pocketed more than once in one shot.", nameof(source));
+                    throw new ArgumentException("Pocketed-ball observations must use valid table pockets.", nameof(source));
                 }
 
-                result.Add(ball);
+                if (!seenNumbers.Add(pocketedBall.Ball.Number))
+                {
+                    throw new ArgumentException(
+                        $"Ball {pocketedBall.Ball.Number} cannot be pocketed more than once in one shot.",
+                        nameof(source));
+                }
+
+                result.Add(pocketedBall);
+            }
+
+            return result.AsReadOnly();
+        }
+
+        private static ReadOnlyCollection<BallId> CopyPocketedBallIds(IReadOnlyList<PocketedBall> source)
+        {
+            var result = new List<BallId>(source.Count);
+
+            for (var index = 0; index < source.Count; index++)
+            {
+                result.Add(source[index].Ball);
             }
 
             return result.AsReadOnly();

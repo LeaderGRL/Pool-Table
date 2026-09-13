@@ -174,7 +174,9 @@ namespace PoolTable.Tests.EditMode
             BallId? first = firstContact.HasValue ? new BallId(firstContact.Value) : (BallId?)null;
             return new ShotFacts(
                 first,
-                Array.ConvertAll(pocketed, value => new BallId(value)),
+                Array.ConvertAll(
+                    pocketed,
+                    value => new PocketedBall(new BallId(value), new PocketId(1))),
                 Array.ConvertAll(rails, value => new BallId(value)));
         }
 
