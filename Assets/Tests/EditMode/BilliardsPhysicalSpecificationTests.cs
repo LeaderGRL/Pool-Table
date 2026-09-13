@@ -11,6 +11,9 @@ namespace PoolTable.Tests.EditMode
             Assert.That(BilliardsPhysicalSpecification.UnityUnitsPerMeter, Is.EqualTo(1f));
             Assert.That(BilliardsPhysicalSpecification.BallDiameterMeters, Is.EqualTo(0.05715f).Within(0.000001f));
             Assert.That(BilliardsPhysicalSpecification.BallRadiusMeters, Is.EqualTo(0.028575f).Within(0.000001f));
+            Assert.That(
+                BilliardsPhysicalSpecification.BallStoppedSpeedMetersPerSecond,
+                Is.EqualTo(0.01f).Within(0.000001f));
         }
 
         [Test]

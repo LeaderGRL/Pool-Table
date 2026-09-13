@@ -147,6 +147,24 @@ namespace PoolTable.Tests.PlayMode
             var apexX = objectBalls.Min(identity => identity.transform.position.x);
             Assert.That(apexX, Is.EqualTo(BilliardsPhysicalSpecification.FootSpotX).Within(0.001f));
 
+            var eightBall = objectBalls.Single(identity => identity.Id.Number == 8);
+            var thirdRowCenterX = BilliardsPhysicalSpecification.FootSpotX
+                + (2f * BilliardsPhysicalSpecification.TriangularRackRowSpacingMeters);
+            Assert.That(eightBall.transform.position.x, Is.EqualTo(thirdRowCenterX).Within(0.0002f));
+            Assert.That(eightBall.transform.position.z, Is.EqualTo(0f).Within(0.0002f));
+
+            var rearRowX = objectBalls.Max(identity => identity.transform.position.x);
+            var rearRow = objectBalls
+                .Where(identity => Mathf.Abs(identity.transform.position.x - rearRowX) <= 0.0002f)
+                .OrderBy(identity => identity.transform.position.z)
+                .ToArray();
+            Assert.That(rearRow, Has.Length.EqualTo(5));
+            Assert.That(rearRow.First().Id.Group, Is.Not.EqualTo(rearRow.Last().Id.Group));
+            Assert.That(
+                new[] { rearRow.First().Id.Group, rearRow.Last().Id.Group },
+                Is.EquivalentTo(new[] { BallGroup.Solids, BallGroup.Stripes }),
+                "The two rear corners of an 8-ball rack must contain opposite groups.");
+
             for (var firstIndex = 0; firstIndex < objectBalls.Length; firstIndex++)
             {
                 var first = objectBalls[firstIndex].transform.position;
@@ -245,8 +263,23 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cueBallCollision, Is.Not.Null, "The cue ball must keep WhiteBallCollision.");
             Assert.That(cueBallCollision.enabled, Is.True, "WhiteBallCollision must be enabled on the cue ball.");
 
-            var initialCueBallPosition = cueBall.transform.position;
+            var stoppedSpeedThreshold = (float)cueBallStateManager.GetType()
+                .GetField("StoppedSpeedThresholdMetersPerSecond")
+                .GetRawConstantValue();
+            Assert.That(
+                stoppedSpeedThreshold,
+                Is.EqualTo(BilliardsPhysicalSpecification.BallStoppedSpeedMetersPerSecond).Within(0.000001f),
+                "The legacy ball-state threshold must stay aligned with the metric physics specification.");
+
+            var cueBallMovingMethod = cueBallStateManager.GetType().GetMethod("isBallMoving");
             var cueBallRigidbody = cueBall.GetComponent<Rigidbody>();
+            cueBallRigidbody.linearVelocity = Vector3.right * 0.009f;
+            Assert.That((bool)cueBallMovingMethod.Invoke(cueBallStateManager, null), Is.False);
+            cueBallRigidbody.linearVelocity = Vector3.right * 0.011f;
+            Assert.That((bool)cueBallMovingMethod.Invoke(cueBallStateManager, null), Is.True);
+            cueBallRigidbody.linearVelocity = Vector3.zero;
+
+            var initialCueBallPosition = cueBall.transform.position;
             cueBall.transform.position = new Vector3(10f, 10f, 10f);
             cueBallRigidbody.linearVelocity = Vector3.one;
             cueBallRigidbody.angularVelocity = Vector3.one;

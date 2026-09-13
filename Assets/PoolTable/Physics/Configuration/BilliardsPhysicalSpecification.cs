@@ -8,6 +8,8 @@ namespace PoolTable.Physics.Configuration
 
         public const float BallRadiusMeters = BallDiameterMeters * 0.5f;
 
+        public const float BallStoppedSpeedMetersPerSecond = 0.01f;
+
         public const float NineFootPlayingSurfaceLengthMeters = 2.54f;
 
         public const float NineFootPlayingSurfaceWidthMeters = 1.27f;

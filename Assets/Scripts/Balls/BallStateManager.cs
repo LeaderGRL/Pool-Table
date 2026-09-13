@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class BallStateManager : MonoBehaviour
 {
+    // Keep the legacy controller metric without making Assembly-CSharp depend on the new Physics assembly.
+    public const float StoppedSpeedThresholdMetersPerSecond = 0.01f;
+
     public static BallStateManager instance;
 
     BallBaseState currentState;
@@ -68,7 +71,7 @@ public class BallStateManager : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        if((collision.gameObject.tag == "ball" || collision.gameObject.tag == "striped" || collision.gameObject.tag == "filled" || collision.gameObject.tag == "white") && collision.gameObject.GetComponent<Rigidbody>().linearVelocity.magnitude > 0.1f)
+        if((collision.gameObject.tag == "ball" || collision.gameObject.tag == "striped" || collision.gameObject.tag == "filled" || collision.gameObject.tag == "white") && collision.gameObject.GetComponent<Rigidbody>().linearVelocity.magnitude > StoppedSpeedThresholdMetersPerSecond)
         {
             currentState.OnCollisionEnter(this, collision);
         }
@@ -86,16 +89,8 @@ public class BallStateManager : MonoBehaviour
     }
 
     public bool isBallMoving(){
-        //Debug.Log(GetComponent<Rigidbody>().velocity.magnitude);
-        //return GetComponent<Rigidbody>().velocity.magnitude > 0.1f;
-        if (GetComponent<Rigidbody>().linearVelocity.magnitude > 0.1f)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return GetComponent<Rigidbody>().linearVelocity.magnitude
+            > StoppedSpeedThresholdMetersPerSecond;
     }
 
     public GameObject getParent()
