@@ -282,6 +282,63 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RailCollisionResponse_CoalescesOverlappingRailCollidersPerPhysicsStep()
+        {
+            var firstRailObject = new GameObject("CoalescedRailCollisionResponseTestRailA");
+            var secondRailObject = new GameObject("CoalescedRailCollisionResponseTestRailB");
+            var ballObject = new GameObject("CoalescedRailCollisionResponseTestBall");
+            var material = new PhysicsMaterial("CoalescedRailCollisionResponseTestMaterial")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+
+            try
+            {
+                foreach (var railObject in new[] { firstRailObject, secondRailObject })
+                {
+                    var railCollider = railObject.AddComponent<BoxCollider>();
+                    railCollider.size = new Vector3(0.1f, 0.2f, 0.5f);
+                    railCollider.sharedMaterial = material;
+                    railObject.AddComponent<RailSurface>();
+                    railObject.transform.position = new Vector3(0.2f, 0f, 0f);
+                }
+
+                var ballCollider = ballObject.AddComponent<SphereCollider>();
+                ballCollider.radius = BilliardsPhysicalSpecification.BallRadiusMeters;
+                ballCollider.sharedMaterial = material;
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+                rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+                rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                ballObject.AddComponent<BallRailCollisionResponse>();
+                ballObject.transform.position = Vector3.zero;
+                rigidbody.linearVelocity = Vector3.right * 2f;
+
+                for (var step = 0; step < 60 && rigidbody.linearVelocity.x >= 0f; step++)
+                {
+                    yield return new WaitForFixedUpdate();
+                }
+
+                Assert.That(rigidbody.linearVelocity.x, Is.LessThan(-1f));
+                Assert.That(
+                    Mathf.Abs(rigidbody.linearVelocity.x),
+                    Is.LessThan(2f),
+                    "Multiple rail colliders in one physics step must share one custom restitution response.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(ballObject);
+                Object.DestroyImmediate(firstRailObject);
+                Object.DestroyImmediate(secondRailObject);
+                Object.DestroyImmediate(material);
+            }
+        }
+
+        [UnityTest]
         public IEnumerator RailCollisionResponse_ReboundsRenewedImpactDuringPersistentContact()
         {
             var railObject = new GameObject("PersistentRailCollisionResponseTestRail");

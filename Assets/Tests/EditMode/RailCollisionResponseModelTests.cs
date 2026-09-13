@@ -270,12 +270,15 @@ namespace PoolTable.Tests.EditMode
                 var resolvedAngularVelocity = incomingAngularVelocity + otherAngularVelocityChange;
                 rigidbody.linearVelocity = resolvedLinearVelocity;
                 rigidbody.angularVelocity = resolvedAngularVelocity;
+                var previousResponse = new RailCollisionResponse(
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    false);
 
                 BallRailCollisionResponse.ApplyRailCorrection(
                     rigidbody,
-                    incomingLinearVelocity,
-                    incomingAngularVelocity,
                     nativeRailVelocityChange * rigidbody.mass,
+                    previousResponse,
                     response);
 
                 Assert.That(
@@ -284,6 +287,66 @@ namespace PoolTable.Tests.EditMode
                 Assert.That(
                     rigidbody.angularVelocity,
                     Is.EqualTo(response.AngularVelocity + otherAngularVelocityChange));
+            }
+            finally
+            {
+                Object.DestroyImmediate(ballObject);
+            }
+        }
+
+        [Test]
+        public void ApplyRailCorrection_CoalescesMultipleRailCollidersWithoutDoubleRestitution()
+        {
+            var ballObject = new GameObject("CoalescedRailCorrectionTestBall");
+
+            try
+            {
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+
+                var incomingLinearVelocity = new Vector3(2f, 0f, 0.5f);
+                var incomingAngularVelocity = Vector3.up * 3f;
+                var initialResponse = new RailCollisionResponse(
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    false);
+                var firstResponse = RailCollisionResponseModel.CalculateManifoldResponse(
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    new[] { Vector3.left },
+                    Radius);
+                var combinedResponse = RailCollisionResponseModel.CalculateManifoldResponse(
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    new[] { Vector3.left, Vector3.left },
+                    Radius);
+                var firstNativeVelocityChange = Vector3.left;
+                var secondNativeVelocityChange = Vector3.left;
+                var otherLinearVelocityChange = new Vector3(0f, 0f, 0.75f);
+                var otherAngularVelocityChange = Vector3.up * 4f;
+                rigidbody.linearVelocity = incomingLinearVelocity
+                                           + firstNativeVelocityChange
+                                           + secondNativeVelocityChange
+                                           + otherLinearVelocityChange;
+                rigidbody.angularVelocity = incomingAngularVelocity + otherAngularVelocityChange;
+
+                BallRailCollisionResponse.ApplyRailCorrection(
+                    rigidbody,
+                    firstNativeVelocityChange * rigidbody.mass,
+                    initialResponse,
+                    firstResponse);
+                BallRailCollisionResponse.ApplyRailCorrection(
+                    rigidbody,
+                    secondNativeVelocityChange * rigidbody.mass,
+                    firstResponse,
+                    combinedResponse);
+
+                Assert.That(
+                    rigidbody.linearVelocity,
+                    Is.EqualTo(combinedResponse.LinearVelocity + otherLinearVelocityChange));
+                Assert.That(
+                    rigidbody.angularVelocity,
+                    Is.EqualTo(combinedResponse.AngularVelocity + otherAngularVelocityChange));
             }
             finally
             {

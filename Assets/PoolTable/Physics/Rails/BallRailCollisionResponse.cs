@@ -8,10 +8,13 @@ namespace PoolTable.Physics.Rails
     [RequireComponent(typeof(Rigidbody))]
     public sealed class BallRailCollisionResponse : MonoBehaviour
     {
-        private readonly Dictionary<EntityId, int> _lastProcessedStepByCollider = new();
-        private readonly List<Vector3> _railNormals = new(4);
+        private readonly HashSet<EntityId> _processedRailColliders = new();
+        private readonly List<Vector3> _railNormals = new(8);
         private Rigidbody _rigidbody;
-        private int _physicsStep;
+        private Vector3 _stepIncomingLinearVelocity;
+        private Vector3 _stepIncomingAngularVelocity;
+        private RailCollisionResponse _stepAppliedResponse;
+        private Vector3 _pendingNativeRailImpulse;
 
         private void Awake()
         {
@@ -20,7 +23,9 @@ namespace PoolTable.Physics.Rails
 
         private void FixedUpdate()
         {
-            _physicsStep++;
+            _processedRailColliders.Clear();
+            _railNormals.Clear();
+            _pendingNativeRailImpulse = Vector3.zero;
         }
 
         private void OnCollisionEnter(Collision collision)
@@ -33,11 +38,6 @@ namespace PoolTable.Physics.Rails
             ProcessCollision(collision);
         }
 
-        private void OnCollisionExit(Collision collision)
-        {
-            _lastProcessedStepByCollider.Remove(collision.collider.GetEntityId());
-        }
-
         private void ProcessCollision(Collision collision)
         {
             if (!collision.collider.TryGetComponent<RailSurface>(out _)
@@ -47,28 +47,33 @@ namespace PoolTable.Physics.Rails
             }
 
             var colliderId = collision.collider.GetEntityId();
-            if (_lastProcessedStepByCollider.TryGetValue(colliderId, out var processedStep)
-                && processedStep == _physicsStep)
+            if (!_processedRailColliders.Add(colliderId))
             {
                 return;
             }
 
-            _lastProcessedStepByCollider[colliderId] = _physicsStep;
+            if (_railNormals.Count == 0)
+            {
+                // Unity reports the contacted body's velocity relative to this Rigidbody.
+                // Every static rail pair in this solver step shares the same incoming ball velocity.
+                _stepIncomingLinearVelocity = -collision.relativeVelocity;
+                _stepIncomingAngularVelocity = _rigidbody.angularVelocity;
+                _stepAppliedResponse = new RailCollisionResponse(
+                    _stepIncomingLinearVelocity,
+                    _stepIncomingAngularVelocity,
+                    false);
+            }
 
-            // Unity reports the contacted body's velocity relative to this Rigidbody.
-            // The response model needs the ball velocity relative to the static rail.
-            var incomingLinearVelocity = -collision.relativeVelocity;
-            var incomingAngularVelocity = _rigidbody.angularVelocity;
-
-            _railNormals.Clear();
             for (var index = 0; index < collision.contactCount; index++)
             {
                 _railNormals.Add(collision.GetContact(index).normal);
             }
 
+            _pendingNativeRailImpulse += collision.impulse;
+
             var response = RailCollisionResponseModel.CalculateManifoldResponse(
-                incomingLinearVelocity,
-                incomingAngularVelocity,
+                _stepIncomingLinearVelocity,
+                _stepIncomingAngularVelocity,
                 _railNormals,
                 BilliardsPhysicalSpecification.BallRadiusMeters);
             if (!response.WasApplied)
@@ -78,25 +83,27 @@ namespace PoolTable.Physics.Rails
 
             ApplyRailCorrection(
                 _rigidbody,
-                incomingLinearVelocity,
-                incomingAngularVelocity,
-                collision.impulse,
+                _pendingNativeRailImpulse,
+                _stepAppliedResponse,
                 response);
+
+            _pendingNativeRailImpulse = Vector3.zero;
+            _stepAppliedResponse = response;
         }
 
         internal static void ApplyRailCorrection(
             Rigidbody rigidbody,
-            Vector3 incomingLinearVelocity,
-            Vector3 incomingAngularVelocity,
             Vector3 nativeRailImpulse,
-            RailCollisionResponse response)
+            RailCollisionResponse previousResponse,
+            RailCollisionResponse combinedResponse)
         {
             // PhysX has already resolved this rail contact before the callback runs.
-            // Replace only this rail's native impulse so impulses from other contacts remain intact.
+            // Remove this collider's native impulse, then add only the change in the combined
+            // custom manifold response so multiple rail colliders cannot apply restitution twice.
             var nativeRailVelocityChange = nativeRailImpulse / rigidbody.mass;
-            var customRailVelocityChange = response.LinearVelocity - incomingLinearVelocity;
+            var customRailVelocityChange = combinedResponse.LinearVelocity - previousResponse.LinearVelocity;
             rigidbody.linearVelocity += customRailVelocityChange - nativeRailVelocityChange;
-            rigidbody.angularVelocity += response.AngularVelocity - incomingAngularVelocity;
+            rigidbody.angularVelocity += combinedResponse.AngularVelocity - previousResponse.AngularVelocity;
         }
     }
 }
