@@ -7,6 +7,8 @@ namespace PoolTable.Gameplay.Pockets
     [RequireComponent(typeof(BallIdentity), typeof(Rigidbody))]
     public sealed class BallPocketCapture : MonoBehaviour
     {
+        private const string LegacyPocketCaptureMessage = "OnModernPocketCaptured";
+
         public bool IsCaptured { get; private set; }
 
         public PocketId? CapturedPocket { get; private set; }
@@ -30,6 +32,8 @@ namespace PoolTable.Gameplay.Pockets
             IsCaptured = true;
             CapturedPocket = pocket;
 
+            // Temporary compatibility bridge while the active match flow still lives in Assembly-CSharp.
+            gameObject.SendMessage(LegacyPocketCaptureMessage, SendMessageOptions.DontRequireReceiver);
             gameObject.SetActive(false);
             return true;
         }
@@ -46,6 +50,11 @@ namespace PoolTable.Gameplay.Pockets
             CapturedPocket = null;
             gameObject.SetActive(true);
             rigidbody.WakeUp();
+        }
+
+        public void RestoreFromLegacyScratch(Vector3 worldPosition)
+        {
+            Restore(worldPosition);
         }
     }
 }

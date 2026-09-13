@@ -7,6 +7,7 @@ public class BallStateManager : MonoBehaviour
     // Keep the legacy controller metric without making Assembly-CSharp depend on the new Physics assembly.
     public const float StoppedSpeedThresholdMetersPerSecond = 0.01f;
 
+    private const string ModernPocketRestoreMessage = "RestoreFromLegacyScratch";
     private const float LegacyFixedTimestepSeconds = 0.02f;
     private const float LegacyUpwardVelocityRetentionPerTick = 0.3f;
 
@@ -91,6 +92,11 @@ public class BallStateManager : MonoBehaviour
     {
         currentState = state;
         state.EnterState(this);
+    }
+
+    public void OnModernPocketCaptured()
+    {
+        SwitchState(pocketedState);
     }
     
     public float GetVelocity()
@@ -273,6 +279,11 @@ public class BallStateManager : MonoBehaviour
             if (ball.Key.gameObject.tag == "white")
             {
                 var ballStateManager = ball.Key.GetComponent<BallStateManager>();
+                ball.Key.SetActive(true);
+                ball.Key.SendMessage(
+                    ModernPocketRestoreMessage,
+                    ballStateManager.initialPosition,
+                    SendMessageOptions.DontRequireReceiver);
                 ball.Key.gameObject.transform.position = ballStateManager.initialPosition;
                 ball.Key.gameObject.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
                 ball.Key.gameObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
