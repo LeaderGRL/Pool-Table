@@ -36,6 +36,16 @@ namespace PoolTable.Core.Rules
                 ? ShotFoul.CueBallScratch
                 : ShotFoul.None;
 
+            if (facts.CueBallDrivenOffTable)
+            {
+                fouls |= ShotFoul.CueBallOffTable;
+            }
+
+            if (HasObjectBallDrivenOffTable(facts))
+            {
+                fouls |= ShotFoul.ObjectBallOffTable;
+            }
+
             if (state.Phase == MatchPhase.Break)
             {
                 return new FoulResolution(fouls);
@@ -57,6 +67,19 @@ namespace PoolTable.Core.Rules
             }
 
             return new FoulResolution(fouls);
+        }
+
+        private static bool HasObjectBallDrivenOffTable(ShotFacts facts)
+        {
+            for (var index = 0; index < facts.BallsDrivenOffTable.Count; index++)
+            {
+                if (!facts.BallsDrivenOffTable[index].IsCueBall)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

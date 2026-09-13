@@ -120,7 +120,8 @@ Every rule must have EditMode tests before being connected to gameplay.
     Core now models ball-in-hand as immutable match state with an explicit recipient and cue-ball placement area. Standard fouls advance the turn and grant the incoming player placement anywhere, while the restricted above-head-string consequence remains an explicit post-break-foul choice. Placement consumption clears the state without mutating the previous snapshot, and match invariants reject invalid recipients, phases, or placement scopes. Reference: GitHub issue #44.
 23. `DONE` **Rules: Implement called-shot information**
     Core now models the WPA call-shot pair as an optional immutable object-ball + pocket declaration on `ShotIntent`. `ShotFacts` records each pocketed ball together with its stable six-pocket identifier while preserving the derived ball-only list used by existing rules. UI selection, Unity pocket mapping, shot legality, and 8-ball win/loss resolution remain separate follow-up work. Reference: GitHub issue #46.
-24. `TODO` **Rules: Implement eight-ball win and loss conditions**
+24. `DONE` **Rules: Implement eight-ball win and loss conditions**
+    Core now resolves terminal WPA 8-ball outcomes into immutable `MatchResult` data with winner, loser, and preserved end reasons. A legal called 8-ball after the shooter's group is cleared wins; foul, early pocket, wrong/uncalled pocket, or 8-ball off-table loses. `ShotFacts` now records balls driven off the table, foul resolution reports cue/object-ball off-table faults, finished match states require a result and reject later turn changes, and break-shot 8-ball outcomes remain intentionally non-terminal for separate break handling. Reference: GitHub issue #48.
 
 ## Phase 4 — new billiards physics
 

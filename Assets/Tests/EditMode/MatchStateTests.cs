@@ -16,6 +16,8 @@ namespace PoolTable.Tests.EditMode
             Assert.That(state.PlayerTwo, Is.EqualTo(new MatchPlayerState(MatchPlayerId.PlayerTwo)));
             Assert.That(state.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
             Assert.That(state.Phase, Is.EqualTo(MatchPhase.Break));
+            Assert.That(state.IsFinished, Is.False);
+            Assert.That(state.Result, Is.Null);
             Assert.That(state.PlayerOne.HasAssignedGroup, Is.False);
             Assert.That(state.PlayerTwo.HasAssignedGroup, Is.False);
         }
@@ -79,6 +81,84 @@ namespace PoolTable.Tests.EditMode
             Assert.That(initial.Phase, Is.EqualTo(MatchPhase.Break));
             Assert.That(openTable.Phase, Is.EqualTo(MatchPhase.OpenTable));
             Assert.That(openTable, Is.Not.SameAs(initial));
+        }
+
+        [Test]
+        public void WithResult_FinishesMatchWithoutMutatingOriginal()
+        {
+            var initial = MatchState.CreateInitial();
+            var result = new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerTwo,
+                MatchEndReason.EightBallLegallyPocketed);
+
+            var finished = initial.WithResult(result);
+
+            Assert.That(initial.IsFinished, Is.False);
+            Assert.That(initial.Result, Is.Null);
+            Assert.That(finished.Phase, Is.EqualTo(MatchPhase.Finished));
+            Assert.That(finished.IsFinished, Is.True);
+            Assert.That(finished.Result, Is.EqualTo(result));
+            Assert.That(finished.HasBallInHand, Is.False);
+        }
+
+        [Test]
+        public void FinishedMatch_RejectsTurnChanges()
+        {
+            var finished = MatchState.CreateInitial().WithResult(new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerTwo,
+                MatchEndReason.EightBallLegallyPocketed));
+
+            Assert.Throws<InvalidOperationException>(() =>
+                finished.WithCurrentPlayer(MatchPlayerId.PlayerTwo));
+            Assert.Throws<InvalidOperationException>(() => finished.AdvanceTurn());
+        }
+
+        [Test]
+        public void Constructor_RejectsFinishedPhaseWithoutResult()
+        {
+            Assert.Throws<ArgumentException>(() => new MatchState(
+                new MatchPlayerState(MatchPlayerId.PlayerOne),
+                new MatchPlayerState(MatchPlayerId.PlayerTwo),
+                MatchPlayerId.PlayerOne,
+                MatchPhase.Finished));
+        }
+
+        [Test]
+        public void MatchResult_RejectsSameWinnerAndLoser()
+        {
+            Assert.Throws<ArgumentException>(() => new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerOne,
+                MatchEndReason.EightBallLegallyPocketed));
+        }
+
+        [Test]
+        public void MatchResult_RejectsMissingReason()
+        {
+            Assert.Throws<ArgumentException>(() => new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerTwo,
+                MatchEndReason.None));
+        }
+
+        [Test]
+        public void MatchResult_RejectsUnknownReason()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerTwo,
+                (MatchEndReason)(1 << 20)));
+        }
+
+        [Test]
+        public void MatchResult_RejectsLegalWinCombinedWithLossReason()
+        {
+            Assert.Throws<ArgumentException>(() => new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerTwo,
+                MatchEndReason.EightBallLegallyPocketed | MatchEndReason.EightBallPocketedWithFoul));
         }
 
         [Test]
