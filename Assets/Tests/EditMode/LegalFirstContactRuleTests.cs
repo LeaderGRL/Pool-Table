@@ -131,7 +131,10 @@ namespace PoolTable.Tests.EditMode
         [Test]
         public void Evaluate_RejectsFinishedMatch()
         {
-            var state = MatchState.CreateInitial().WithPhase(MatchPhase.Finished);
+            var state = MatchState.CreateInitial().WithResult(new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerTwo,
+                MatchEndReason.EightBallLegallyPocketed));
 
             Assert.Throws<InvalidOperationException>(() => Evaluate(state, 1, StandardTable()));
         }

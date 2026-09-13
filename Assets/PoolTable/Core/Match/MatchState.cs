@@ -10,7 +10,7 @@ namespace PoolTable.Core.Match
             MatchPlayerState playerTwo,
             MatchPlayerId currentPlayer,
             MatchPhase phase)
-            : this(playerOne, playerTwo, currentPlayer, phase, BallInHandState.None)
+            : this(playerOne, playerTwo, currentPlayer, phase, BallInHandState.None, null)
         {
         }
 
@@ -20,6 +20,17 @@ namespace PoolTable.Core.Match
             MatchPlayerId currentPlayer,
             MatchPhase phase,
             BallInHandState ballInHand)
+            : this(playerOne, playerTwo, currentPlayer, phase, ballInHand, null)
+        {
+        }
+
+        internal MatchState(
+            MatchPlayerState playerOne,
+            MatchPlayerState playerTwo,
+            MatchPlayerId currentPlayer,
+            MatchPhase phase,
+            BallInHandState ballInHand,
+            MatchResult? result)
         {
             if (playerOne.Id != MatchPlayerId.PlayerOne)
             {
@@ -36,12 +47,14 @@ namespace PoolTable.Core.Match
             ValidateGroupAssignments(playerOne, playerTwo);
             ValidatePhaseConsistency(playerOne, playerTwo, phase);
             ValidateBallInHand(currentPlayer, phase, ballInHand);
+            ValidateResult(phase, result);
 
             PlayerOne = playerOne;
             PlayerTwo = playerTwo;
             CurrentPlayer = currentPlayer;
             Phase = phase;
             BallInHand = ballInHand;
+            Result = result;
         }
 
         public MatchPlayerState PlayerOne { get; }
@@ -54,7 +67,11 @@ namespace PoolTable.Core.Match
 
         public BallInHandState BallInHand { get; }
 
+        public MatchResult? Result { get; }
+
         public bool HasBallInHand => BallInHand.IsActive;
+
+        public bool IsFinished => Result.HasValue;
 
         public bool IsTableOpen => Phase == MatchPhase.OpenTable;
 
@@ -75,7 +92,12 @@ namespace PoolTable.Core.Match
 
         public MatchState WithCurrentPlayer(MatchPlayerId currentPlayer)
         {
-            return new MatchState(PlayerOne, PlayerTwo, currentPlayer, Phase, BallInHand);
+            if (IsFinished)
+            {
+                throw new InvalidOperationException("Current player cannot change after the match has finished.");
+            }
+
+            return new MatchState(PlayerOne, PlayerTwo, currentPlayer, Phase, BallInHand, Result);
         }
 
         public MatchState AdvanceTurn()
@@ -89,7 +111,12 @@ namespace PoolTable.Core.Match
 
         internal MatchState WithPhase(MatchPhase phase)
         {
-            return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, phase, BallInHand);
+            if (phase == MatchPhase.Finished)
+            {
+                throw new InvalidOperationException("Finished phase requires a match result.");
+            }
+
+            return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, phase, BallInHand, Result);
         }
 
         internal MatchState WithAssignedGroups(MatchPlayerId solidsPlayer)
@@ -108,12 +135,24 @@ namespace PoolTable.Core.Match
                 PlayerTwo.WithGroup(playerTwoGroup),
                 CurrentPlayer,
                 MatchPhase.GroupsAssigned,
-                BallInHand);
+                BallInHand,
+                Result);
         }
 
         internal MatchState WithBallInHand(BallInHandState ballInHand)
         {
-            return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, Phase, ballInHand);
+            return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, Phase, ballInHand, Result);
+        }
+
+        internal MatchState WithResult(MatchResult result)
+        {
+            return new MatchState(
+                PlayerOne,
+                PlayerTwo,
+                CurrentPlayer,
+                MatchPhase.Finished,
+                BallInHandState.None,
+                result);
         }
 
         public bool Equals(MatchState other)
@@ -123,7 +162,8 @@ namespace PoolTable.Core.Match
                 && PlayerTwo == other.PlayerTwo
                 && CurrentPlayer == other.CurrentPlayer
                 && Phase == other.Phase
-                && BallInHand == other.BallInHand;
+                && BallInHand == other.BallInHand
+                && Nullable.Equals(Result, other.Result);
         }
 
         public override bool Equals(object obj) => Equals(obj as MatchState);
@@ -137,6 +177,7 @@ namespace PoolTable.Core.Match
                 hashCode = (hashCode * 397) ^ (int)CurrentPlayer;
                 hashCode = (hashCode * 397) ^ (int)Phase;
                 hashCode = (hashCode * 397) ^ BallInHand.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Result?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }
@@ -214,6 +255,24 @@ namespace PoolTable.Core.Match
                 throw new ArgumentException(
                     "Above-head-string ball-in-hand is only valid immediately after a break foul.",
                     nameof(ballInHand));
+            }
+        }
+
+        private static void ValidateResult(MatchPhase phase, MatchResult? result)
+        {
+            if (phase == MatchPhase.Finished && !result.HasValue)
+            {
+                throw new ArgumentException("Finished matches require a match result.", nameof(result));
+            }
+
+            if (phase != MatchPhase.Finished && result.HasValue)
+            {
+                throw new ArgumentException("Only finished matches may carry a match result.", nameof(result));
+            }
+
+            if (result.HasValue)
+            {
+                MatchResult.Validate(result.Value);
             }
         }
     }

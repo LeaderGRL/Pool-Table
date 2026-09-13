@@ -102,7 +102,10 @@ namespace PoolTable.Tests.EditMode
         [Test]
         public void Evaluate_FinishedPhase_RejectsEvaluation()
         {
-            var state = MatchState.CreateInitial().WithPhase(MatchPhase.Finished);
+            var state = MatchState.CreateInitial().WithResult(new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerTwo,
+                MatchEndReason.EightBallLegallyPocketed));
             var facts = CreateFacts(1, Array.Empty<int>(), new[] { 2 });
 
             Assert.Throws<InvalidOperationException>(() =>

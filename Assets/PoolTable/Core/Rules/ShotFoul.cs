@@ -10,5 +10,7 @@ namespace PoolTable.Core.Rules
         NoObjectBallContact = 1 << 1,
         IllegalFirstContact = 1 << 2,
         NoRailOrPocketAfterObjectBallContact = 1 << 3,
+        CueBallOffTable = 1 << 4,
+        ObjectBallOffTable = 1 << 5,
     }
 }

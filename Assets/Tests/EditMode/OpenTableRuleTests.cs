@@ -64,7 +64,10 @@ namespace PoolTable.Tests.EditMode
         [Test]
         public void EnterAfterBreak_RejectsFinishedPhase()
         {
-            var finished = MatchState.CreateInitial().WithPhase(MatchPhase.Finished);
+            var finished = MatchState.CreateInitial().WithResult(new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerTwo,
+                MatchEndReason.EightBallLegallyPocketed));
 
             Assert.Throws<InvalidOperationException>(() => OpenTableRule.EnterAfterBreak(finished));
         }

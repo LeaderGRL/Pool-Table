@@ -138,9 +138,72 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void Evaluate_CueBallDrivenOffTable_ReportsCueBallOffTable()
+        {
+            var facts = Facts(
+                firstContact: 1,
+                pocketed: Array.Empty<int>(),
+                rails: new[] { 1 },
+                offTable: new[] { BallId.CueBallNumber });
+
+            var result = FoulResolutionRule.Evaluate(OpenTableState(), facts, StandardTable());
+
+            Assert.That(result.Has(ShotFoul.CueBallOffTable), Is.True);
+            Assert.That(result.Has(ShotFoul.CueBallScratch), Is.False);
+        }
+
+        [Test]
+        public void Evaluate_ObjectBallDrivenOffTable_ReportsObjectBallOffTable()
+        {
+            var facts = Facts(
+                firstContact: 1,
+                pocketed: Array.Empty<int>(),
+                rails: new[] { 1 },
+                offTable: new[] { 4 });
+
+            var result = FoulResolutionRule.Evaluate(OpenTableState(), facts, StandardTable());
+
+            Assert.That(result.Has(ShotFoul.ObjectBallOffTable), Is.True);
+        }
+
+        [Test]
+        public void Evaluate_ObjectBallDrivenOffTableMissingFromSnapshot_Throws()
+        {
+            var facts = Facts(
+                firstContact: 1,
+                pocketed: Array.Empty<int>(),
+                rails: new[] { 1 },
+                offTable: new[] { 4 });
+            var tableWithoutFour = new ObjectBallTableSnapshot(new[]
+            {
+                new BallId(1),
+                new BallId(2),
+                new BallId(3),
+                new BallId(8),
+            });
+
+            Assert.Throws<ArgumentException>(() =>
+                FoulResolutionRule.Evaluate(OpenTableState(), facts, tableWithoutFour));
+        }
+
+        [Test]
+        public void Evaluate_BreakObjectBallDrivenOffTable_ReportsObjectBallOffTableWithoutNormalShotRules()
+        {
+            var facts = Facts(
+                firstContact: 1,
+                pocketed: Array.Empty<int>(),
+                rails: Array.Empty<int>(),
+                offTable: new[] { 4 });
+
+            var result = FoulResolutionRule.Evaluate(MatchState.CreateInitial(), facts, StandardTable());
+
+            Assert.That(result.Fouls, Is.EqualTo(ShotFoul.ObjectBallOffTable));
+        }
+
+        [Test]
         public void Evaluate_FinishedMatch_Throws()
         {
-            var state = MatchState.CreateInitial().WithPhase(MatchPhase.Finished);
+            var state = FinishedState();
             var facts = Facts(1, Array.Empty<int>(), new[] { 1 });
 
             Assert.Throws<InvalidOperationException>(() =>
@@ -169,7 +232,11 @@ namespace PoolTable.Tests.EditMode
             return FoulResolutionRule.Evaluate(state, Facts(firstContact, pocketed, rails), table);
         }
 
-        private static ShotFacts Facts(int? firstContact, int[] pocketed, int[] rails)
+        private static ShotFacts Facts(
+            int? firstContact,
+            int[] pocketed,
+            int[] rails,
+            int[] offTable = null)
         {
             BallId? first = firstContact.HasValue ? new BallId(firstContact.Value) : (BallId?)null;
             return new ShotFacts(
@@ -177,12 +244,21 @@ namespace PoolTable.Tests.EditMode
                 Array.ConvertAll(
                     pocketed,
                     value => new PocketedBall(new BallId(value), new PocketId(1))),
-                Array.ConvertAll(rails, value => new BallId(value)));
+                Array.ConvertAll(rails, value => new BallId(value)),
+                Array.ConvertAll(offTable ?? Array.Empty<int>(), value => new BallId(value)));
         }
 
         private static MatchState OpenTableState()
         {
             return OpenTableRule.EnterAfterBreak(MatchState.CreateInitial());
+        }
+
+        private static MatchState FinishedState()
+        {
+            return MatchState.CreateInitial().WithResult(new MatchResult(
+                MatchPlayerId.PlayerOne,
+                MatchPlayerId.PlayerTwo,
+                MatchEndReason.EightBallLegallyPocketed));
         }
 
         private static MatchState AssignedState(BallGroup currentPlayerGroup)

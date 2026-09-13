@@ -178,6 +178,52 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void ShotFacts_CapturesBallsDrivenOffTable()
+        {
+            var offTable = new List<BallId>
+            {
+                new BallId(BallId.CueBallNumber),
+                new BallId(8),
+            };
+
+            var facts = new ShotFacts(
+                new BallId(1),
+                Array.Empty<PocketedBall>(),
+                new[] { new BallId(1) },
+                offTable);
+
+            offTable.Clear();
+
+            Assert.That(facts.BallsDrivenOffTable, Is.EqualTo(new[]
+            {
+                new BallId(BallId.CueBallNumber),
+                new BallId(8),
+            }));
+            Assert.That(facts.CueBallDrivenOffTable, Is.True);
+            Assert.That(facts.WasDrivenOffTable(new BallId(8)), Is.True);
+        }
+
+        [Test]
+        public void ShotFacts_RejectsDuplicateOffTableBall()
+        {
+            Assert.Throws<ArgumentException>(() => new ShotFacts(
+                new BallId(1),
+                Array.Empty<PocketedBall>(),
+                new[] { new BallId(1) },
+                new[] { new BallId(8), new BallId(8) }));
+        }
+
+        [Test]
+        public void ShotFacts_RejectsBallBothPocketedAndDrivenOffTable()
+        {
+            Assert.Throws<ArgumentException>(() => new ShotFacts(
+                new BallId(8),
+                new[] { new PocketedBall(new BallId(8), new PocketId(1)) },
+                Array.Empty<BallId>(),
+                new[] { new BallId(8) }));
+        }
+
+        [Test]
         public void ShotFacts_RejectsCueBallAsFirstObjectBallContact()
         {
             Assert.Throws<ArgumentException>(() =>
@@ -243,6 +289,12 @@ namespace PoolTable.Tests.EditMode
                 new ShotFacts(new BallId(1), null, Array.Empty<BallId>()));
             Assert.Throws<ArgumentNullException>(() =>
                 new ShotFacts(new BallId(1), Array.Empty<PocketedBall>(), null));
+            Assert.Throws<ArgumentNullException>(() =>
+                new ShotFacts(
+                    new BallId(1),
+                    Array.Empty<PocketedBall>(),
+                    Array.Empty<BallId>(),
+                    null));
         }
 
         [Test]
