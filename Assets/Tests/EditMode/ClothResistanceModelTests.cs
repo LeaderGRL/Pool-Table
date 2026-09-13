@@ -87,7 +87,7 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
-        public void CalculateMotionAfterStep_RollingResistancePreservesNoSlipAndSideSpin()
+        public void CalculateMotionAfterStep_RollingResistancePreservesNoSlipAndDecaysSideSpin()
         {
             const float initialSpeed = 1f;
             const float sideSpin = 3f;
@@ -108,8 +108,82 @@ namespace PoolTable.Tests.EditMode
 
             Assert.That(result.LinearVelocity.x, Is.EqualTo(0.98f).Within(0.000001f));
             Assert.That(result.LinearVelocity.y, Is.EqualTo(-0.2f).Within(0.000001f));
-            Assert.That(result.AngularVelocity.y, Is.EqualTo(sideSpin).Within(0.000001f));
+            Assert.That(result.AngularVelocity.y, Is.EqualTo(2.5f).Within(0.000001f));
             Assert.That(slip.magnitude, Is.LessThan(0.00001f));
+        }
+
+        [TestCase(0.2f)]
+        [TestCase(-0.2f)]
+        public void CalculateMotionAfterStep_SideSpinStopsWithoutReversing(float sideSpin)
+        {
+            const float initialSpeed = 1f;
+            var angularVelocity = new Vector3(
+                0f,
+                sideSpin,
+                -initialSpeed / BilliardsPhysicalSpecification.BallRadiusMeters);
+
+            var result = ClothResistanceModel.CalculateMotionAfterStep(
+                Vector3.right * initialSpeed,
+                angularVelocity,
+                BilliardsPhysicalSpecification.BallRadiusMeters,
+                1f);
+
+            Assert.That(result.AngularVelocity.y, Is.Zero.Within(0.000001f));
+        }
+
+        [Test]
+        public void CalculateMotionAfterStep_SideSpinDecayDoesNotAffectSlidingSolution()
+        {
+            const float initialSpeed = 2f;
+            const float sideSpin = 3f;
+            const float deltaTime = 0.1f;
+            var linearVelocity = Vector3.right * initialSpeed;
+
+            var withoutSideSpin = ClothResistanceModel.CalculateMotionAfterStep(
+                linearVelocity,
+                Vector3.zero,
+                BilliardsPhysicalSpecification.BallRadiusMeters,
+                deltaTime);
+            var withSideSpin = ClothResistanceModel.CalculateMotionAfterStep(
+                linearVelocity,
+                Vector3.up * sideSpin,
+                BilliardsPhysicalSpecification.BallRadiusMeters,
+                deltaTime);
+
+            Assert.That(withSideSpin.LinearVelocity, Is.EqualTo(withoutSideSpin.LinearVelocity));
+            Assert.That(withSideSpin.AngularVelocity.x, Is.EqualTo(withoutSideSpin.AngularVelocity.x).Within(0.000001f));
+            Assert.That(withSideSpin.AngularVelocity.z, Is.EqualTo(withoutSideSpin.AngularVelocity.z).Within(0.000001f));
+            Assert.That(withSideSpin.AngularVelocity.y, Is.EqualTo(2.5f).Within(0.000001f));
+        }
+
+        [Test]
+        public void CalculateMotionAfterStep_SideSpinDecayIsIndependentOfFixedStepSize()
+        {
+            const float initialSpeed = 1f;
+            var initial = new ClothMotionState(
+                Vector3.right * initialSpeed,
+                new Vector3(
+                    0f,
+                    3f,
+                    -initialSpeed / BilliardsPhysicalSpecification.BallRadiusMeters));
+
+            var oneStep = ClothResistanceModel.CalculateMotionAfterStep(
+                initial.LinearVelocity,
+                initial.AngularVelocity,
+                BilliardsPhysicalSpecification.BallRadiusMeters,
+                0.2f);
+
+            var repeatedSteps = initial;
+            for (var index = 0; index < 40; index++)
+            {
+                repeatedSteps = ClothResistanceModel.CalculateMotionAfterStep(
+                    repeatedSteps.LinearVelocity,
+                    repeatedSteps.AngularVelocity,
+                    BilliardsPhysicalSpecification.BallRadiusMeters,
+                    0.005f);
+            }
+
+            Assert.That(repeatedSteps.AngularVelocity.y, Is.EqualTo(oneStep.AngularVelocity.y).Within(0.00001f));
         }
 
         [Test]

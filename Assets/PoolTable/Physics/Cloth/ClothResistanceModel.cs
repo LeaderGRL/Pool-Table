@@ -40,14 +40,15 @@ namespace PoolTable.Physics.Cloth
             var slipSpeed = slipVelocity.magnitude;
             if (slipSpeed <= SlipSpeedEpsilonMetersPerSecond)
             {
-                return ApplyRollingResistance(motion, ballRadiusMeters, deltaTimeSeconds);
+                motion = ApplyRollingResistance(motion, ballRadiusMeters, deltaTimeSeconds);
+                return ApplySideSpinResistance(motion, deltaTimeSeconds);
             }
 
             var slidingDeceleration =
                 BilliardsSimulationConfiguration.ClothSlidingDecelerationMetersPerSecondSquared;
             if (slidingDeceleration <= 0f)
             {
-                return motion;
+                return ApplySideSpinResistance(motion, deltaTimeSeconds);
             }
 
             var translationalSpeedChangeToRolling =
@@ -65,7 +66,7 @@ namespace PoolTable.Physics.Cloth
                 motion = ApplyRollingResistance(motion, ballRadiusMeters, rollingDuration);
             }
 
-            return motion;
+            return ApplySideSpinResistance(motion, deltaTimeSeconds);
         }
 
         internal static Vector3 CalculateContactPointSlipVelocity(
@@ -126,6 +127,19 @@ namespace PoolTable.Physics.Cloth
                 rollingAngularVelocity.z);
 
             return new ClothMotionState(nextLinearVelocity, nextAngularVelocity);
+        }
+
+        private static ClothMotionState ApplySideSpinResistance(
+            ClothMotionState motion,
+            float deltaTimeSeconds)
+        {
+            var angularVelocity = motion.AngularVelocity;
+            angularVelocity.y = Mathf.MoveTowards(
+                angularVelocity.y,
+                0f,
+                BilliardsSimulationConfiguration.ClothSideSpinDecelerationRadiansPerSecondSquared * deltaTimeSeconds);
+
+            return new ClothMotionState(motion.LinearVelocity, angularVelocity);
         }
     }
 }

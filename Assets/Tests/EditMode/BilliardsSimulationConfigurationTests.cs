@@ -14,7 +14,10 @@ namespace PoolTable.Tests.EditMode
             Assert.That(BilliardsSimulationConfiguration.BallAngularDamping, Is.Zero);
             Assert.That(
                 BilliardsSimulationConfiguration.BallMaxAngularVelocityRadiansPerSecond,
-                Is.EqualTo(200f).Within(0.000001f));
+                Is.EqualTo(400f).Within(0.000001f));
+            Assert.That(
+                BilliardsSimulationConfiguration.CueTipMaximumContactOffsetRatio,
+                Is.EqualTo(0.5f).Within(0.000001f));
             Assert.That(
                 BilliardsSimulationConfiguration.BallCollisionDetectionMode,
                 Is.EqualTo(CollisionDetectionMode.ContinuousDynamic));
@@ -32,6 +35,9 @@ namespace PoolTable.Tests.EditMode
             Assert.That(
                 BilliardsSimulationConfiguration.ClothRollingDecelerationMetersPerSecondSquared,
                 Is.EqualTo(0.2f).Within(0.000001f));
+            Assert.That(
+                BilliardsSimulationConfiguration.ClothSideSpinDecelerationRadiansPerSecondSquared,
+                Is.EqualTo(5f).Within(0.000001f));
         }
 
         [Test]

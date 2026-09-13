@@ -32,6 +32,39 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void CueBallSpin_DefaultRepresentsCenteredContact()
+        {
+            var spin = default(CueBallSpin);
+
+            Assert.That(spin.Side, Is.Zero);
+            Assert.That(spin.Vertical, Is.Zero);
+            Assert.That(spin.IsCentered, Is.True);
+        }
+
+        [Test]
+        public void CueBallSpin_CapturesNormalizedCueTipContact()
+        {
+            var spin = new CueBallSpin(0.6f, -0.8f);
+
+            Assert.That(spin.Side, Is.EqualTo(0.6f).Within(0.000001f));
+            Assert.That(spin.Vertical, Is.EqualTo(-0.8f).Within(0.000001f));
+            Assert.That(spin.IsCentered, Is.False);
+        }
+
+        [Test]
+        public void CueBallSpin_RejectsContactOutsideNormalizedDisc()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new CueBallSpin(0.8f, 0.8f));
+        }
+
+        [TestCase(float.NaN, 0f)]
+        [TestCase(0f, float.PositiveInfinity)]
+        public void CueBallSpin_RejectsNonFiniteComponents(float side, float vertical)
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new CueBallSpin(side, vertical));
+        }
+
+        [Test]
         public void ShotIntent_CapturesPlayerDirectionAndNormalizedPower()
         {
             var direction = new ShotDirection(1f, 1f);
@@ -40,8 +73,26 @@ namespace PoolTable.Tests.EditMode
             Assert.That(intent.Player, Is.EqualTo(MatchPlayerId.PlayerTwo));
             Assert.That(intent.Direction, Is.EqualTo(direction));
             Assert.That(intent.NormalizedPower, Is.EqualTo(0.75f));
+            Assert.That(intent.Spin.IsCentered, Is.True);
+            Assert.That(intent.HasSpin, Is.False);
             Assert.That(intent.HasCalledShot, Is.False);
             Assert.That(intent.CalledShot, Is.Null);
+        }
+
+        [Test]
+        public void ShotIntent_CapturesCueBallSpin()
+        {
+            var spin = new CueBallSpin(0.3f, -0.4f);
+
+            var intent = new ShotIntent(
+                MatchPlayerId.PlayerOne,
+                new ShotDirection(1f, 0f),
+                0.5f,
+                spin);
+
+            Assert.That(intent.Spin, Is.EqualTo(spin));
+            Assert.That(intent.HasSpin, Is.True);
+            Assert.That(intent.HasCalledShot, Is.False);
         }
 
         [Test]
@@ -119,6 +170,24 @@ namespace PoolTable.Tests.EditMode
                 direction,
                 0.5f,
                 new CalledShot(new BallId(3), new PocketId(5)));
+
+            Assert.That(left, Is.Not.EqualTo(right));
+        }
+
+        [Test]
+        public void ShotIntent_DifferentCueBallSpinIsNotEqual()
+        {
+            var direction = new ShotDirection(1f, 0f);
+            var left = new ShotIntent(
+                MatchPlayerId.PlayerOne,
+                direction,
+                0.5f,
+                new CueBallSpin(0.25f, 0f));
+            var right = new ShotIntent(
+                MatchPlayerId.PlayerOne,
+                direction,
+                0.5f,
+                new CueBallSpin(-0.25f, 0f));
 
             Assert.That(left, Is.Not.EqualTo(right));
         }
