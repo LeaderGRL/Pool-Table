@@ -106,6 +106,15 @@ namespace PoolTable.Tests.PlayMode
 
             var tabletop = FindActiveSolidMeshColliderByName(activeScene, "tabletop");
             Assert.That(tabletop, Is.Not.Null);
+            Assert.That(tabletop.sharedMaterial, Is.Not.Null);
+            Assert.That(
+                tabletop.sharedMaterial.dynamicFriction,
+                Is.EqualTo(0f),
+                "The tabletop must not add native PhysX friction on top of explicit cloth resistance.");
+            Assert.That(
+                tabletop.sharedMaterial.staticFriction,
+                Is.EqualTo(0f),
+                "The tabletop must not reintroduce implicit sliding-to-rolling coupling before that model is implemented.");
             Assert.That(
                 tabletop.bounds.size.x,
                 Is.EqualTo(BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters).Within(0.001f));
