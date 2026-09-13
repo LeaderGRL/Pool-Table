@@ -13,6 +13,9 @@ namespace PoolTable.Tests.EditMode
             Assert.That(BilliardsSimulationConfiguration.BallLinearDamping, Is.Zero);
             Assert.That(BilliardsSimulationConfiguration.BallAngularDamping, Is.Zero);
             Assert.That(
+                BilliardsSimulationConfiguration.BallMaxAngularVelocityRadiansPerSecond,
+                Is.EqualTo(200f).Within(0.000001f));
+            Assert.That(
                 BilliardsSimulationConfiguration.BallCollisionDetectionMode,
                 Is.EqualTo(CollisionDetectionMode.ContinuousDynamic));
             Assert.That(
@@ -23,6 +26,9 @@ namespace PoolTable.Tests.EditMode
         [Test]
         public void Configuration_DefinesExplicitClothResistanceBaseline()
         {
+            Assert.That(
+                BilliardsSimulationConfiguration.ClothSlidingDecelerationMetersPerSecondSquared,
+                Is.EqualTo(1.962f).Within(0.000001f));
             Assert.That(
                 BilliardsSimulationConfiguration.ClothRollingDecelerationMetersPerSecondSquared,
                 Is.EqualTo(0.2f).Within(0.000001f));

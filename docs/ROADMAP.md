@@ -136,9 +136,10 @@ Every rule must have EditMode tests before being connected to gameplay.
 26. `DONE` **Physics: Rebuild ball rigidbody configuration**
     Define the authoritative metric rigidbody/simulation baseline: regulation-scale ball mass, continuous dynamic collision detection, interpolation, tighter contact tolerance, higher solver iteration counts, a lower sleep threshold, and a 0.005 s fixed timestep. PR #55 intentionally retained legacy 0.35/0.2 Rigidbody damping as a temporary turn-termination safeguard; step 27 supersedes that temporary resistance with the explicit cloth model. Legacy upward-velocity damping is scaled by elapsed fixed time so changing the physics tick rate preserves the previous 20 ms behavior, and shot strength is expressed as a mass-independent target velocity change so the 0.17 kg ball mass does not multiply shot speed. Scene and runtime tests prevent the 16 billiard balls, shot-speed behavior, timestep-sensitive damping, or project physics settings from drifting unexpectedly. Reference: GitHub issue #54 / PR #55.
 
-27. `PR` **Physics: Rebuild cloth friction model**
+27. `DONE` **Physics: Rebuild cloth friction model**
     Replace temporary Rigidbody damping with explicit mass-independent planar cloth resistance. The Physics layer owns a 0.2 m/s² rolling-deceleration baseline, applies it only while a ball has an upward supporting contact from the explicitly marked cloth surface, preserves vertical PhysX motion, and clamps low planar speed without reversal. All 16 scene balls use zero built-in linear/angular damping and carry the dedicated cloth-resistance component, while the tabletop uses a `ClothSurface` marker and dedicated zero-friction PhysicMaterial so unrelated contacts and native PhysX friction do not distort the explicit resistance model. Sliding-to-rolling coupling and spin remain separate follow-up work. Reference: GitHub issue #56 / PR #57.
-28. `TODO` **Physics: Implement sliding-to-rolling transition**
+28. `PR` **Physics: Implement sliding-to-rolling transition**
+    Model the velocity of the ball-cloth contact point explicitly and use kinetic cloth friction to couple planar translation with horizontal rotation until rolling without slipping is reached. The solid-sphere inertia relation drives contact slip to zero without overshoot, rolling resistance maintains the no-slip relationship after transition, vertical linear velocity and vertical-axis spin remain independent, and the ball Rigidbody angular-speed cap is raised so regulation-radius rolling is not clipped by Unity defaults. Cue-spin controls and spin decay remain in step 29. Reference: GitHub issue #58.
 29. `TODO` **Physics: Implement cue-ball spin**
 30. `TODO` **Physics: Implement rail collision response**
 31. `TODO` **Physics: Rebuild pocket detection and capture**
@@ -215,4 +216,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 4 work is **Physics: Rebuild cloth friction model** (issue #56). After it is merged, continue with **Physics: Implement sliding-to-rolling transition**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 4 work is **Physics: Implement sliding-to-rolling transition** (issue #58). After it is merged, continue with **Physics: Implement cue-ball spin**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
