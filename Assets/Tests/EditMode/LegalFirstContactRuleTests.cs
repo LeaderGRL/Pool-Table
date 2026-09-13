@@ -108,7 +108,7 @@ namespace PoolTable.Tests.EditMode
         [Test]
         public void Evaluate_NoFirstContactIsIllegal()
         {
-            var facts = new ShotFacts(null, Array.Empty<BallId>(), Array.Empty<BallId>());
+            var facts = new ShotFacts(null, Array.Empty<PocketedBall>(), Array.Empty<BallId>());
 
             var evaluation = LegalFirstContactRule.Evaluate(OpenTableState(), facts, StandardTable());
 
@@ -172,7 +172,7 @@ namespace PoolTable.Tests.EditMode
 
         private static ShotFacts FactsWithFirstContact(int ballNumber)
         {
-            return new ShotFacts(new BallId(ballNumber), Array.Empty<BallId>(), Array.Empty<BallId>());
+            return new ShotFacts(new BallId(ballNumber), Array.Empty<PocketedBall>(), Array.Empty<BallId>());
         }
 
         private static MatchState OpenTableState()

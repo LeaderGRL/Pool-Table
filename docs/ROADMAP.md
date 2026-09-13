@@ -118,7 +118,8 @@ Every rule must have EditMode tests before being connected to gameplay.
     Core now composes first-contact and rail/pocket evaluations with cue-ball scratch detection into a multi-foul result for all currently modeled shot facts. Break scratch is detected without duplicating `LegalBreakRule`; ball-in-hand and other consequences remain separate. Reference: GitHub issue #42.
 22. `DONE` **Rules: Implement ball-in-hand state**
     Core now models ball-in-hand as immutable match state with an explicit recipient and cue-ball placement area. Standard fouls advance the turn and grant the incoming player placement anywhere, while the restricted above-head-string consequence remains an explicit post-break-foul choice. Placement consumption clears the state without mutating the previous snapshot, and match invariants reject invalid recipients, phases, or placement scopes. Reference: GitHub issue #44.
-23. `TODO` **Rules: Implement called-shot information**
+23. `DONE` **Rules: Implement called-shot information**
+    Core now models the WPA call-shot pair as an optional immutable object-ball + pocket declaration on `ShotIntent`. `ShotFacts` records each pocketed ball together with its stable six-pocket identifier while preserving the derived ball-only list used by existing rules. UI selection, Unity pocket mapping, shot legality, and 8-ball win/loss resolution remain separate follow-up work. Reference: GitHub issue #46.
 24. `TODO` **Rules: Implement eight-ball win and loss conditions**
 
 ## Phase 4 — new billiards physics
