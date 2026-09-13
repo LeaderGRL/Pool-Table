@@ -167,6 +167,26 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void Evaluate_ObjectBallDrivenOffTableMissingFromSnapshot_Throws()
+        {
+            var facts = Facts(
+                firstContact: 1,
+                pocketed: Array.Empty<int>(),
+                rails: new[] { 1 },
+                offTable: new[] { 4 });
+            var tableWithoutFour = new ObjectBallTableSnapshot(new[]
+            {
+                new BallId(1),
+                new BallId(2),
+                new BallId(3),
+                new BallId(8),
+            });
+
+            Assert.Throws<ArgumentException>(() =>
+                FoulResolutionRule.Evaluate(OpenTableState(), facts, tableWithoutFour));
+        }
+
+        [Test]
         public void Evaluate_BreakObjectBallDrivenOffTable_ReportsObjectBallOffTableWithoutNormalShotRules()
         {
             var facts = Facts(

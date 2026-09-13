@@ -13,32 +13,7 @@ namespace PoolTable.Core.Match
 
         internal MatchResult(MatchPlayerId winner, MatchPlayerId loser, MatchEndReason reasons)
         {
-            MatchPlayerState.ValidatePlayerId(winner);
-            MatchPlayerState.ValidatePlayerId(loser);
-
-            if (winner == loser)
-            {
-                throw new ArgumentException("Match winner and loser must be different players.");
-            }
-
-            if (reasons == MatchEndReason.None)
-            {
-                throw new ArgumentException("A finished match requires at least one end reason.", nameof(reasons));
-            }
-
-            if ((reasons & ~KnownReasons) != MatchEndReason.None)
-            {
-                throw new ArgumentOutOfRangeException(nameof(reasons), reasons, "Match result contains an unknown end reason.");
-            }
-
-            var legalWin = (reasons & MatchEndReason.EightBallLegallyPocketed) != 0;
-            var lossReasons = reasons & ~MatchEndReason.EightBallLegallyPocketed;
-            if (legalWin && lossReasons != MatchEndReason.None)
-            {
-                throw new ArgumentException(
-                    "A legal eight-ball win cannot be combined with eight-ball loss reasons.",
-                    nameof(reasons));
-            }
+            Validate(winner, loser, reasons);
 
             Winner = winner;
             Loser = loser;
@@ -81,5 +56,40 @@ namespace PoolTable.Core.Match
         public static bool operator ==(MatchResult left, MatchResult right) => left.Equals(right);
 
         public static bool operator !=(MatchResult left, MatchResult right) => !left.Equals(right);
+
+        internal static void Validate(MatchResult result)
+        {
+            Validate(result.Winner, result.Loser, result.Reasons);
+        }
+
+        private static void Validate(MatchPlayerId winner, MatchPlayerId loser, MatchEndReason reasons)
+        {
+            MatchPlayerState.ValidatePlayerId(winner);
+            MatchPlayerState.ValidatePlayerId(loser);
+
+            if (winner == loser)
+            {
+                throw new ArgumentException("Match winner and loser must be different players.");
+            }
+
+            if (reasons == MatchEndReason.None)
+            {
+                throw new ArgumentException("A finished match requires at least one end reason.", nameof(reasons));
+            }
+
+            if ((reasons & ~KnownReasons) != MatchEndReason.None)
+            {
+                throw new ArgumentOutOfRangeException(nameof(reasons), reasons, "Match result contains an unknown end reason.");
+            }
+
+            var legalWin = (reasons & MatchEndReason.EightBallLegallyPocketed) != 0;
+            var lossReasons = reasons & ~MatchEndReason.EightBallLegallyPocketed;
+            if (legalWin && lossReasons != MatchEndReason.None)
+            {
+                throw new ArgumentException(
+                    "A legal eight-ball win cannot be combined with eight-ball loss reasons.",
+                    nameof(reasons));
+            }
+        }
     }
 }

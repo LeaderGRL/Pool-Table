@@ -32,6 +32,8 @@ namespace PoolTable.Core.Rules
                 throw new InvalidOperationException("Foul resolution cannot run after the match has finished.");
             }
 
+            ValidateDrivenOffTableFacts(facts, tableBeforeShot);
+
             var fouls = facts.CueBallPocketed
                 ? ShotFoul.CueBallScratch
                 : ShotFoul.None;
@@ -80,6 +82,22 @@ namespace PoolTable.Core.Rules
             }
 
             return false;
+        }
+
+        private static void ValidateDrivenOffTableFacts(
+            ShotFacts facts,
+            ObjectBallTableSnapshot tableBeforeShot)
+        {
+            for (var index = 0; index < facts.BallsDrivenOffTable.Count; index++)
+            {
+                var ball = facts.BallsDrivenOffTable[index];
+                if (!ball.IsCueBall && !tableBeforeShot.Contains(ball))
+                {
+                    throw new ArgumentException(
+                        $"Off-table ball {ball.Number} must exist in the pre-shot table snapshot.",
+                        nameof(facts));
+                }
+            }
         }
     }
 }

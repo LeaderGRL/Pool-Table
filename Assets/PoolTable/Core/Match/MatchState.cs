@@ -269,6 +269,11 @@ namespace PoolTable.Core.Match
             {
                 throw new ArgumentException("Only finished matches may carry a match result.", nameof(result));
             }
+
+            if (result.HasValue)
+            {
+                MatchResult.Validate(result.Value);
+            }
         }
     }
 }

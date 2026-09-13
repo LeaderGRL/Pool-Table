@@ -153,6 +153,13 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void WithResult_RejectsDefaultMatchResult()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                MatchState.CreateInitial().WithResult(default));
+        }
+
+        [Test]
         public void MatchResult_RejectsLegalWinCombinedWithLossReason()
         {
             Assert.Throws<ArgumentException>(() => new MatchResult(
