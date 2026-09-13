@@ -4,7 +4,11 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using PoolTable.Core.Balls;
+using PoolTable.Core.Match;
+using PoolTable.Core.Rules;
+using PoolTable.Core.Shots;
 using PoolTable.Gameplay.Balls;
+using PoolTable.Gameplay.Match;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
 using UnityEngine;
@@ -38,6 +42,45 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(SceneContainsObject(activeScene, "Balls"), Is.True);
             Assert.That(SceneContainsObject(activeScene, "PoolCue"), Is.True);
             Assert.That(SceneContainsObject(activeScene, "Player"), Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_TypedBallIdentitiesFeedGameplayShotResolution()
+        {
+            yield return LoadPoolTableScene();
+
+            var identities = Object.FindObjectsByType<BallIdentity>(FindObjectsSortMode.None);
+            var objectBalls = identities
+                .Select(identity => identity.Id)
+                .Where(id => !id.IsCueBall)
+                .OrderBy(id => id.Number)
+                .ToArray();
+
+            Assert.That(identities, Has.Length.EqualTo(16));
+            Assert.That(objectBalls, Has.Length.EqualTo(15));
+
+            var snapshot = new ObjectBallTableSnapshot(objectBalls);
+            var state = OpenTableRule.EnterAfterBreak(MatchState.CreateInitial());
+            var calledBall = objectBalls.First(id => id.Group == BallGroup.Solids);
+            var calledPocket = new PocketId(1);
+            var intent = new ShotIntent(
+                MatchPlayerId.PlayerOne,
+                new ShotDirection(1f, 0f),
+                0.5f,
+                new CalledShot(calledBall, calledPocket));
+            var facts = new ShotFacts(
+                calledBall,
+                new[] { new PocketedBall(calledBall, calledPocket) },
+                System.Array.Empty<BallId>());
+
+            var resolution = new MatchShotResolver().Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+            Assert.That(resolution.GroupAssigned, Is.True);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.GroupsAssigned));
+            Assert.That(resolution.State.PlayerOne.Group, Is.EqualTo(BallGroup.Solids));
+            Assert.That(resolution.State.PlayerTwo.Group, Is.EqualTo(BallGroup.Stripes));
+            Assert.That(resolution.ShooterContinues, Is.True);
         }
 
         [UnityTest]
