@@ -143,6 +143,52 @@ namespace PoolTable.Tests.EditMode
             Assert.That(result.AngularVelocity, Is.EqualTo(angularVelocity));
         }
 
+        [Test]
+        public void ApplyRailCorrection_PreservesOtherResolvedVelocityContributions()
+        {
+            var ballObject = new GameObject("RailCorrectionTestBall");
+
+            try
+            {
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+
+                var incomingLinearVelocity = new Vector3(2f, 0f, 0.5f);
+                var incomingAngularVelocity = Vector3.up * 3f;
+                var response = RailCollisionResponseModel.CalculateResponse(
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    Vector3.left,
+                    Radius);
+                var nativeRailVelocityChange = new Vector3(-1.75f, 0f, 0f);
+                var otherLinearVelocityChange = new Vector3(0f, 0f, 0.75f);
+                var otherAngularVelocityChange = Vector3.up * 4f;
+                var resolvedLinearVelocity =
+                    incomingLinearVelocity + nativeRailVelocityChange + otherLinearVelocityChange;
+                var resolvedAngularVelocity = incomingAngularVelocity + otherAngularVelocityChange;
+                rigidbody.linearVelocity = resolvedLinearVelocity;
+                rigidbody.angularVelocity = resolvedAngularVelocity;
+
+                BallRailCollisionResponse.ApplyRailCorrection(
+                    rigidbody,
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    nativeRailVelocityChange * rigidbody.mass,
+                    response);
+
+                Assert.That(
+                    rigidbody.linearVelocity,
+                    Is.EqualTo(response.LinearVelocity + otherLinearVelocityChange));
+                Assert.That(
+                    rigidbody.angularVelocity,
+                    Is.EqualTo(response.AngularVelocity + otherAngularVelocityChange));
+            }
+            finally
+            {
+                Object.DestroyImmediate(ballObject);
+            }
+        }
+
         private static float CalculateRailTangentialContactSpeed(
             Vector3 linearVelocity,
             Vector3 angularVelocity,
