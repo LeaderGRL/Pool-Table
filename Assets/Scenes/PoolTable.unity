@@ -2248,7 +2248,7 @@ MonoBehaviour:
   Cam: {fileID: 963194225}
   Cue_Camera: {fileID: 583553788}
   distance: 1.6666667
-  force: 6.6666667
+  maxShotSpeedMetersPerSecond: 6.6666667
   cueStrokeDistancePerInput: 0.02
   spin: 3
   CameraOffset: {x: 0, y: 0.06666667, z: 0}

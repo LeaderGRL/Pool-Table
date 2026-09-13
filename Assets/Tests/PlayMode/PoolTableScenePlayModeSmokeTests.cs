@@ -251,6 +251,61 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PoolTableScene_LegacyShotSpeedIsIndependentOfBallMass()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var playerController = FindActiveMonoBehaviourByTypeName(activeScene, "PlayersStateManagement");
+            Assert.That(playerController, Is.Not.Null);
+
+            var controllerType = playerController.GetType();
+            var maxShotSpeedMetersPerSecond =
+                (float)controllerType.GetField("maxShotSpeedMetersPerSecond").GetValue(playerController);
+            var shootState = controllerType.GetField("shootState").GetValue(playerController);
+            var applyShotVelocityChange = shootState.GetType().GetMethod(
+                "ApplyShotVelocityChange",
+                BindingFlags.Static | BindingFlags.NonPublic);
+
+            Assert.That(applyShotVelocityChange, Is.Not.Null);
+
+            var regulationProbe = new GameObject("RegulationMassShotProbe");
+            var legacyMassProbe = new GameObject("LegacyMassShotProbe");
+            var regulationRigidbody = regulationProbe.AddComponent<Rigidbody>();
+            var legacyRigidbody = legacyMassProbe.AddComponent<Rigidbody>();
+
+            regulationRigidbody.useGravity = false;
+            legacyRigidbody.useGravity = false;
+            regulationRigidbody.linearDamping = 0f;
+            legacyRigidbody.linearDamping = 0f;
+            regulationRigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+            legacyRigidbody.mass = 1f;
+
+            applyShotVelocityChange.Invoke(
+                null,
+                new object[] { regulationRigidbody, Vector3.right, 1f, maxShotSpeedMetersPerSecond });
+            applyShotVelocityChange.Invoke(
+                null,
+                new object[] { legacyRigidbody, Vector3.right, 1f, maxShotSpeedMetersPerSecond });
+
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(
+                regulationRigidbody.linearVelocity.x,
+                Is.EqualTo(maxShotSpeedMetersPerSecond).Within(0.0001f));
+            Assert.That(
+                legacyRigidbody.linearVelocity.x,
+                Is.EqualTo(maxShotSpeedMetersPerSecond).Within(0.0001f));
+            Assert.That(
+                regulationRigidbody.linearVelocity,
+                Is.EqualTo(legacyRigidbody.linearVelocity),
+                "Cue-ball shot speed must not change when Rigidbody mass changes.");
+
+            Object.Destroy(regulationProbe);
+            Object.Destroy(legacyMassProbe);
+        }
+
+        [UnityTest]
         public IEnumerator PoolTableScene_InitializesLegacyGameplayWiring()
         {
             yield return LoadPoolTableScene();
@@ -288,9 +343,9 @@ namespace PoolTable.Tests.PlayMode
                 Is.LessThan(BilliardsPhysicalSpecification.BallRadiusMeters),
                 "A single normalized cue stroke input must move less than one regulation ball radius.");
             Assert.That(
-                (float)controllerType.GetField("force").GetValue(playerController),
+                (float)controllerType.GetField("maxShotSpeedMetersPerSecond").GetValue(playerController),
                 Is.EqualTo(6.6666667f).Within(0.0001f),
-                "The legacy shot impulse must be scaled with the metric table setup.");
+                "The legacy cue controller must express shot strength as a metric target speed.");
             Assert.That(
                 (Vector3)controllerType.GetField("CameraOffset").GetValue(playerController),
                 Is.EqualTo(new Vector3(0f, 0.06666667f, 0f)),
