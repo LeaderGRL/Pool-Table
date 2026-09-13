@@ -295,6 +295,46 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void ApplyRailCorrection_PreservesNativeVerticalImpulse()
+        {
+            var ballObject = new GameObject("VerticalRailImpulseTestBall");
+
+            try
+            {
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+
+                var incomingLinearVelocity = new Vector3(2f, -0.4f, 0.5f);
+                var incomingAngularVelocity = Vector3.up * 3f;
+                var response = RailCollisionResponseModel.CalculateResponse(
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    Vector3.left,
+                    Radius);
+                var nativeRailVelocityChange = new Vector3(-1.75f, 0.65f, 0f);
+                rigidbody.linearVelocity = incomingLinearVelocity + nativeRailVelocityChange;
+                rigidbody.angularVelocity = incomingAngularVelocity;
+                var previousResponse = new RailCollisionResponse(
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    false);
+
+                BallRailCollisionResponse.ApplyRailCorrection(
+                    rigidbody,
+                    nativeRailVelocityChange * rigidbody.mass,
+                    previousResponse,
+                    response);
+
+                var expectedLinearVelocity = response.LinearVelocity + new Vector3(0f, nativeRailVelocityChange.y, 0f);
+                Assert.That(rigidbody.linearVelocity, Is.EqualTo(expectedLinearVelocity));
+                Assert.That(rigidbody.angularVelocity, Is.EqualTo(response.AngularVelocity));
+            }
+            finally
+            {
+                Object.DestroyImmediate(ballObject);
+            }
+        }
+        [Test]
         public void ApplyRailCorrection_CoalescesMultipleRailCollidersWithoutDoubleRestitution()
         {
             var ballObject = new GameObject("CoalescedRailCorrectionTestBall");

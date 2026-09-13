@@ -98,11 +98,15 @@ namespace PoolTable.Physics.Rails
             RailCollisionResponse combinedResponse)
         {
             // PhysX has already resolved this rail contact before the callback runs.
-            // Remove this collider's native impulse, then add only the change in the combined
-            // custom manifold response so multiple rail colliders cannot apply restitution twice.
+            // Replace only the planar portion owned by the custom rail model. PhysX keeps the
+            // vertical impulse from beveled or sloped faces while the manifold response stays XZ-only.
             var nativeRailVelocityChange = nativeRailImpulse / rigidbody.mass;
+            var planarNativeRailVelocityChange = new Vector3(
+                nativeRailVelocityChange.x,
+                0f,
+                nativeRailVelocityChange.z);
             var customRailVelocityChange = combinedResponse.LinearVelocity - previousResponse.LinearVelocity;
-            rigidbody.linearVelocity += customRailVelocityChange - nativeRailVelocityChange;
+            rigidbody.linearVelocity += customRailVelocityChange - planarNativeRailVelocityChange;
             rigidbody.angularVelocity += combinedResponse.AngularVelocity - previousResponse.AngularVelocity;
         }
     }
