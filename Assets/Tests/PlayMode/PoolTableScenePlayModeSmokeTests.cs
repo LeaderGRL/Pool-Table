@@ -106,6 +106,10 @@ namespace PoolTable.Tests.PlayMode
 
             var tabletop = FindActiveSolidMeshColliderByName(activeScene, "tabletop");
             Assert.That(tabletop, Is.Not.Null);
+            Assert.That(
+                tabletop.GetComponent<ClothSurface>(),
+                Is.Not.Null,
+                "The tabletop collider must explicitly identify itself as a cloth surface.");
             Assert.That(tabletop.sharedMaterial, Is.Not.Null);
             Assert.That(
                 tabletop.sharedMaterial.dynamicFriction,

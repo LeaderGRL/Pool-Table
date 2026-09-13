@@ -40,6 +40,11 @@ namespace PoolTable.Physics.Cloth
 
         private void RecordSupportingContact(Collision collision)
         {
+            if (!collision.collider.TryGetComponent<ClothSurface>(out _))
+            {
+                return;
+            }
+
             for (var index = 0; index < collision.contactCount; index++)
             {
                 if (Vector3.Dot(collision.GetContact(index).normal, Vector3.up) >= MinimumSupportingNormalDot)
