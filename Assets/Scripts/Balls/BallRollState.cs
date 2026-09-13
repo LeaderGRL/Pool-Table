@@ -137,6 +137,8 @@ public class BallRollState : BallBaseState
     {
         if (!ball.isBallMoving())
         {
+            ball.rb.linearVelocity = Vector3.zero;
+            ball.rb.angularVelocity = Vector3.zero;
             ball.SwitchState(ball.idleState);
         }
 

@@ -16,6 +16,7 @@ public class PlayersStateManagement : MonoBehaviour
     public GameObject Cue_Camera;
     public float distance;
     public float force;
+    public float cueStrokeDistancePerInput = 0.02f;
     public float spin;
     public Vector3 CameraOffset;
     public float CameraDistance;
@@ -138,11 +139,11 @@ public class PlayersStateManagement : MonoBehaviour
 
     public void shoot()
     {
-        float mouseAxisY = Input.GetAxis("Mouse Y");
+        float mouseAxisY = Mathf.Clamp(Input.GetAxis("Mouse Y"), -1f, 1f);
 
         lockCamera(true);
 
-        transform.position -= transform.forward * mouseAxisY * 0.3f;
+        transform.position -= transform.forward * mouseAxisY * cueStrokeDistancePerInput;
     }
 
     public void lockCamera(bool lockCamera)

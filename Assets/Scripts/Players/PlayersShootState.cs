@@ -36,8 +36,8 @@ public class PlayersShootState : PlayersBaseState
         float normalizedMousePosition = Mathf.Clamp(-Input.GetAxis("Mouse Y"), -1, 1);
 
 
-        // Convert the normalized mouse position to a shot strength between 0 and 100
-        float strength = normalizedMousePosition * 100;
+        // Convert the normalized mouse position to the configured metric shot impulse.
+        float strength = normalizedMousePosition * player.force;
 
 
         // Calculate the force to apply based on the direction and strength of the shot

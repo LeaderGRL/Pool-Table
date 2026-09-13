@@ -130,8 +130,8 @@ Every rule must have EditMode tests before being connected to gameplay.
 
 ## Phase 4 — new billiards physics
 
-25. `TODO` **Physics: Normalize table and ball physical scale**
-    Use physically coherent dimensions, with a standard ball diameter of approximately 57.15 mm.
+25. `PR` **Physics: Normalize table and ball physical scale**
+    The physics layer now defines one metric 9-foot table specification: one Unity world unit equals one meter, regulation balls use a 57.15 mm diameter, the reference playing surface is 2.54 m x 1.27 m, and the table bed uses a deterministic height inside the WPA equipment range. `PoolTable.unity` is normalized to that scale, including a legal WPA 8-ball rack layout, cue-ball head-string placement, metric cue-controller distance/stroke/impulse tuning, a metric stopped-ball threshold, and scratch recovery back to the cue ball's initial metric placement and idle state. EditMode specification tests and PlayMode scene-scale/gameplay regression coverage prevent future drift. Mass, collision detection, solver settings, timestep, friction, spin, rail response, and pocket rebuilding remain in their dedicated follow-up issues. Reference: GitHub issue #52.
 
 26. `TODO` **Physics: Rebuild ball rigidbody configuration**
     Configure mass, collision detection, solver settings, sleep thresholds, and fixed timestep for billiards.
@@ -214,4 +214,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-After the gameplay integration checkpoint for issue #50 is merged, begin Phase 4 with **Physics: Normalize table and ball physical scale**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+After issue #52 is merged, continue Phase 4 with **Physics: Rebuild ball rigidbody configuration**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.

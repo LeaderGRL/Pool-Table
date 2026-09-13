@@ -9,6 +9,7 @@ using PoolTable.Core.Rules;
 using PoolTable.Core.Shots;
 using PoolTable.Gameplay.Balls;
 using PoolTable.Gameplay.Match;
+using PoolTable.Physics.Configuration;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
 using UnityEngine;
@@ -84,6 +85,118 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PoolTableScene_UsesMetricBilliardsPhysicalScale()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var identities = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallIdentity>())
+                .Where(identity => identity != null)
+                .OrderBy(identity => identity.Id.Number)
+                .ToArray();
+
+            Assert.That(identities, Has.Length.EqualTo(16));
+
+            var ballsContainer = EnumerateSceneObjects(activeScene)
+                .First(gameObject => gameObject.name == "Balls");
+            Assert.That(ballsContainer.transform.position, Is.EqualTo(Vector3.zero));
+            Assert.That(ballsContainer.transform.lossyScale, Is.EqualTo(Vector3.one));
+
+            var tabletop = FindActiveSolidMeshColliderByName(activeScene, "tabletop");
+            Assert.That(tabletop, Is.Not.Null);
+            Assert.That(
+                tabletop.bounds.size.x,
+                Is.EqualTo(BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters).Within(0.001f));
+            Assert.That(
+                tabletop.bounds.size.z,
+                Is.EqualTo(BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters).Within(0.001f));
+            Assert.That(
+                tabletop.bounds.max.y,
+                Is.EqualTo(BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters).Within(0.001f));
+
+            foreach (var identity in identities)
+            {
+                var sphere = identity.GetComponent<SphereCollider>();
+                Assert.That(sphere, Is.Not.Null, $"Ball {identity.Id.Number} must keep a SphereCollider.");
+                Assert.That(
+                    sphere.bounds.size.x,
+                    Is.EqualTo(BilliardsPhysicalSpecification.BallDiameterMeters).Within(0.0001f),
+                    $"Ball {identity.Id.Number} must use the regulation diameter on X.");
+                Assert.That(
+                    sphere.bounds.size.y,
+                    Is.EqualTo(BilliardsPhysicalSpecification.BallDiameterMeters).Within(0.0001f),
+                    $"Ball {identity.Id.Number} must use the regulation diameter on Y.");
+                Assert.That(
+                    sphere.bounds.size.z,
+                    Is.EqualTo(BilliardsPhysicalSpecification.BallDiameterMeters).Within(0.0001f),
+                    $"Ball {identity.Id.Number} must use the regulation diameter on Z.");
+                Assert.That(
+                    identity.transform.position.y,
+                    Is.EqualTo(BilliardsPhysicalSpecification.BallCenterHeightMeters).Within(0.002f),
+                    $"Ball {identity.Id.Number} must rest one radius above the reference bed height.");
+            }
+
+            var cueBall = identities.Single(identity => identity.IsCueBall);
+            Assert.That(
+                cueBall.transform.position.x,
+                Is.EqualTo(BilliardsPhysicalSpecification.HeadStringX).Within(0.001f));
+            Assert.That(cueBall.transform.position.z, Is.EqualTo(0f).Within(0.001f));
+
+            var objectBalls = identities.Where(identity => !identity.IsCueBall).ToArray();
+            var apexX = objectBalls.Min(identity => identity.transform.position.x);
+            Assert.That(apexX, Is.EqualTo(BilliardsPhysicalSpecification.FootSpotX).Within(0.001f));
+
+            var eightBall = objectBalls.Single(identity => identity.Id.Number == 8);
+            var thirdRowCenterX = BilliardsPhysicalSpecification.FootSpotX
+                + (2f * BilliardsPhysicalSpecification.TriangularRackRowSpacingMeters);
+            Assert.That(eightBall.transform.position.x, Is.EqualTo(thirdRowCenterX).Within(0.0002f));
+            Assert.That(eightBall.transform.position.z, Is.EqualTo(0f).Within(0.0002f));
+
+            var rearRowX = objectBalls.Max(identity => identity.transform.position.x);
+            var rearRow = objectBalls
+                .Where(identity => Mathf.Abs(identity.transform.position.x - rearRowX) <= 0.0002f)
+                .OrderBy(identity => identity.transform.position.z)
+                .ToArray();
+            Assert.That(rearRow, Has.Length.EqualTo(5));
+            Assert.That(rearRow.First().Id.Group, Is.Not.EqualTo(rearRow.Last().Id.Group));
+            Assert.That(
+                new[] { rearRow.First().Id.Group, rearRow.Last().Id.Group },
+                Is.EquivalentTo(new[] { BallGroup.Solids, BallGroup.Stripes }),
+                "The two rear corners of an 8-ball rack must contain opposite groups.");
+
+            for (var firstIndex = 0; firstIndex < objectBalls.Length; firstIndex++)
+            {
+                var first = objectBalls[firstIndex].transform.position;
+                var hasTouchingNeighbor = false;
+
+                for (var secondIndex = 0; secondIndex < objectBalls.Length; secondIndex++)
+                {
+                    if (firstIndex == secondIndex)
+                    {
+                        continue;
+                    }
+
+                    var distance = Vector3.Distance(first, objectBalls[secondIndex].transform.position);
+                    Assert.That(
+                        distance,
+                        Is.GreaterThanOrEqualTo(BilliardsPhysicalSpecification.BallDiameterMeters - 0.0002f),
+                        "The initial rack must not contain overlapping balls.");
+
+                    if (Mathf.Abs(distance - BilliardsPhysicalSpecification.BallDiameterMeters) <= 0.0002f)
+                    {
+                        hasTouchingNeighbor = true;
+                    }
+                }
+
+                Assert.That(
+                    hasTouchingNeighbor,
+                    Is.True,
+                    $"Object ball {objectBalls[firstIndex].Id.Number} must touch the initial triangular rack.");
+            }
+        }
+
+        [UnityTest]
         public IEnumerator PoolTableScene_InitializesLegacyGameplayWiring()
         {
             yield return LoadPoolTableScene();
@@ -105,6 +218,34 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(playerCollider.enabled, Is.True, "The active player controller collider must be enabled.");
             Assert.That(playerCollider.isTrigger, Is.False, "The active player controller collider must remain solid.");
 
+            var controllerType = playerController.GetType();
+            Assert.That(
+                (float)controllerType.GetField("distance").GetValue(playerController),
+                Is.EqualTo(1.6666667f).Within(0.0001f),
+                "The legacy cue controller distance must use the metric table scale.");
+            var cueStrokeDistancePerInput =
+                (float)controllerType.GetField("cueStrokeDistancePerInput").GetValue(playerController);
+            Assert.That(
+                cueStrokeDistancePerInput,
+                Is.EqualTo(0.02f).Within(0.0001f),
+                "The cue stroke must use the metric controller scale.");
+            Assert.That(
+                cueStrokeDistancePerInput,
+                Is.LessThan(BilliardsPhysicalSpecification.BallRadiusMeters),
+                "A single normalized cue stroke input must move less than one regulation ball radius.");
+            Assert.That(
+                (float)controllerType.GetField("force").GetValue(playerController),
+                Is.EqualTo(6.6666667f).Within(0.0001f),
+                "The legacy shot impulse must be scaled with the metric table setup.");
+            Assert.That(
+                (Vector3)controllerType.GetField("CameraOffset").GetValue(playerController),
+                Is.EqualTo(new Vector3(0f, 0.06666667f, 0f)),
+                "The cue camera offset must be scaled with the metric cue setup.");
+            Assert.That(
+                playerController.transform.lossyScale.x,
+                Is.EqualTo(0.01f).Within(0.0001f),
+                "The active cue model must be scaled to approximately 1.5 meters.");
+
             var cueBall = GetPublicGameObjectField(playerController, "WhiteBall");
             var spectateCamera = GetPublicGameObjectField(playerController, "Cam");
             var cueCamera = GetPublicGameObjectField(playerController, "Cue_Camera");
@@ -121,6 +262,50 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cueBallStateManager.enabled, Is.True);
             Assert.That(cueBallCollision, Is.Not.Null, "The cue ball must keep WhiteBallCollision.");
             Assert.That(cueBallCollision.enabled, Is.True, "WhiteBallCollision must be enabled on the cue ball.");
+
+            var stoppedSpeedThreshold = (float)cueBallStateManager.GetType()
+                .GetField("StoppedSpeedThresholdMetersPerSecond")
+                .GetRawConstantValue();
+            Assert.That(
+                stoppedSpeedThreshold,
+                Is.EqualTo(BilliardsPhysicalSpecification.BallStoppedSpeedMetersPerSecond).Within(0.000001f),
+                "The legacy ball-state threshold must stay aligned with the metric physics specification.");
+
+            var cueBallMovingMethod = cueBallStateManager.GetType().GetMethod("isBallMoving");
+            var cueBallRigidbody = cueBall.GetComponent<Rigidbody>();
+            cueBallRigidbody.linearVelocity = Vector3.right * 0.009f;
+            Assert.That((bool)cueBallMovingMethod.Invoke(cueBallStateManager, null), Is.False);
+            cueBallRigidbody.linearVelocity = Vector3.right * 0.011f;
+            Assert.That((bool)cueBallMovingMethod.Invoke(cueBallStateManager, null), Is.True);
+            cueBallRigidbody.linearVelocity = Vector3.zero;
+
+            var initialCueBallPosition = cueBall.transform.position;
+            cueBall.transform.position = new Vector3(10f, 10f, 10f);
+            cueBallRigidbody.linearVelocity = Vector3.one;
+            cueBallRigidbody.angularVelocity = Vector3.one;
+            var ballManagerType = cueBallStateManager.GetType();
+            var currentBallStateField = ballManagerType.GetField(
+                "currentState",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            var pocketedState = ballManagerType.GetField("pocketedState").GetValue(cueBallStateManager);
+            currentBallStateField.SetValue(cueBallStateManager, pocketedState);
+            var legacyBallManager = FindActiveMonoBehaviourByTypeName(activeScene, "BallStateManager");
+            legacyBallManager.GetType().GetMethod("addPocketedBall").Invoke(
+                legacyBallManager,
+                new object[] { cueBall, 1 });
+            legacyBallManager.GetType().GetMethod("resetWhiteBallFromPocket").Invoke(
+                legacyBallManager,
+                null);
+            Assert.That(
+                Vector3.Distance(cueBall.transform.position, initialCueBallPosition),
+                Is.LessThan(0.0001f),
+                "The cue ball must return to its metric initial position after a scratch.");
+            Assert.That(cueBallRigidbody.linearVelocity, Is.EqualTo(Vector3.zero));
+            Assert.That(cueBallRigidbody.angularVelocity, Is.EqualTo(Vector3.zero));
+            Assert.That(
+                currentBallStateField.GetValue(cueBallStateManager).GetType().Name,
+                Is.EqualTo("BallIdleState"),
+                "The cue ball must leave BallPocketedState after scratch recovery.");
 
             Assert.That(spectateCamera, Is.Not.Null, "PlayersStateManagement.Cam must remain wired.");
             Assert.That(spectateCamera.activeInHierarchy, Is.True, "The spectate camera must be active in the scene hierarchy.");
