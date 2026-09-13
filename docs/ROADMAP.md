@@ -133,8 +133,8 @@ Every rule must have EditMode tests before being connected to gameplay.
 25. `PR` **Physics: Normalize table and ball physical scale**
     The physics layer now defines one metric 9-foot table specification: one Unity world unit equals one meter, regulation balls use a 57.15 mm diameter, the reference playing surface is 2.54 m x 1.27 m, and the table bed uses a deterministic height inside the WPA equipment range. `PoolTable.unity` is normalized to that scale, including a legal WPA 8-ball rack layout, cue-ball head-string placement, metric cue-controller distance/stroke/impulse tuning, a metric stopped-ball threshold, and scratch recovery back to the cue ball's initial metric placement and idle state. EditMode specification tests and PlayMode scene-scale/gameplay regression coverage prevent future drift. Mass, collision detection, solver settings, timestep, friction, spin, rail response, and pocket rebuilding remain in their dedicated follow-up issues. Reference: GitHub issue #52.
 
-26. `TODO` **Physics: Rebuild ball rigidbody configuration**
-    Configure mass, collision detection, solver settings, sleep thresholds, and fixed timestep for billiards.
+26. `PR` **Physics: Rebuild ball rigidbody configuration**
+    Define the authoritative metric rigidbody/simulation baseline: regulation-scale ball mass, zero hidden damping, continuous dynamic collision detection, interpolation, tighter contact tolerance, higher solver iteration counts, a lower sleep threshold, and a 0.005 s fixed timestep. Scene and runtime tests prevent the 16 billiard balls or project physics settings from drifting back to the legacy configuration. Reference: GitHub issue #54.
 
 27. `TODO` **Physics: Rebuild cloth friction model**
 28. `TODO` **Physics: Implement sliding-to-rolling transition**

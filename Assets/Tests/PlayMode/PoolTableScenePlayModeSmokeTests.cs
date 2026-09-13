@@ -197,6 +197,60 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PoolTableScene_UsesBilliardsRigidbodySimulationConfiguration()
+        {
+            yield return LoadPoolTableScene();
+
+            Assert.That(
+                Time.fixedDeltaTime,
+                Is.EqualTo(BilliardsSimulationConfiguration.FixedTimestepSeconds).Within(0.000001f));
+            Assert.That(
+                UnityEngine.Physics.sleepThreshold,
+                Is.EqualTo(BilliardsSimulationConfiguration.GlobalSleepThreshold).Within(0.000001f));
+            Assert.That(
+                UnityEngine.Physics.defaultContactOffset,
+                Is.EqualTo(BilliardsSimulationConfiguration.DefaultContactOffsetMeters).Within(0.000001f));
+            Assert.That(
+                UnityEngine.Physics.defaultSolverIterations,
+                Is.EqualTo(BilliardsSimulationConfiguration.DefaultSolverIterations));
+            Assert.That(
+                UnityEngine.Physics.defaultSolverVelocityIterations,
+                Is.EqualTo(BilliardsSimulationConfiguration.DefaultSolverVelocityIterations));
+
+            var identities = Object.FindObjectsByType<BallIdentity>(FindObjectsSortMode.None);
+            Assert.That(identities, Has.Length.EqualTo(16));
+
+            foreach (var identity in identities)
+            {
+                var rigidbody = identity.GetComponent<Rigidbody>();
+
+                Assert.That(rigidbody, Is.Not.Null, $"Ball {identity.Id.Number} must keep a Rigidbody.");
+                Assert.That(
+                    rigidbody.mass,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallMassKilograms).Within(0.000001f),
+                    $"Ball {identity.Id.Number} must use the billiards mass baseline.");
+                Assert.That(
+                    rigidbody.linearDamping,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallLinearDamping).Within(0.000001f),
+                    $"Ball {identity.Id.Number} must not hide cloth resistance in Rigidbody linear damping.");
+                Assert.That(
+                    rigidbody.angularDamping,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallAngularDamping).Within(0.000001f),
+                    $"Ball {identity.Id.Number} must not hide rolling resistance in Rigidbody angular damping.");
+                Assert.That(rigidbody.useGravity, Is.True, $"Ball {identity.Id.Number} must remain gravity-enabled.");
+                Assert.That(rigidbody.isKinematic, Is.False, $"Ball {identity.Id.Number} must remain dynamic.");
+                Assert.That(
+                    rigidbody.collisionDetectionMode,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallCollisionDetectionMode),
+                    $"Ball {identity.Id.Number} must use continuous dynamic collision detection.");
+                Assert.That(
+                    rigidbody.interpolation,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallInterpolation),
+                    $"Ball {identity.Id.Number} must use the billiards interpolation baseline.");
+            }
+        }
+
+        [UnityTest]
         public IEnumerator PoolTableScene_InitializesLegacyGameplayWiring()
         {
             yield return LoadPoolTableScene();
