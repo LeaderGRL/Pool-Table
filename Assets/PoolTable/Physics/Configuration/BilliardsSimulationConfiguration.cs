@@ -6,9 +6,11 @@ namespace PoolTable.Physics.Configuration
     {
         public const float BallMassKilograms = 0.17f;
 
-        public const float BallLinearDamping = 0.35f;
+        public const float BallLinearDamping = 0f;
 
-        public const float BallAngularDamping = 0.2f;
+        public const float BallAngularDamping = 0f;
+
+        public const float ClothRollingDecelerationMetersPerSecondSquared = 0.2f;
 
         public const CollisionDetectionMode BallCollisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 

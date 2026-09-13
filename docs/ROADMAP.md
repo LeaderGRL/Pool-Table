@@ -125,18 +125,19 @@ Every rule must have EditMode tests before being connected to gameplay.
 
 ### Gameplay integration checkpoint
 
-- `PR` **Gameplay: Add Core rules integration checkpoint**
+- `DONE` **Gameplay: Add Core rules integration checkpoint**
   `MatchShotResolver` composes immutable shot intent/facts with the Core rules into one authoritative next `MatchState`. Terminal 8-ball outcomes are handled before non-terminal consequences, standard fouls advance the turn with ball-in-hand, clean successful calls can assign an open table and continue the shooter's turn, and unresolved break choices are surfaced explicitly instead of guessed. The resolver remains independent from legacy gameplay singletons and is covered by deterministic EditMode tests plus a scene PlayMode smoke using typed ball identities. Reference: GitHub issue #50.
 
 ## Phase 4 — new billiards physics
 
-25. `PR` **Physics: Normalize table and ball physical scale**
+25. `DONE` **Physics: Normalize table and ball physical scale**
     The physics layer now defines one metric 9-foot table specification: one Unity world unit equals one meter, regulation balls use a 57.15 mm diameter, the reference playing surface is 2.54 m x 1.27 m, and the table bed uses a deterministic height inside the WPA equipment range. `PoolTable.unity` is normalized to that scale, including a legal WPA 8-ball rack layout, cue-ball head-string placement, metric cue-controller distance/stroke/impulse tuning, a metric stopped-ball threshold, and scratch recovery back to the cue ball's initial metric placement and idle state. EditMode specification tests and PlayMode scene-scale/gameplay regression coverage prevent future drift. Mass, collision detection, solver settings, timestep, friction, spin, rail response, and pocket rebuilding remain in their dedicated follow-up issues. Reference: GitHub issue #52.
 
-26. `PR` **Physics: Rebuild ball rigidbody configuration**
-    Define the authoritative metric rigidbody/simulation baseline: regulation-scale ball mass, continuous dynamic collision detection, interpolation, tighter contact tolerance, higher solver iteration counts, a lower sleep threshold, and a 0.005 s fixed timestep. Legacy 0.35/0.2 Rigidbody damping is retained explicitly as a temporary turn-termination safeguard until the cloth-resistance issue replaces it. Legacy upward-velocity damping is scaled by elapsed fixed time so changing the physics tick rate preserves the previous 20 ms behavior, and shot strength is expressed as a mass-independent target velocity change so the 0.17 kg ball mass does not multiply shot speed. Scene and runtime tests prevent the 16 billiard balls, shot-speed behavior, temporary resistance, timestep-sensitive damping, or project physics settings from drifting unexpectedly. Reference: GitHub issue #54.
+26. `DONE` **Physics: Rebuild ball rigidbody configuration**
+    Define the authoritative metric rigidbody/simulation baseline: regulation-scale ball mass, continuous dynamic collision detection, interpolation, tighter contact tolerance, higher solver iteration counts, a lower sleep threshold, and a 0.005 s fixed timestep. PR #55 intentionally retained legacy 0.35/0.2 Rigidbody damping as a temporary turn-termination safeguard; step 27 supersedes that temporary resistance with the explicit cloth model. Legacy upward-velocity damping is scaled by elapsed fixed time so changing the physics tick rate preserves the previous 20 ms behavior, and shot strength is expressed as a mass-independent target velocity change so the 0.17 kg ball mass does not multiply shot speed. Scene and runtime tests prevent the 16 billiard balls, shot-speed behavior, timestep-sensitive damping, or project physics settings from drifting unexpectedly. Reference: GitHub issue #54 / PR #55.
 
-27. `TODO` **Physics: Rebuild cloth friction model**
+27. `PR` **Physics: Rebuild cloth friction model**
+    Replace temporary Rigidbody damping with explicit mass-independent planar cloth resistance. The Physics layer owns a 0.2 m/s² rolling-deceleration baseline, applies it only while a ball has an upward supporting contact from the explicitly marked cloth surface, preserves vertical PhysX motion, and clamps low planar speed without reversal. All 16 scene balls use zero built-in linear/angular damping and carry the dedicated cloth-resistance component, while the tabletop uses a `ClothSurface` marker and dedicated zero-friction PhysicMaterial so unrelated contacts and native PhysX friction do not distort the explicit resistance model. Sliding-to-rolling coupling and spin remain separate follow-up work. Reference: GitHub issue #56 / PR #57.
 28. `TODO` **Physics: Implement sliding-to-rolling transition**
 29. `TODO` **Physics: Implement cue-ball spin**
 30. `TODO` **Physics: Implement rail collision response**
@@ -214,4 +215,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-After issue #52 is merged, continue Phase 4 with **Physics: Rebuild ball rigidbody configuration**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 4 work is **Physics: Rebuild cloth friction model** (issue #56). After it is merged, continue with **Physics: Implement sliding-to-rolling transition**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.

@@ -9,6 +9,7 @@ using PoolTable.Core.Rules;
 using PoolTable.Core.Shots;
 using PoolTable.Gameplay.Balls;
 using PoolTable.Gameplay.Match;
+using PoolTable.Physics.Cloth;
 using PoolTable.Physics.Configuration;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
@@ -105,6 +106,19 @@ namespace PoolTable.Tests.PlayMode
 
             var tabletop = FindActiveSolidMeshColliderByName(activeScene, "tabletop");
             Assert.That(tabletop, Is.Not.Null);
+            Assert.That(
+                tabletop.GetComponent<ClothSurface>(),
+                Is.Not.Null,
+                "The tabletop collider must explicitly identify itself as a cloth surface.");
+            Assert.That(tabletop.sharedMaterial, Is.Not.Null);
+            Assert.That(
+                tabletop.sharedMaterial.dynamicFriction,
+                Is.EqualTo(0f),
+                "The tabletop must not add native PhysX friction on top of explicit cloth resistance.");
+            Assert.That(
+                tabletop.sharedMaterial.staticFriction,
+                Is.EqualTo(0f),
+                "The tabletop must not reintroduce implicit sliding-to-rolling coupling before that model is implemented.");
             Assert.That(
                 tabletop.bounds.size.x,
                 Is.EqualTo(BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters).Within(0.001f));
@@ -232,11 +246,15 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(
                     rigidbody.linearDamping,
                     Is.EqualTo(BilliardsSimulationConfiguration.BallLinearDamping).Within(0.000001f),
-                    $"Ball {identity.Id.Number} must keep temporary resistance until the cloth model replaces it.");
+                    $"Ball {identity.Id.Number} must not hide cloth resistance in Rigidbody linear damping.");
                 Assert.That(
                     rigidbody.angularDamping,
                     Is.EqualTo(BilliardsSimulationConfiguration.BallAngularDamping).Within(0.000001f),
-                    $"Ball {identity.Id.Number} must keep temporary rotational resistance until the cloth model replaces it.");
+                    $"Ball {identity.Id.Number} must not hide rotational resistance in Rigidbody angular damping.");
+                Assert.That(
+                    identity.GetComponent<BallClothResistance>(),
+                    Is.Not.Null,
+                    $"Ball {identity.Id.Number} must use the explicit cloth-resistance component.");
                 Assert.That(rigidbody.useGravity, Is.True, $"Ball {identity.Id.Number} must remain gravity-enabled.");
                 Assert.That(rigidbody.isKinematic, Is.False, $"Ball {identity.Id.Number} must remain dynamic.");
                 Assert.That(
@@ -332,33 +350,6 @@ namespace PoolTable.Tests.PlayMode
 
             Object.Destroy(regulationProbe);
             Object.Destroy(legacyMassProbe);
-        }
-
-        [UnityTest]
-        public IEnumerator PoolTableScene_TemporaryDampingReducesBallMotion()
-        {
-            yield return LoadPoolTableScene();
-
-            var probe = new GameObject("Temporary Damping Probe");
-            var rigidbody = probe.AddComponent<Rigidbody>();
-            rigidbody.useGravity = false;
-            rigidbody.linearDamping = BilliardsSimulationConfiguration.BallLinearDamping;
-            rigidbody.angularDamping = BilliardsSimulationConfiguration.BallAngularDamping;
-
-            rigidbody.linearVelocity = Vector3.right;
-            rigidbody.angularVelocity = Vector3.up;
-            var initialLinearSpeed = rigidbody.linearVelocity.magnitude;
-            var initialAngularSpeed = rigidbody.angularVelocity.magnitude;
-
-            for (var step = 0; step < 10; step++)
-            {
-                yield return new WaitForFixedUpdate();
-            }
-
-            Assert.That(rigidbody.linearVelocity.magnitude, Is.LessThan(initialLinearSpeed));
-            Assert.That(rigidbody.angularVelocity.magnitude, Is.LessThan(initialAngularSpeed));
-
-            Object.Destroy(probe);
         }
 
         [UnityTest]
