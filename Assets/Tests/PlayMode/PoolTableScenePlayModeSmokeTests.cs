@@ -9,8 +9,10 @@ using PoolTable.Core.Rules;
 using PoolTable.Core.Shots;
 using PoolTable.Gameplay.Balls;
 using PoolTable.Gameplay.Match;
+using PoolTable.Gameplay.Pockets;
 using PoolTable.Physics.Cloth;
 using PoolTable.Physics.Configuration;
+using PoolTable.Physics.Pockets;
 using PoolTable.Physics.Rails;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
@@ -227,6 +229,107 @@ namespace PoolTable.Tests.PlayMode
 
             AssertRailSurface(cushion, "The rubber cushion");
             AssertRailSurface(sideRail, "The side-rail fallback geometry");
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_UsesSixTypedPocketCaptureVolumes()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var volumes = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<PocketCaptureVolume>())
+                .Where(volume => volume != null)
+                .OrderBy(volume => volume.Pocket.Index)
+                .ToArray();
+
+            Assert.That(volumes, Has.Length.EqualTo(PocketId.MaximumIndex));
+            Assert.That(
+                volumes.Select(volume => volume.Pocket.Index),
+                Is.EqualTo(Enumerable.Range(PocketId.MinimumIndex, PocketId.MaximumIndex)));
+
+            foreach (var volume in volumes)
+            {
+                Assert.That(volume.TriggerCollider.isTrigger, Is.True);
+                Assert.That(
+                    volume.TriggerCollider.radius,
+                    Is.EqualTo(BilliardsPhysicalSpecification.PocketCaptureRadiusMeters).Within(0.000001f));
+                Assert.That(
+                    Vector3.Distance(volume.transform.position, PocketCaptureLayout.GetCenter(volume.Pocket)),
+                    Is.LessThan(0.0001f),
+                    $"Pocket {volume.Pocket.Index} must remain on the authoritative metric capture layout.");
+            }
+
+            var ballCaptures = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallPocketCapture>())
+                .Where(capture => capture != null)
+                .ToArray();
+            Assert.That(ballCaptures, Has.Length.EqualTo(16));
+            Assert.That(SceneContainsObject(activeScene, "pocket_destroy"), Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator PocketCapture_PreservesLegacyTurnAndScratchFlowDuringMigration()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var volume = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<PocketCaptureVolume>())
+                .First(candidate => candidate != null && candidate.Pocket == new PocketId(1));
+            var identities = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallIdentity>())
+                .Where(identity => identity != null)
+                .ToArray();
+            var objectBallIdentity = identities.First(identity => identity.Id.Number == 1);
+            var cueBallIdentity = identities.First(identity => identity.Id.IsCueBall);
+            var objectBall = objectBallIdentity.gameObject;
+            var cueBall = cueBallIdentity.gameObject;
+            var objectCapture = objectBall.GetComponent<BallPocketCapture>();
+            var cueCapture = cueBall.GetComponent<BallPocketCapture>();
+            var anyLegacyBallManager = FindActiveMonoBehaviourByTypeName(activeScene, "BallStateManager");
+            var ballManagerType = anyLegacyBallManager.GetType();
+            var legacyAuthority = ballManagerType
+                .GetField("instance", BindingFlags.Public | BindingFlags.Static)
+                .GetValue(null) as MonoBehaviour;
+            var pocketedBalls = legacyAuthority.GetType()
+                .GetMethod("getPocketedBalls")
+                .Invoke(legacyAuthority, null) as IDictionary;
+            var gameManager = FindActiveMonoBehaviourByTypeName(activeScene, "GameManager");
+            var turnNumberField = gameManager.GetType().GetField("turnNumber");
+            var initialTurnNumber = (int)turnNumberField.GetValue(gameManager);
+            var initialPocketedCount = pocketedBalls.Count;
+
+            Assert.That(volume.TryCapture(objectCapture), Is.True);
+            Assert.That(objectBall.activeSelf, Is.False);
+            Assert.That(pocketedBalls.Contains(objectBall), Is.True);
+            Assert.That(pocketedBalls.Count, Is.EqualTo(initialPocketedCount + 1));
+
+            Assert.That(volume.TryCapture(objectCapture), Is.False);
+            Assert.That(pocketedBalls.Count, Is.EqualTo(initialPocketedCount + 1));
+
+            turnNumberField.SetValue(gameManager, initialTurnNumber + 1);
+            Assert.That(
+                (bool)legacyAuthority.GetType().GetMethod("IsBallPocketedLastTurn").Invoke(legacyAuthority, null),
+                Is.True,
+                "The legacy turn resolver must still observe object balls captured by the typed pocket system.");
+
+            var cueInitialPosition = cueBall.transform.position;
+            Assert.That(volume.TryCapture(cueCapture), Is.True);
+            Assert.That(cueBall.activeSelf, Is.False);
+            Assert.That(cueCapture.IsCaptured, Is.True);
+            Assert.That(
+                (bool)legacyAuthority.GetType().GetMethod("isPocketedBallContainWhiteBall").Invoke(legacyAuthority, null),
+                Is.True,
+                "The legacy scratch resolver must still observe the cue ball captured by the typed pocket system.");
+
+            legacyAuthority.GetType().GetMethod("resetWhiteBallFromPocket").Invoke(legacyAuthority, null);
+
+            Assert.That(cueBall.activeSelf, Is.True);
+            Assert.That(cueCapture.IsCaptured, Is.False);
+            Assert.That(cueCapture.CapturedPocket, Is.Null);
+            Assert.That(Vector3.Distance(cueBall.transform.position, cueInitialPosition), Is.LessThan(0.0001f));
+            Assert.That(pocketedBalls.Contains(cueBall), Is.False);
         }
 
         [UnityTest]
@@ -781,13 +884,10 @@ namespace PoolTable.Tests.PlayMode
                 Is.Not.Null,
                 "The pool table must keep active solid side-rail collision geometry.");
 
-            var pocket = FindActiveMonoBehaviourByTypeName(activeScene, "Pocket");
-            Assert.That(pocket, Is.Not.Null, "The gameplay scene must keep an active Pocket capture behavior.");
-
-            var pocketCollider = pocket.GetComponent<Collider>();
-            Assert.That(pocketCollider, Is.Not.Null, "Pocket must keep its trigger collider.");
-            Assert.That(pocketCollider.enabled, Is.True, "Pocket trigger collider must be enabled.");
-            Assert.That(pocketCollider.isTrigger, Is.True, "Pocket collider must remain configured as a trigger.");
+            Assert.That(
+                FindActiveMonoBehaviourByTypeName(activeScene, "Pocket"),
+                Is.Null,
+                "The gameplay scene must not retain the legacy global Pocket capture behavior.");
 
             var ground = FindActiveMonoBehaviourWithCollider(activeScene, "Ground", requireTrigger: true);
             Assert.That(ground, Is.Not.Null, "The gameplay scene must keep an active Ground recovery trigger.");

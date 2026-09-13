@@ -29,6 +29,13 @@ namespace PoolTable.Physics.Configuration
 
         public const float CushionNoseHeightMeters = BallDiameterMeters * CushionNoseHeightRatio;
 
+        public const float PocketCaptureRadiusMeters = BallDiameterMeters;
+
+        public const float PocketCaptureDepthBelowBedMeters = 0.063f;
+
+        public const float PocketCaptureCenterHeightMeters =
+            ReferenceTableBedHeightMeters - PocketCaptureDepthBelowBedMeters;
+
         public const float TriangularRackRowSpacingMeters = BallDiameterMeters * 0.8660254f;
 
         public const float BallCenterHeightMeters = ReferenceTableBedHeightMeters + BallRadiusMeters;
