@@ -142,9 +142,10 @@ Every rule must have EditMode tests before being connected to gameplay.
     Model the velocity of the ball-cloth contact point explicitly and use kinetic cloth friction to couple planar translation with horizontal rotation until rolling without slipping is reached. The solid-sphere inertia relation drives contact slip to zero without overshoot, rolling resistance maintains the no-slip relationship after transition, vertical linear velocity and vertical-axis spin remain independent, and the ball Rigidbody angular-speed cap is raised so regulation-radius rolling is not clipped by Unity defaults. Cue-spin controls and spin decay remain in step 29. Reference: GitHub issue #58 / PR #59.
 29. `DONE` **Physics: Implement cue-ball spin**
     Add a Unity-independent normalized cue-tip contact value to `ShotIntent`, convert off-center cue strikes into physically coherent linear/angular velocity changes with a solid-sphere impulse model, and dissipate vertical-axis side spin explicitly on the cloth without timestep dependence or reversal. Center strikes preserve the existing no-initial-spin behavior, maximum cue offset is bounded away from the ball edge, and the ball angular-speed ceiling is raised to cover the supported maximum strike. Input selection and spin UI remain in Phase 5. Reference: GitHub issue #60 / PR #61.
-30. `PR` **Physics: Implement rail collision response**
-    The explicit model uses calibrated normal restitution and tangential Coulomb friction, keeps native rail PhysicMaterial bounce/friction disabled, and couples tangential contact slip with side spin through the solid-sphere inertia relation. Scene rails are identified explicitly and every billiard ball uses the Unity collision-response adapter. Reference: GitHub issue #62.
-31. `TODO` **Physics: Rebuild pocket detection and capture**
+30. `DONE` **Physics: Implement rail collision response**
+    The explicit model uses calibrated normal restitution and tangential Coulomb friction, keeps native rail PhysicMaterial bounce/friction disabled, and couples tangential contact slip with side spin through the solid-sphere inertia relation. Scene rails are identified explicitly and every billiard ball uses the Unity collision-response adapter. Reference: GitHub issue #62 / PR #63.
+31. `PR` **Physics: Rebuild pocket detection and capture**
+    Six metric capture volumes map the physical pockets to stable `PocketId` values, and each typed billiard ball now emits one idempotent `PocketedBall` observation when captured. Captured rigidbodies are stopped and removed from active simulation without destroying the underlying object, allowing the cue ball to be explicitly restored for future ball-in-hand placement. The legacy global `pocket_destroy` detector is removed from the scene. Reference: GitHub issue #64.
 32. `TODO` **Physics: Add shot simulation instrumentation**
     Measure trajectories, energy, stopping time, and collisions to calibrate gameplay.
 
@@ -218,4 +219,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 4 work is **Physics: Implement rail collision response** (issue #62). After it is merged, continue with **Physics: Rebuild pocket detection and capture**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 4 work is **Physics: Rebuild pocket detection and capture** (issue #64). After it is merged, continue with **Physics: Add shot simulation instrumentation**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.

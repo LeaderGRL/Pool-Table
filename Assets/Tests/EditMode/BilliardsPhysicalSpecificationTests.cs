@@ -56,5 +56,17 @@ namespace PoolTable.Tests.EditMode
 
             Assert.That(centerDistanceSquared, Is.EqualTo(diameterSquared).Within(0.000001f));
         }
+
+        [Test]
+        public void Specification_DefinesPocketCaptureBelowPlayingSurface()
+        {
+            Assert.That(
+                BilliardsPhysicalSpecification.PocketCaptureRadiusMeters,
+                Is.EqualTo(BilliardsPhysicalSpecification.BallDiameterMeters).Within(0.000001f));
+            Assert.That(BilliardsPhysicalSpecification.PocketCaptureDepthBelowBedMeters, Is.GreaterThan(0f));
+            Assert.That(
+                BilliardsPhysicalSpecification.PocketCaptureCenterHeightMeters,
+                Is.LessThan(BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters));
+        }
     }
 }

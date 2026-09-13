@@ -9,8 +9,10 @@ using PoolTable.Core.Rules;
 using PoolTable.Core.Shots;
 using PoolTable.Gameplay.Balls;
 using PoolTable.Gameplay.Match;
+using PoolTable.Gameplay.Pockets;
 using PoolTable.Physics.Cloth;
 using PoolTable.Physics.Configuration;
+using PoolTable.Physics.Pockets;
 using PoolTable.Physics.Rails;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
@@ -227,6 +229,43 @@ namespace PoolTable.Tests.PlayMode
 
             AssertRailSurface(cushion, "The rubber cushion");
             AssertRailSurface(sideRail, "The side-rail fallback geometry");
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_UsesSixTypedPocketCaptureVolumes()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var volumes = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<PocketCaptureVolume>())
+                .Where(volume => volume != null)
+                .OrderBy(volume => volume.Pocket.Index)
+                .ToArray();
+
+            Assert.That(volumes, Has.Length.EqualTo(PocketId.MaximumIndex));
+            Assert.That(
+                volumes.Select(volume => volume.Pocket.Index),
+                Is.EqualTo(Enumerable.Range(PocketId.MinimumIndex, PocketId.MaximumIndex)));
+
+            foreach (var volume in volumes)
+            {
+                Assert.That(volume.TriggerCollider.isTrigger, Is.True);
+                Assert.That(
+                    volume.TriggerCollider.radius,
+                    Is.EqualTo(BilliardsPhysicalSpecification.PocketCaptureRadiusMeters).Within(0.000001f));
+                Assert.That(
+                    Vector3.Distance(volume.transform.position, PocketCaptureLayout.GetCenter(volume.Pocket)),
+                    Is.LessThan(0.0001f),
+                    $"Pocket {volume.Pocket.Index} must remain on the authoritative metric capture layout.");
+            }
+
+            var ballCaptures = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallPocketCapture>())
+                .Where(capture => capture != null)
+                .ToArray();
+            Assert.That(ballCaptures, Has.Length.EqualTo(16));
+            Assert.That(SceneContainsObject(activeScene, "pocket_destroy"), Is.False);
         }
 
         [UnityTest]
@@ -781,13 +820,10 @@ namespace PoolTable.Tests.PlayMode
                 Is.Not.Null,
                 "The pool table must keep active solid side-rail collision geometry.");
 
-            var pocket = FindActiveMonoBehaviourByTypeName(activeScene, "Pocket");
-            Assert.That(pocket, Is.Not.Null, "The gameplay scene must keep an active Pocket capture behavior.");
-
-            var pocketCollider = pocket.GetComponent<Collider>();
-            Assert.That(pocketCollider, Is.Not.Null, "Pocket must keep its trigger collider.");
-            Assert.That(pocketCollider.enabled, Is.True, "Pocket trigger collider must be enabled.");
-            Assert.That(pocketCollider.isTrigger, Is.True, "Pocket collider must remain configured as a trigger.");
+            Assert.That(
+                FindActiveMonoBehaviourByTypeName(activeScene, "Pocket"),
+                Is.Null,
+                "The gameplay scene must not retain the legacy global Pocket capture behavior.");
 
             var ground = FindActiveMonoBehaviourWithCollider(activeScene, "Ground", requireTrigger: true);
             Assert.That(ground, Is.Not.Null, "The gameplay scene must keep an active Ground recovery trigger.");

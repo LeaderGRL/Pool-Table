@@ -267,6 +267,7 @@ GameObject:
   - component: {fileID: 910260003}
   - component: {fileID: 920260003}
   - component: {fileID: 930260003}
+  - component: {fileID: 1082107271}
   m_Layer: 6
   m_Name: Sphere (3)
   m_TagString: filled
@@ -417,6 +418,7 @@ GameObject:
   - component: {fileID: 910260000}
   - component: {fileID: 920260000}
   - component: {fileID: 930260000}
+  - component: {fileID: 1824040252}
   m_Layer: 0
   m_Name: Sphere
   m_TagString: white
@@ -578,6 +580,7 @@ GameObject:
   - component: {fileID: 910260004}
   - component: {fileID: 920260004}
   - component: {fileID: 930260004}
+  - component: {fileID: 582077255}
   m_Layer: 6
   m_Name: Sphere (6)
   m_TagString: filled
@@ -1695,6 +1698,7 @@ GameObject:
   - component: {fileID: 910260005}
   - component: {fileID: 920260005}
   - component: {fileID: 930260005}
+  - component: {fileID: 1863900542}
   m_Layer: 6
   m_Name: Sphere (4)
   m_TagString: filled
@@ -1918,6 +1922,7 @@ GameObject:
   - component: {fileID: 910260012}
   - component: {fileID: 920260012}
   - component: {fileID: 930260012}
+  - component: {fileID: 930260017}
   m_Layer: 6
   m_Name: Sphere (14)
   m_TagString: striped
@@ -2461,6 +2466,7 @@ GameObject:
   - component: {fileID: 910260014}
   - component: {fileID: 920260014}
   - component: {fileID: 930260014}
+  - component: {fileID: 930260019}
   m_Layer: 6
   m_Name: Sphere (12)
   m_TagString: striped
@@ -3110,6 +3116,7 @@ GameObject:
   - component: {fileID: 910260006}
   - component: {fileID: 920260006}
   - component: {fileID: 930260006}
+  - component: {fileID: 374834652}
   m_Layer: 6
   m_Name: Sphere (5)
   m_TagString: filled
@@ -3259,6 +3266,7 @@ GameObject:
   - component: {fileID: 910260011}
   - component: {fileID: 920260011}
   - component: {fileID: 930260011}
+  - component: {fileID: 930260016}
   m_Layer: 6
   m_Name: Sphere (15)
   m_TagString: striped
@@ -3408,6 +3416,7 @@ GameObject:
   - component: {fileID: 910260010}
   - component: {fileID: 920260010}
   - component: {fileID: 930260010}
+  - component: {fileID: 601986359}
   m_Layer: 6
   m_Name: Sphere (7)
   m_TagString: striped
@@ -3557,6 +3566,7 @@ GameObject:
   - component: {fileID: 910260013}
   - component: {fileID: 920260013}
   - component: {fileID: 930260013}
+  - component: {fileID: 930260018}
   m_Layer: 6
   m_Name: Sphere (13)
   m_TagString: striped
@@ -3724,7 +3734,6 @@ Transform:
   - {fileID: 1318723544}
   - {fileID: 299705691}
   - {fileID: 959986522}
-  - {fileID: 1873088441}
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4261,6 +4270,7 @@ GameObject:
   - component: {fileID: 910260001}
   - component: {fileID: 920260001}
   - component: {fileID: 930260001}
+  - component: {fileID: 1019706809}
   m_Layer: 6
   m_Name: Sphere (1)
   m_TagString: filled
@@ -4410,6 +4420,7 @@ GameObject:
   - component: {fileID: 910260009}
   - component: {fileID: 920260009}
   - component: {fileID: 930260009}
+  - component: {fileID: 1062358944}
   m_Layer: 6
   m_Name: Sphere (8)
   m_TagString: striped
@@ -4559,6 +4570,7 @@ GameObject:
   - component: {fileID: 910260007}
   - component: {fileID: 920260007}
   - component: {fileID: 930260007}
+  - component: {fileID: 1072184241}
   m_Layer: 6
   m_Name: Sphere (10)
   m_TagString: filled
@@ -5994,6 +6006,7 @@ GameObject:
   - component: {fileID: 910260015}
   - component: {fileID: 920260015}
   - component: {fileID: 930260015}
+  - component: {fileID: 1640636888}
   m_Layer: 6
   m_Name: Sphere (11)
   m_TagString: striped
@@ -6320,6 +6333,7 @@ GameObject:
   - component: {fileID: 910260002}
   - component: {fileID: 920260002}
   - component: {fileID: 930260002}
+  - component: {fileID: 1722692151}
   m_Layer: 6
   m_Name: Sphere (2)
   m_TagString: filled
@@ -6532,63 +6546,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1794770031}
   m_Mesh: {fileID: 8015797352006473031, guid: f30c43eeaae34ce4baa6438187ff577d, type: 3}
---- !u!1 &1873088440
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1873088441}
-  - component: {fileID: 1873088443}
-  - component: {fileID: 1873088442}
-  m_Layer: 0
-  m_Name: pocket_destroy
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1873088441
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1873088440}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.9, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 796958867}
-  m_RootOrder: 9
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1873088442
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1873088440}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4362263da6ef0ac4c862f4d527196c24, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!65 &1873088443
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1873088440}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 2.0817223, y: 0.1, z: 1.1658106}
-  m_Center: {x: -0.10216233, y: 0, z: -0.008418083}
 --- !u!1 &1940031935
 GameObject:
   m_ObjectHideFlags: 0
@@ -6607,6 +6564,7 @@ GameObject:
   - component: {fileID: 910260008}
   - component: {fileID: 920260008}
   - component: {fileID: 930260008}
+  - component: {fileID: 1940031943}
   m_Layer: 6
   m_Name: Sphere (9)
   m_TagString: black
@@ -7810,3 +7768,627 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b52c2e2105e9174cb18718853849dc7, type: 3}
   m_Name:
   m_EditorClassIdentifier:
+--- !u!114 &374834652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 726879712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &582077255
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 138793834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &601986359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 752744630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &930260016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728835048}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &930260017
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506606833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &930260018
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 795021681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &930260019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 589692452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &1019706809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1019706801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &1062358944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062358936}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &1072184241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072184233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &1082107271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 39856144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &1640636888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1640636880}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &1722692151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722692143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &1824040252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 86719732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &1863900542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466467918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!114 &1940031943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1940031935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47275b29f72961f4d9d87aada35a8824, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.BallPocketCapture
+--- !u!1 &109172901
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 109172902}
+  m_Layer: 0
+  m_Name: Pocket Capture Volumes
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &109172902
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 109172901}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1339481109}
+  - {fileID: 835756102}
+  - {fileID: 1817031560}
+  - {fileID: 1677794131}
+  - {fileID: 548133498}
+  - {fileID: 2062870150}
+  m_Father: {fileID: 0}
+  m_RootOrder: 13
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &548133497
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 548133498}
+  - component: {fileID: 548133500}
+  - component: {fileID: 548133499}
+  m_Layer: 0
+  m_Name: Pocket 5 - Side Positive Z
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &548133498
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 548133497}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.702175, z: 0.635}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 109172902}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &548133499
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 548133497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b23cb2dbb05d13c49a609779efbd22ed, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.PocketCaptureVolume
+  pocketIndex: 5
+--- !u!135 &548133500
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 548133497}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.05715
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &835756101
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 835756102}
+  - component: {fileID: 835756104}
+  - component: {fileID: 835756103}
+  m_Layer: 0
+  m_Name: Pocket 2 - Side Negative Z
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &835756102
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 835756101}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.702175, z: -0.635}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 109172902}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &835756103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 835756101}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b23cb2dbb05d13c49a609779efbd22ed, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.PocketCaptureVolume
+  pocketIndex: 2
+--- !u!135 &835756104
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 835756101}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.05715
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &1339481108
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1339481109}
+  - component: {fileID: 1339481111}
+  - component: {fileID: 1339481110}
+  m_Layer: 0
+  m_Name: Pocket 1 - Head Negative Z
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1339481109
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1339481108}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.27, y: 0.702175, z: -0.635}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 109172902}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1339481110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1339481108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b23cb2dbb05d13c49a609779efbd22ed, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.PocketCaptureVolume
+  pocketIndex: 1
+--- !u!135 &1339481111
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1339481108}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.05715
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &1677794130
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1677794131}
+  - component: {fileID: 1677794133}
+  - component: {fileID: 1677794132}
+  m_Layer: 0
+  m_Name: Pocket 4 - Foot Positive Z
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1677794131
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1677794130}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.27, y: 0.702175, z: 0.635}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 109172902}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1677794132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1677794130}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b23cb2dbb05d13c49a609779efbd22ed, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.PocketCaptureVolume
+  pocketIndex: 4
+--- !u!135 &1677794133
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1677794130}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.05715
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &1817031559
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1817031560}
+  - component: {fileID: 1817031562}
+  - component: {fileID: 1817031561}
+  m_Layer: 0
+  m_Name: Pocket 3 - Foot Negative Z
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1817031560
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1817031559}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.27, y: 0.702175, z: -0.635}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 109172902}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1817031561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1817031559}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b23cb2dbb05d13c49a609779efbd22ed, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.PocketCaptureVolume
+  pocketIndex: 3
+--- !u!135 &1817031562
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1817031559}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.05715
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &2062870149
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2062870150}
+  - component: {fileID: 2062870152}
+  - component: {fileID: 2062870151}
+  m_Layer: 0
+  m_Name: Pocket 6 - Head Positive Z
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2062870150
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2062870149}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.27, y: 0.702175, z: 0.635}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 109172902}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2062870151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2062870149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b23cb2dbb05d13c49a609779efbd22ed, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Pockets.PocketCaptureVolume
+  pocketIndex: 6
+--- !u!135 &2062870152
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2062870149}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.05715
+  m_Center: {x: 0, y: 0, z: 0}
