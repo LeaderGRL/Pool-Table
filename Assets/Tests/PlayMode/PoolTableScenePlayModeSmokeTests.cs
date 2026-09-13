@@ -251,6 +251,35 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PoolTableScene_VerticalVelocityDampingIsTimestepIndependent()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var ballStateManager = FindActiveMonoBehaviourByTypeName(activeScene, "BallStateManager");
+            Assert.That(ballStateManager, Is.Not.Null);
+
+            var getUpwardVelocityRetention = ballStateManager.GetType().GetMethod(
+                "GetUpwardVelocityRetention",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(getUpwardVelocityRetention, Is.Not.Null);
+
+            var legacyTickRetention = (float)getUpwardVelocityRetention.Invoke(null, new object[] { 0.02f });
+            var currentTickRetention = (float)getUpwardVelocityRetention.Invoke(
+                null,
+                new object[] { BilliardsSimulationConfiguration.FixedTimestepSeconds });
+            var currentRetentionOverLegacyInterval = Mathf.Pow(
+                currentTickRetention,
+                0.02f / BilliardsSimulationConfiguration.FixedTimestepSeconds);
+
+            Assert.That(legacyTickRetention, Is.EqualTo(0.3f).Within(0.000001f));
+            Assert.That(
+                currentRetentionOverLegacyInterval,
+                Is.EqualTo(legacyTickRetention).Within(0.000001f),
+                "Vertical damping must preserve the legacy 20 ms behavior when the physics timestep changes.");
+        }
+
+        [UnityTest]
         public IEnumerator PoolTableScene_LegacyShotSpeedIsIndependentOfBallMass()
         {
             yield return LoadPoolTableScene();
