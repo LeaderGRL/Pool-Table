@@ -20,6 +20,10 @@ namespace PoolTable.Physics.Configuration
 
         public const float ClothSideSpinDecelerationRadiansPerSecondSquared = 5f;
 
+        public const float RailNormalRestitution = 0.82f;
+
+        public const float RailTangentialFrictionCoefficient = 0.2f;
+
         public const CollisionDetectionMode BallCollisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 
         public const RigidbodyInterpolation BallInterpolation = RigidbodyInterpolation.Interpolate;

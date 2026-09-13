@@ -11,6 +11,7 @@ using PoolTable.Gameplay.Balls;
 using PoolTable.Gameplay.Match;
 using PoolTable.Physics.Cloth;
 using PoolTable.Physics.Configuration;
+using PoolTable.Physics.Rails;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
 using UnityEngine;
@@ -132,7 +133,12 @@ namespace PoolTable.Tests.PlayMode
             foreach (var identity in identities)
             {
                 var sphere = identity.GetComponent<SphereCollider>();
+                var railCollisionResponse = identity.GetComponent<BallRailCollisionResponse>();
                 Assert.That(sphere, Is.Not.Null, $"Ball {identity.Id.Number} must keep a SphereCollider.");
+                Assert.That(
+                    railCollisionResponse,
+                    Is.Not.Null,
+                    $"Ball {identity.Id.Number} must use the explicit rail-collision response adapter.");
                 Assert.That(
                     sphere.bounds.size.x,
                     Is.EqualTo(BilliardsPhysicalSpecification.BallDiameterMeters).Within(0.0001f),
@@ -207,6 +213,188 @@ namespace PoolTable.Tests.PlayMode
                     hasTouchingNeighbor,
                     Is.True,
                     $"Object ball {objectBalls[firstIndex].Id.Number} must touch the initial triangular rack.");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_UsesExplicitRailCollisionSurfaces()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var cushion = FindActiveSolidMeshColliderByName(activeScene, "rubber");
+            var sideRail = FindActiveSolidMeshColliderByName(activeScene, "sides");
+
+            AssertRailSurface(cushion, "The rubber cushion");
+            AssertRailSurface(sideRail, "The side-rail fallback geometry");
+        }
+
+        [UnityTest]
+        public IEnumerator RailCollisionResponse_ReboundsBallFromMarkedStaticRail()
+        {
+            var railObject = new GameObject("RailCollisionResponseTestRail");
+            var ballObject = new GameObject("RailCollisionResponseTestBall");
+            var material = new PhysicsMaterial("RailCollisionResponseTestMaterial")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+
+            try
+            {
+                var railCollider = railObject.AddComponent<BoxCollider>();
+                railCollider.size = new Vector3(0.1f, 0.2f, 0.5f);
+                railCollider.sharedMaterial = material;
+                railObject.AddComponent<RailSurface>();
+                railObject.transform.position = new Vector3(0.2f, 0f, 0f);
+
+                var ballCollider = ballObject.AddComponent<SphereCollider>();
+                ballCollider.radius = BilliardsPhysicalSpecification.BallRadiusMeters;
+                ballCollider.sharedMaterial = material;
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+                rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+                rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                ballObject.AddComponent<BallRailCollisionResponse>();
+                ballObject.transform.position = Vector3.zero;
+                rigidbody.linearVelocity = Vector3.right * 2f;
+
+                for (var step = 0; step < 60 && rigidbody.linearVelocity.x >= 0f; step++)
+                {
+                    yield return new WaitForFixedUpdate();
+                }
+
+                Assert.That(rigidbody.linearVelocity.x, Is.LessThan(-1f));
+                Assert.That(
+                    Mathf.Abs(rigidbody.linearVelocity.x),
+                    Is.LessThan(2f),
+                    "The rail response must rebound with controlled energy loss.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(ballObject);
+                Object.DestroyImmediate(railObject);
+                Object.DestroyImmediate(material);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RailCollisionResponse_CoalescesOverlappingRailCollidersPerPhysicsStep()
+        {
+            var firstRailObject = new GameObject("CoalescedRailCollisionResponseTestRailA");
+            var secondRailObject = new GameObject("CoalescedRailCollisionResponseTestRailB");
+            var ballObject = new GameObject("CoalescedRailCollisionResponseTestBall");
+            var material = new PhysicsMaterial("CoalescedRailCollisionResponseTestMaterial")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+
+            try
+            {
+                foreach (var railObject in new[] { firstRailObject, secondRailObject })
+                {
+                    var railCollider = railObject.AddComponent<BoxCollider>();
+                    railCollider.size = new Vector3(0.1f, 0.2f, 0.5f);
+                    railCollider.sharedMaterial = material;
+                    railObject.AddComponent<RailSurface>();
+                    railObject.transform.position = new Vector3(0.2f, 0f, 0f);
+                }
+
+                var ballCollider = ballObject.AddComponent<SphereCollider>();
+                ballCollider.radius = BilliardsPhysicalSpecification.BallRadiusMeters;
+                ballCollider.sharedMaterial = material;
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+                rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+                rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                ballObject.AddComponent<BallRailCollisionResponse>();
+                ballObject.transform.position = Vector3.zero;
+                rigidbody.linearVelocity = Vector3.right * 2f;
+
+                for (var step = 0; step < 60 && rigidbody.linearVelocity.x >= 0f; step++)
+                {
+                    yield return new WaitForFixedUpdate();
+                }
+
+                Assert.That(rigidbody.linearVelocity.x, Is.LessThan(-1f));
+                Assert.That(
+                    Mathf.Abs(rigidbody.linearVelocity.x),
+                    Is.LessThan(2f),
+                    "Multiple rail colliders in one physics step must share one custom restitution response.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(ballObject);
+                Object.DestroyImmediate(firstRailObject);
+                Object.DestroyImmediate(secondRailObject);
+                Object.DestroyImmediate(material);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator RailCollisionResponse_ReboundsRenewedImpactDuringPersistentContact()
+        {
+            var railObject = new GameObject("PersistentRailCollisionResponseTestRail");
+            var ballObject = new GameObject("PersistentRailCollisionResponseTestBall");
+            var material = new PhysicsMaterial("PersistentRailCollisionResponseTestMaterial")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+
+            try
+            {
+                const float railCenterX = 0.2f;
+                const float railHalfWidth = 0.05f;
+                var railCollider = railObject.AddComponent<BoxCollider>();
+                railCollider.size = new Vector3(railHalfWidth * 2f, 0.2f, 0.5f);
+                railCollider.sharedMaterial = material;
+                railObject.AddComponent<RailSurface>();
+                railObject.transform.position = new Vector3(railCenterX, 0f, 0f);
+
+                var ballCollider = ballObject.AddComponent<SphereCollider>();
+                ballCollider.radius = BilliardsPhysicalSpecification.BallRadiusMeters;
+                ballCollider.sharedMaterial = material;
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+                rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+                rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                ballObject.AddComponent<BallRailCollisionResponse>();
+                ballObject.transform.position = new Vector3(
+                    railCenterX - railHalfWidth - BilliardsPhysicalSpecification.BallRadiusMeters,
+                    0f,
+                    0f);
+
+                yield return new WaitForFixedUpdate();
+                yield return new WaitForFixedUpdate();
+
+                rigidbody.linearVelocity = Vector3.right * 2f;
+                yield return new WaitForFixedUpdate();
+
+                Assert.That(
+                    rigidbody.linearVelocity.x,
+                    Is.LessThan(-1f),
+                    "A renewed inward impact while contact persists must use the configured rail rebound.");
+                Assert.That(
+                    Mathf.Abs(rigidbody.linearVelocity.x),
+                    Is.LessThan(2f),
+                    "The renewed rail rebound must retain controlled energy loss.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(ballObject);
+                Object.DestroyImmediate(railObject);
+                Object.DestroyImmediate(material);
             }
         }
 
@@ -685,6 +873,28 @@ namespace PoolTable.Tests.PlayMode
                     && collider.enabled
                     && !collider.isTrigger
                     && collider.sharedMesh != null);
+        }
+
+        private static void AssertRailSurface(MeshCollider collider, string subject)
+        {
+            Assert.That(collider, Is.Not.Null, $"{subject} must keep active solid collision geometry.");
+            Assert.That(
+                collider.GetComponent<RailSurface>(),
+                Is.Not.Null,
+                $"{subject} must explicitly identify itself as a rail surface.");
+            Assert.That(collider.sharedMaterial, Is.Not.Null, $"{subject} must use the dedicated rail PhysicMaterial.");
+            Assert.That(
+                collider.sharedMaterial.dynamicFriction,
+                Is.EqualTo(0f),
+                $"{subject} must not add native PhysX friction on top of the explicit rail model.");
+            Assert.That(
+                collider.sharedMaterial.staticFriction,
+                Is.EqualTo(0f),
+                $"{subject} must not add native PhysX friction on top of the explicit rail model.");
+            Assert.That(
+                collider.sharedMaterial.bounciness,
+                Is.EqualTo(0f),
+                $"{subject} must not add native PhysX bounce on top of the explicit rail model.");
         }
 
         private static MonoBehaviour FindActiveMonoBehaviourWithCollider(Scene scene, string typeName, bool requireTrigger)
