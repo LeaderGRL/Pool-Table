@@ -232,11 +232,11 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(
                     rigidbody.linearDamping,
                     Is.EqualTo(BilliardsSimulationConfiguration.BallLinearDamping).Within(0.000001f),
-                    $"Ball {identity.Id.Number} must not hide cloth resistance in Rigidbody linear damping.");
+                    $"Ball {identity.Id.Number} must keep temporary resistance until the cloth model replaces it.");
                 Assert.That(
                     rigidbody.angularDamping,
                     Is.EqualTo(BilliardsSimulationConfiguration.BallAngularDamping).Within(0.000001f),
-                    $"Ball {identity.Id.Number} must not hide rolling resistance in Rigidbody angular damping.");
+                    $"Ball {identity.Id.Number} must keep temporary rotational resistance until the cloth model replaces it.");
                 Assert.That(rigidbody.useGravity, Is.True, $"Ball {identity.Id.Number} must remain gravity-enabled.");
                 Assert.That(rigidbody.isKinematic, Is.False, $"Ball {identity.Id.Number} must remain dynamic.");
                 Assert.That(
@@ -303,6 +303,33 @@ namespace PoolTable.Tests.PlayMode
 
             Object.Destroy(regulationProbe);
             Object.Destroy(legacyMassProbe);
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_TemporaryDampingReducesBallMotion()
+        {
+            yield return LoadPoolTableScene();
+
+            var probe = new GameObject("Temporary Damping Probe");
+            var rigidbody = probe.AddComponent<Rigidbody>();
+            rigidbody.useGravity = false;
+            rigidbody.linearDamping = BilliardsSimulationConfiguration.BallLinearDamping;
+            rigidbody.angularDamping = BilliardsSimulationConfiguration.BallAngularDamping;
+
+            rigidbody.linearVelocity = Vector3.right;
+            rigidbody.angularVelocity = Vector3.up;
+            var initialLinearSpeed = rigidbody.linearVelocity.magnitude;
+            var initialAngularSpeed = rigidbody.angularVelocity.magnitude;
+
+            for (var step = 0; step < 10; step++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(rigidbody.linearVelocity.magnitude, Is.LessThan(initialLinearSpeed));
+            Assert.That(rigidbody.angularVelocity.magnitude, Is.LessThan(initialAngularSpeed));
+
+            Object.Destroy(probe);
         }
 
         [UnityTest]

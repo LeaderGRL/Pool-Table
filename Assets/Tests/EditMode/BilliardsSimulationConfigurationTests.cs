@@ -10,8 +10,8 @@ namespace PoolTable.Tests.EditMode
         public void Configuration_DefinesRegulationScaleBallRigidbodyBaseline()
         {
             Assert.That(BilliardsSimulationConfiguration.BallMassKilograms, Is.EqualTo(0.17f).Within(0.000001f));
-            Assert.That(BilliardsSimulationConfiguration.BallLinearDamping, Is.Zero);
-            Assert.That(BilliardsSimulationConfiguration.BallAngularDamping, Is.Zero);
+            Assert.That(BilliardsSimulationConfiguration.BallLinearDamping, Is.EqualTo(0.35f).Within(0.000001f));
+            Assert.That(BilliardsSimulationConfiguration.BallAngularDamping, Is.EqualTo(0.2f).Within(0.000001f));
             Assert.That(
                 BilliardsSimulationConfiguration.BallCollisionDetectionMode,
                 Is.EqualTo(CollisionDetectionMode.ContinuousDynamic));
