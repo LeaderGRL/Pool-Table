@@ -20,7 +20,12 @@ public class BallStateManager : MonoBehaviour
     private ballType ballType;
     private Dictionary<GameObject, int> pocketedBalls;
     private bool playAgain = false;
+    private Vector3 initialPosition;
 
+    private void Awake()
+    {
+        initialPosition = transform.position;
+    }
 
 
     //[SerializeField] private GameObject whiteBall;
@@ -30,7 +35,6 @@ public class BallStateManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
         instance = this;
         //starting state for the state machine
         currentState = idleState;
@@ -258,12 +262,13 @@ public class BallStateManager : MonoBehaviour
 
     public void resetWhiteBallFromPocket()
     {
-        GameObject temp = new GameObject();
+        GameObject temp = null;
         foreach (KeyValuePair<GameObject, int> ball in pocketedBalls)
         {
             if (ball.Key.gameObject.tag == "white")
             {
-                ball.Key.gameObject.transform.position = new Vector3(-9.52f, 20, 0);
+                var ballStateManager = ball.Key.GetComponent<BallStateManager>();
+                ball.Key.gameObject.transform.position = ballStateManager.initialPosition;
                 ball.Key.gameObject.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
                 ball.Key.gameObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
                 temp = ball.Key;
@@ -277,7 +282,8 @@ public class BallStateManager : MonoBehaviour
 
     public void resetBall(GameObject ball)
     {
-        ball.transform.position = new Vector3(-0.635f, 1, 0);
+        var ballStateManager = ball.GetComponent<BallStateManager>();
+        ball.transform.position = ballStateManager.initialPosition;
         ball.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
         ball.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
     }

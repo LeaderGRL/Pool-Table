@@ -200,6 +200,20 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(playerCollider.enabled, Is.True, "The active player controller collider must be enabled.");
             Assert.That(playerCollider.isTrigger, Is.False, "The active player controller collider must remain solid.");
 
+            var controllerType = playerController.GetType();
+            Assert.That(
+                (float)controllerType.GetField("distance").GetValue(playerController),
+                Is.EqualTo(1.6666667f).Within(0.0001f),
+                "The legacy cue controller distance must use the metric table scale.");
+            Assert.That(
+                (Vector3)controllerType.GetField("CameraOffset").GetValue(playerController),
+                Is.EqualTo(new Vector3(0f, 0.06666667f, 0f)),
+                "The cue camera offset must be scaled with the metric cue setup.");
+            Assert.That(
+                playerController.transform.lossyScale.x,
+                Is.EqualTo(0.01f).Within(0.0001f),
+                "The active cue model must be scaled to approximately 1.5 meters.");
+
             var cueBall = GetPublicGameObjectField(playerController, "WhiteBall");
             var spectateCamera = GetPublicGameObjectField(playerController, "Cam");
             var cueCamera = GetPublicGameObjectField(playerController, "Cue_Camera");
@@ -216,6 +230,25 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cueBallStateManager.enabled, Is.True);
             Assert.That(cueBallCollision, Is.Not.Null, "The cue ball must keep WhiteBallCollision.");
             Assert.That(cueBallCollision.enabled, Is.True, "WhiteBallCollision must be enabled on the cue ball.");
+
+            var initialCueBallPosition = cueBall.transform.position;
+            var cueBallRigidbody = cueBall.GetComponent<Rigidbody>();
+            cueBall.transform.position = new Vector3(10f, 10f, 10f);
+            cueBallRigidbody.linearVelocity = Vector3.one;
+            cueBallRigidbody.angularVelocity = Vector3.one;
+            var legacyBallManager = FindActiveMonoBehaviourByTypeName(activeScene, "BallStateManager");
+            legacyBallManager.GetType().GetMethod("addPocketedBall").Invoke(
+                legacyBallManager,
+                new object[] { cueBall, 1 });
+            legacyBallManager.GetType().GetMethod("resetWhiteBallFromPocket").Invoke(
+                legacyBallManager,
+                null);
+            Assert.That(
+                Vector3.Distance(cueBall.transform.position, initialCueBallPosition),
+                Is.LessThan(0.0001f),
+                "The cue ball must return to its metric initial position after a scratch.");
+            Assert.That(cueBallRigidbody.linearVelocity, Is.EqualTo(Vector3.zero));
+            Assert.That(cueBallRigidbody.angularVelocity, Is.EqualTo(Vector3.zero));
 
             Assert.That(spectateCamera, Is.Not.Null, "PlayersStateManagement.Cam must remain wired.");
             Assert.That(spectateCamera.activeInHierarchy, Is.True, "The spectate camera must be active in the scene hierarchy.");

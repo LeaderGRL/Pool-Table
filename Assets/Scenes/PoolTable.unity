@@ -2247,10 +2247,10 @@ MonoBehaviour:
   WhiteBall: {fileID: 86719732}
   Cam: {fileID: 963194225}
   Cue_Camera: {fileID: 583553788}
-  distance: 25
+  distance: 1.6666667
   force: 3
   spin: 3
-  CameraOffset: {x: 0, y: 1, z: 0}
+  CameraOffset: {x: 0, y: 0.06666667, z: 0}
   CameraDistance: 2
   rotationSpeed: 5
   angleLimit: 45
@@ -4916,23 +4916,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.15000007
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.15000004
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.15
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -34.5
+      value: -2.3006334
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 16.1
+      value: 0.85242724
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 32660c65c06405b40806cbcb2a050f5a, type: 3}
       propertyPath: m_LocalPosition.z
