@@ -7,6 +7,9 @@ public class BallStateManager : MonoBehaviour
     // Keep the legacy controller metric without making Assembly-CSharp depend on the new Physics assembly.
     public const float StoppedSpeedThresholdMetersPerSecond = 0.01f;
 
+    private const float LegacyFixedTimestepSeconds = 0.02f;
+    private const float LegacyUpwardVelocityRetentionPerTick = 0.3f;
+
     public static BallStateManager instance;
 
     BallBaseState currentState;
@@ -64,9 +67,16 @@ public class BallStateManager : MonoBehaviour
         if (rigidbody.linearVelocity.y > 0)
         {
             var velocity = rigidbody.linearVelocity;
-            velocity.y *= 0.3f;
+            velocity.y *= GetUpwardVelocityRetention(Time.fixedDeltaTime);
             rigidbody.linearVelocity = velocity;
         }
+    }
+
+    private static float GetUpwardVelocityRetention(float fixedDeltaTimeSeconds)
+    {
+        return Mathf.Pow(
+            LegacyUpwardVelocityRetentionPerTick,
+            fixedDeltaTimeSeconds / LegacyFixedTimestepSeconds);
     }
 
     void OnCollisionEnter(Collision collision)

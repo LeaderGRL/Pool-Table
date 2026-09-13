@@ -197,6 +197,171 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PoolTableScene_UsesBilliardsRigidbodySimulationConfiguration()
+        {
+            yield return LoadPoolTableScene();
+
+            Assert.That(
+                Time.fixedDeltaTime,
+                Is.EqualTo(BilliardsSimulationConfiguration.FixedTimestepSeconds).Within(0.000001f));
+            Assert.That(
+                UnityEngine.Physics.sleepThreshold,
+                Is.EqualTo(BilliardsSimulationConfiguration.GlobalSleepThreshold).Within(0.000001f));
+            Assert.That(
+                UnityEngine.Physics.defaultContactOffset,
+                Is.EqualTo(BilliardsSimulationConfiguration.DefaultContactOffsetMeters).Within(0.000001f));
+            Assert.That(
+                UnityEngine.Physics.defaultSolverIterations,
+                Is.EqualTo(BilliardsSimulationConfiguration.DefaultSolverIterations));
+            Assert.That(
+                UnityEngine.Physics.defaultSolverVelocityIterations,
+                Is.EqualTo(BilliardsSimulationConfiguration.DefaultSolverVelocityIterations));
+
+            var identities = Object.FindObjectsByType<BallIdentity>(FindObjectsSortMode.None);
+            Assert.That(identities, Has.Length.EqualTo(16));
+
+            foreach (var identity in identities)
+            {
+                var rigidbody = identity.GetComponent<Rigidbody>();
+
+                Assert.That(rigidbody, Is.Not.Null, $"Ball {identity.Id.Number} must keep a Rigidbody.");
+                Assert.That(
+                    rigidbody.mass,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallMassKilograms).Within(0.000001f),
+                    $"Ball {identity.Id.Number} must use the billiards mass baseline.");
+                Assert.That(
+                    rigidbody.linearDamping,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallLinearDamping).Within(0.000001f),
+                    $"Ball {identity.Id.Number} must keep temporary resistance until the cloth model replaces it.");
+                Assert.That(
+                    rigidbody.angularDamping,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallAngularDamping).Within(0.000001f),
+                    $"Ball {identity.Id.Number} must keep temporary rotational resistance until the cloth model replaces it.");
+                Assert.That(rigidbody.useGravity, Is.True, $"Ball {identity.Id.Number} must remain gravity-enabled.");
+                Assert.That(rigidbody.isKinematic, Is.False, $"Ball {identity.Id.Number} must remain dynamic.");
+                Assert.That(
+                    rigidbody.collisionDetectionMode,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallCollisionDetectionMode),
+                    $"Ball {identity.Id.Number} must use continuous dynamic collision detection.");
+                Assert.That(
+                    rigidbody.interpolation,
+                    Is.EqualTo(BilliardsSimulationConfiguration.BallInterpolation),
+                    $"Ball {identity.Id.Number} must use the billiards interpolation baseline.");
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_VerticalVelocityDampingIsTimestepIndependent()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var ballStateManager = FindActiveMonoBehaviourByTypeName(activeScene, "BallStateManager");
+            Assert.That(ballStateManager, Is.Not.Null);
+
+            var getUpwardVelocityRetention = ballStateManager.GetType().GetMethod(
+                "GetUpwardVelocityRetention",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            Assert.That(getUpwardVelocityRetention, Is.Not.Null);
+
+            var legacyTickRetention = (float)getUpwardVelocityRetention.Invoke(null, new object[] { 0.02f });
+            var currentTickRetention = (float)getUpwardVelocityRetention.Invoke(
+                null,
+                new object[] { BilliardsSimulationConfiguration.FixedTimestepSeconds });
+            var currentRetentionOverLegacyInterval = Mathf.Pow(
+                currentTickRetention,
+                0.02f / BilliardsSimulationConfiguration.FixedTimestepSeconds);
+
+            Assert.That(legacyTickRetention, Is.EqualTo(0.3f).Within(0.000001f));
+            Assert.That(
+                currentRetentionOverLegacyInterval,
+                Is.EqualTo(legacyTickRetention).Within(0.000001f),
+                "Vertical damping must preserve the legacy 20 ms behavior when the physics timestep changes.");
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_LegacyShotSpeedIsIndependentOfBallMass()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var playerController = FindActiveMonoBehaviourByTypeName(activeScene, "PlayersStateManagement");
+            Assert.That(playerController, Is.Not.Null);
+
+            var controllerType = playerController.GetType();
+            var maxShotSpeedMetersPerSecond =
+                (float)controllerType.GetField("maxShotSpeedMetersPerSecond").GetValue(playerController);
+            var shootState = controllerType.GetField("shootState").GetValue(playerController);
+            var applyShotVelocityChange = shootState.GetType().GetMethod(
+                "ApplyShotVelocityChange",
+                BindingFlags.Static | BindingFlags.NonPublic);
+
+            Assert.That(applyShotVelocityChange, Is.Not.Null);
+
+            var regulationProbe = new GameObject("RegulationMassShotProbe");
+            var legacyMassProbe = new GameObject("LegacyMassShotProbe");
+            var regulationRigidbody = regulationProbe.AddComponent<Rigidbody>();
+            var legacyRigidbody = legacyMassProbe.AddComponent<Rigidbody>();
+
+            regulationRigidbody.useGravity = false;
+            legacyRigidbody.useGravity = false;
+            regulationRigidbody.linearDamping = 0f;
+            legacyRigidbody.linearDamping = 0f;
+            regulationRigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+            legacyRigidbody.mass = 1f;
+
+            applyShotVelocityChange.Invoke(
+                null,
+                new object[] { regulationRigidbody, Vector3.right, 1f, maxShotSpeedMetersPerSecond });
+            applyShotVelocityChange.Invoke(
+                null,
+                new object[] { legacyRigidbody, Vector3.right, 1f, maxShotSpeedMetersPerSecond });
+
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(
+                regulationRigidbody.linearVelocity.x,
+                Is.EqualTo(maxShotSpeedMetersPerSecond).Within(0.0001f));
+            Assert.That(
+                legacyRigidbody.linearVelocity.x,
+                Is.EqualTo(maxShotSpeedMetersPerSecond).Within(0.0001f));
+            Assert.That(
+                regulationRigidbody.linearVelocity,
+                Is.EqualTo(legacyRigidbody.linearVelocity),
+                "Cue-ball shot speed must not change when Rigidbody mass changes.");
+
+            Object.Destroy(regulationProbe);
+            Object.Destroy(legacyMassProbe);
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_TemporaryDampingReducesBallMotion()
+        {
+            yield return LoadPoolTableScene();
+
+            var probe = new GameObject("Temporary Damping Probe");
+            var rigidbody = probe.AddComponent<Rigidbody>();
+            rigidbody.useGravity = false;
+            rigidbody.linearDamping = BilliardsSimulationConfiguration.BallLinearDamping;
+            rigidbody.angularDamping = BilliardsSimulationConfiguration.BallAngularDamping;
+
+            rigidbody.linearVelocity = Vector3.right;
+            rigidbody.angularVelocity = Vector3.up;
+            var initialLinearSpeed = rigidbody.linearVelocity.magnitude;
+            var initialAngularSpeed = rigidbody.angularVelocity.magnitude;
+
+            for (var step = 0; step < 10; step++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            Assert.That(rigidbody.linearVelocity.magnitude, Is.LessThan(initialLinearSpeed));
+            Assert.That(rigidbody.angularVelocity.magnitude, Is.LessThan(initialAngularSpeed));
+
+            Object.Destroy(probe);
+        }
+
+        [UnityTest]
         public IEnumerator PoolTableScene_InitializesLegacyGameplayWiring()
         {
             yield return LoadPoolTableScene();
@@ -234,9 +399,9 @@ namespace PoolTable.Tests.PlayMode
                 Is.LessThan(BilliardsPhysicalSpecification.BallRadiusMeters),
                 "A single normalized cue stroke input must move less than one regulation ball radius.");
             Assert.That(
-                (float)controllerType.GetField("force").GetValue(playerController),
+                (float)controllerType.GetField("maxShotSpeedMetersPerSecond").GetValue(playerController),
                 Is.EqualTo(6.6666667f).Within(0.0001f),
-                "The legacy shot impulse must be scaled with the metric table setup.");
+                "The legacy cue controller must express shot strength as a metric target speed.");
             Assert.That(
                 (Vector3)controllerType.GetField("CameraOffset").GetValue(playerController),
                 Is.EqualTo(new Vector3(0f, 0.06666667f, 0f)),

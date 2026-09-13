@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class PlayersStateManagement : MonoBehaviour
 {
@@ -15,7 +16,8 @@ public class PlayersStateManagement : MonoBehaviour
     public GameObject Cam;
     public GameObject Cue_Camera;
     public float distance;
-    public float force;
+    [FormerlySerializedAs("force")]
+    public float maxShotSpeedMetersPerSecond;
     public float cueStrokeDistancePerInput = 0.02f;
     public float spin;
     public Vector3 CameraOffset;
