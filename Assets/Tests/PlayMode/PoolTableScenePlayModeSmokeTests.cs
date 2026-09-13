@@ -205,6 +205,20 @@ namespace PoolTable.Tests.PlayMode
                 (float)controllerType.GetField("distance").GetValue(playerController),
                 Is.EqualTo(1.6666667f).Within(0.0001f),
                 "The legacy cue controller distance must use the metric table scale.");
+            var cueStrokeDistancePerInput =
+                (float)controllerType.GetField("cueStrokeDistancePerInput").GetValue(playerController);
+            Assert.That(
+                cueStrokeDistancePerInput,
+                Is.EqualTo(0.02f).Within(0.0001f),
+                "The cue stroke must use the metric controller scale.");
+            Assert.That(
+                cueStrokeDistancePerInput,
+                Is.LessThan(BilliardsPhysicalSpecification.BallRadiusMeters),
+                "A single normalized cue stroke input must move less than one regulation ball radius.");
+            Assert.That(
+                (float)controllerType.GetField("force").GetValue(playerController),
+                Is.EqualTo(6.6666667f).Within(0.0001f),
+                "The legacy shot impulse must be scaled with the metric table setup.");
             Assert.That(
                 (Vector3)controllerType.GetField("CameraOffset").GetValue(playerController),
                 Is.EqualTo(new Vector3(0f, 0.06666667f, 0f)),
@@ -236,6 +250,12 @@ namespace PoolTable.Tests.PlayMode
             cueBall.transform.position = new Vector3(10f, 10f, 10f);
             cueBallRigidbody.linearVelocity = Vector3.one;
             cueBallRigidbody.angularVelocity = Vector3.one;
+            var ballManagerType = cueBallStateManager.GetType();
+            var currentBallStateField = ballManagerType.GetField(
+                "currentState",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            var pocketedState = ballManagerType.GetField("pocketedState").GetValue(cueBallStateManager);
+            currentBallStateField.SetValue(cueBallStateManager, pocketedState);
             var legacyBallManager = FindActiveMonoBehaviourByTypeName(activeScene, "BallStateManager");
             legacyBallManager.GetType().GetMethod("addPocketedBall").Invoke(
                 legacyBallManager,
@@ -249,6 +269,10 @@ namespace PoolTable.Tests.PlayMode
                 "The cue ball must return to its metric initial position after a scratch.");
             Assert.That(cueBallRigidbody.linearVelocity, Is.EqualTo(Vector3.zero));
             Assert.That(cueBallRigidbody.angularVelocity, Is.EqualTo(Vector3.zero));
+            Assert.That(
+                currentBallStateField.GetValue(cueBallStateManager).GetType().Name,
+                Is.EqualTo("BallIdleState"),
+                "The cue ball must leave BallPocketedState after scratch recovery.");
 
             Assert.That(spectateCamera, Is.Not.Null, "PlayersStateManagement.Cam must remain wired.");
             Assert.That(spectateCamera.activeInHierarchy, Is.True, "The spectate camera must be active in the scene hierarchy.");

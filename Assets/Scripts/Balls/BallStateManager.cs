@@ -271,6 +271,7 @@ public class BallStateManager : MonoBehaviour
                 ball.Key.gameObject.transform.position = ballStateManager.initialPosition;
                 ball.Key.gameObject.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
                 ball.Key.gameObject.GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+                ballStateManager.SwitchState(ballStateManager.idleState);
                 temp = ball.Key;
             }
         }
