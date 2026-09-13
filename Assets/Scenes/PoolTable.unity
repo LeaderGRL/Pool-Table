@@ -268,6 +268,7 @@ GameObject:
   - component: {fileID: 920260003}
   - component: {fileID: 930260003}
   - component: {fileID: 1082107271}
+  - component: {fileID: 1082107272}
   m_Layer: 6
   m_Name: Sphere (3)
   m_TagString: filled
@@ -419,6 +420,7 @@ GameObject:
   - component: {fileID: 920260000}
   - component: {fileID: 930260000}
   - component: {fileID: 1824040252}
+  - component: {fileID: 1824040253}
   m_Layer: 0
   m_Name: Sphere
   m_TagString: white
@@ -581,6 +583,7 @@ GameObject:
   - component: {fileID: 920260004}
   - component: {fileID: 930260004}
   - component: {fileID: 582077255}
+  - component: {fileID: 826117159}
   m_Layer: 6
   m_Name: Sphere (6)
   m_TagString: filled
@@ -1699,6 +1702,7 @@ GameObject:
   - component: {fileID: 920260005}
   - component: {fileID: 930260005}
   - component: {fileID: 1863900542}
+  - component: {fileID: 1863900543}
   m_Layer: 6
   m_Name: Sphere (4)
   m_TagString: filled
@@ -1923,6 +1927,7 @@ GameObject:
   - component: {fileID: 920260012}
   - component: {fileID: 930260012}
   - component: {fileID: 930260017}
+  - component: {fileID: 930260021}
   m_Layer: 6
   m_Name: Sphere (14)
   m_TagString: striped
@@ -2467,6 +2472,7 @@ GameObject:
   - component: {fileID: 920260014}
   - component: {fileID: 930260014}
   - component: {fileID: 930260019}
+  - component: {fileID: 930260023}
   m_Layer: 6
   m_Name: Sphere (12)
   m_TagString: striped
@@ -3117,6 +3123,7 @@ GameObject:
   - component: {fileID: 920260006}
   - component: {fileID: 930260006}
   - component: {fileID: 374834652}
+  - component: {fileID: 471311137}
   m_Layer: 6
   m_Name: Sphere (5)
   m_TagString: filled
@@ -3267,6 +3274,7 @@ GameObject:
   - component: {fileID: 920260011}
   - component: {fileID: 930260011}
   - component: {fileID: 930260016}
+  - component: {fileID: 930260020}
   m_Layer: 6
   m_Name: Sphere (15)
   m_TagString: striped
@@ -3417,6 +3425,7 @@ GameObject:
   - component: {fileID: 920260010}
   - component: {fileID: 930260010}
   - component: {fileID: 601986359}
+  - component: {fileID: 1060858220}
   m_Layer: 6
   m_Name: Sphere (7)
   m_TagString: striped
@@ -3567,6 +3576,7 @@ GameObject:
   - component: {fileID: 920260013}
   - component: {fileID: 930260013}
   - component: {fileID: 930260018}
+  - component: {fileID: 930260022}
   m_Layer: 6
   m_Name: Sphere (13)
   m_TagString: striped
@@ -4238,6 +4248,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   soundManager: {fileID: 1008307702}
   ballsRoot: {fileID: 1362464029}
+  shotSimulationInstrumentation: {fileID: 1362464031}
 --- !u!4 &1008307703
 Transform:
   m_ObjectHideFlags: 0
@@ -4271,6 +4282,7 @@ GameObject:
   - component: {fileID: 920260001}
   - component: {fileID: 930260001}
   - component: {fileID: 1019706809}
+  - component: {fileID: 1019706810}
   m_Layer: 6
   m_Name: Sphere (1)
   m_TagString: filled
@@ -4421,6 +4433,7 @@ GameObject:
   - component: {fileID: 920260009}
   - component: {fileID: 930260009}
   - component: {fileID: 1062358944}
+  - component: {fileID: 1062358945}
   m_Layer: 6
   m_Name: Sphere (8)
   m_TagString: striped
@@ -4571,6 +4584,7 @@ GameObject:
   - component: {fileID: 920260007}
   - component: {fileID: 930260007}
   - component: {fileID: 1072184241}
+  - component: {fileID: 1072184242}
   m_Layer: 6
   m_Name: Sphere (10)
   m_TagString: filled
@@ -5294,6 +5308,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1362464029}
   - component: {fileID: 1362464030}
+  - component: {fileID: 1362464031}
   m_Layer: 0
   m_Name: Balls
   m_TagString: Untagged
@@ -6007,6 +6022,7 @@ GameObject:
   - component: {fileID: 920260015}
   - component: {fileID: 930260015}
   - component: {fileID: 1640636888}
+  - component: {fileID: 1640636889}
   m_Layer: 6
   m_Name: Sphere (11)
   m_TagString: striped
@@ -6334,6 +6350,7 @@ GameObject:
   - component: {fileID: 920260002}
   - component: {fileID: 930260002}
   - component: {fileID: 1722692151}
+  - component: {fileID: 1722692152}
   m_Layer: 6
   m_Name: Sphere (2)
   m_TagString: filled
@@ -6565,6 +6582,7 @@ GameObject:
   - component: {fileID: 920260008}
   - component: {fileID: 930260008}
   - component: {fileID: 1940031943}
+  - component: {fileID: 1940031944}
   m_Layer: 6
   m_Name: Sphere (9)
   m_TagString: black
@@ -8062,6 +8080,210 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.05715
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &1082107272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 39856144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &1824040253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 86719732}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &826117159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 138793834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &1863900543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 466467918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &930260021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 506606833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &930260023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 589692452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &471311137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 726879712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &930260020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728835048}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &1060858220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 752744630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &930260022
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 795021681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &1019706810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1019706801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &1062358945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062358936}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &1072184242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072184233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &1362464031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362464028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34d13ff2d7a44584db0b5692ec857258, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Gameplay::PoolTable.Gameplay.Instrumentation.ShotSimulationInstrumentation
+--- !u!114 &1640636889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1640636880}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &1722692152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722692143}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
+--- !u!114 &1940031944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1940031935}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a568f0b45b5c94f43ad52a3a5ea95aa5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PoolTable.Physics::PoolTable.Physics.Instrumentation.RigidbodySimulationProbe
 --- !u!1 &835756101
 GameObject:
   m_ObjectHideFlags: 0

@@ -8,10 +8,12 @@ using PoolTable.Core.Match;
 using PoolTable.Core.Rules;
 using PoolTable.Core.Shots;
 using PoolTable.Gameplay.Balls;
+using PoolTable.Gameplay.Instrumentation;
 using PoolTable.Gameplay.Match;
 using PoolTable.Gameplay.Pockets;
 using PoolTable.Physics.Cloth;
 using PoolTable.Physics.Configuration;
+using PoolTable.Physics.Instrumentation;
 using PoolTable.Physics.Pockets;
 using PoolTable.Physics.Rails;
 using PoolTable.Presentation;
@@ -912,6 +914,70 @@ namespace PoolTable.Tests.PlayMode
                 playerOneTurn.activeInHierarchy,
                 Is.Not.EqualTo(playerTwoTurn.activeInHierarchy),
                 "Exactly one turn indicator must be active in the scene hierarchy after startup.");
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_ShotInstrumentationRecordsAllBallsAndBallCollision()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var compositionRoot = Object.FindFirstObjectByType<PoolTableSceneCompositionRoot>();
+            Assert.That(compositionRoot, Is.Not.Null);
+
+            var instrumentation = compositionRoot.ShotSimulationInstrumentation;
+            Assert.That(instrumentation, Is.Not.Null, "The composition root must expose shot simulation instrumentation.");
+            Assert.That(instrumentation.isActiveAndEnabled, Is.True);
+            Assert.That(instrumentation.RegisteredBallCount, Is.EqualTo(16));
+
+            var probes = compositionRoot.BallsRoot.GetComponentsInChildren<RigidbodySimulationProbe>(true);
+            Assert.That(probes, Has.Length.EqualTo(16), "Every billiard ball must expose one simulation probe.");
+
+            var identities = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallIdentity>())
+                .Where(identity => identity != null)
+                .ToArray();
+            var cueBall = identities.Single(identity => identity.Id.Number == 0);
+            var oneBall = identities.Single(identity => identity.Id.Number == 1);
+            var cueBody = cueBall.GetComponent<Rigidbody>();
+            var oneBody = oneBall.GetComponent<Rigidbody>();
+
+            cueBody.useGravity = false;
+            oneBody.useGravity = false;
+            cueBody.linearVelocity = Vector3.zero;
+            oneBody.linearVelocity = Vector3.zero;
+            cueBody.angularVelocity = Vector3.zero;
+            oneBody.angularVelocity = Vector3.zero;
+            cueBody.position = new Vector3(-0.05f, 2f, 0f);
+            oneBody.position = new Vector3(0.05f, 2f, 0f);
+            cueBody.linearVelocity = Vector3.right;
+            oneBody.linearVelocity = Vector3.left;
+            UnityEngine.Physics.SyncTransforms();
+
+            instrumentation.BeginShot();
+            for (var step = 0; step < 16; step++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            var report = instrumentation.CompleteShot();
+
+            Assert.That(report, Is.SameAs(instrumentation.LastReport));
+            Assert.That(report.Tracks, Has.Count.EqualTo(16));
+            Assert.That(report.DurationSeconds, Is.GreaterThanOrEqualTo(BilliardsSimulationConfiguration.FixedTimestepSeconds));
+            Assert.That(report.TryGetTrack(cueBall.Id, out var cueTrack), Is.True);
+            Assert.That(report.TryGetTrack(oneBall.Id, out var oneTrack), Is.True);
+            Assert.That(cueTrack.Samples, Has.Count.GreaterThan(2));
+            Assert.That(oneTrack.Samples, Has.Count.GreaterThan(2));
+            Assert.That(cueTrack.DistanceTraveledMeters, Is.GreaterThan(0f));
+            Assert.That(oneTrack.DistanceTraveledMeters, Is.GreaterThan(0f));
+            Assert.That(
+                report.Collisions.Any(collision =>
+                    collision.Kind == SimulationCollisionKind.Ball
+                    && collision.Ball == cueBall.Id
+                    && collision.OtherBall == oneBall.Id),
+                Is.True,
+                "The controlled cue-ball/object-ball impact must be captured once using typed ball IDs.");
         }
 
         private static IEnumerator LoadPoolTableScene()
