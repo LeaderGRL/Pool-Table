@@ -15,9 +15,10 @@ namespace PoolTable.Gameplay.Shots
         [SerializeField] private float maximumCuePullbackMeters = 0.35f;
         [SerializeField] private float pointerDeltaSensitivity = 0.1f;
         [SerializeField] private float cueStrokeMetersPerPointerUnit = 0.02f;
+        [SerializeField] private float controllerPullbackMetersPerSecond = 0.5f;
         [SerializeField] private float maximumShotSpeedMetersPerSecond = 6.6666667f;
 
-        private MouseInputReader mouseInputReader;
+        private LocalPlayerInputReader localPlayerInputReader;
         private ShotPowerState shotPowerState;
         private Vector3 restPosition;
         private Quaternion restRotation;
@@ -48,15 +49,15 @@ namespace PoolTable.Gameplay.Shots
 
         private void Awake()
         {
-            mouseInputReader = new MouseInputReader();
+            localPlayerInputReader = new LocalPlayerInputReader();
             shotPowerState = new ShotPowerState(maximumCuePullbackMeters);
         }
 
         private void OnEnable()
         {
-            if (mouseInputReader == null)
+            if (localPlayerInputReader == null)
             {
-                mouseInputReader = new MouseInputReader();
+                localPlayerInputReader = new LocalPlayerInputReader();
             }
 
             shotPowerState = new ShotPowerState(maximumCuePullbackMeters);
@@ -82,7 +83,7 @@ namespace PoolTable.Gameplay.Shots
                 return;
             }
 
-            ProcessInput(mouseInputReader.Read());
+            ProcessInput(localPlayerInputReader.Read());
         }
 
         private void FixedUpdate()
@@ -100,7 +101,7 @@ namespace PoolTable.Gameplay.Shots
             enabled = false;
         }
 
-        internal void ProcessInput(PointerInputSnapshot input)
+        internal void ProcessInput(LocalPlayerInputSnapshot input)
         {
             if (shotPowerState == null || cueBall == null || aimingController == null || strikeQueued || ShotCommitted)
             {
@@ -109,8 +110,10 @@ namespace PoolTable.Gameplay.Shots
 
             if (input.PrimaryButtonIsPressed)
             {
-                var pointerDelta = Mathf.Clamp(input.Delta.y * pointerDeltaSensitivity, -1f, 1f);
-                shotPowerState.AdjustPullback(pointerDelta * cueStrokeMetersPerPointerUnit);
+                var pointerInput = Mathf.Clamp(input.PointerDelta.y * pointerDeltaSensitivity, -1f, 1f);
+                var pointerPullback = pointerInput * cueStrokeMetersPerPointerUnit;
+                var controllerPullback = input.ActionAxis.y * controllerPullbackMetersPerSecond * Time.deltaTime;
+                shotPowerState.AdjustPullback(pointerPullback + controllerPullback);
                 ApplyCuePullbackPose();
             }
             else if (previousPrimaryButtonPressed)
@@ -164,3 +167,4 @@ namespace PoolTable.Gameplay.Shots
         }
     }
 }
+

@@ -9,7 +9,7 @@ namespace PoolTable.Gameplay.Shots
     {
         [SerializeField] private float normalizedUnitsPerPointerUnit = 0.01f;
 
-        private MouseInputReader mouseInputReader;
+        private LocalPlayerInputReader localPlayerInputReader;
         private CueBallSpinState spinState;
 
         public float NormalizedUnitsPerPointerUnit => normalizedUnitsPerPointerUnit;
@@ -18,15 +18,15 @@ namespace PoolTable.Gameplay.Shots
 
         private void Awake()
         {
-            mouseInputReader = new MouseInputReader();
+            localPlayerInputReader = new LocalPlayerInputReader();
             spinState = new CueBallSpinState();
         }
 
         private void OnEnable()
         {
-            if (mouseInputReader == null)
+            if (localPlayerInputReader == null)
             {
-                mouseInputReader = new MouseInputReader();
+                localPlayerInputReader = new LocalPlayerInputReader();
             }
 
             if (spinState == null)
@@ -37,10 +37,10 @@ namespace PoolTable.Gameplay.Shots
 
         private void Update()
         {
-            ProcessInput(mouseInputReader.Read());
+            ProcessInput(localPlayerInputReader.Read());
         }
 
-        internal void ProcessInput(PointerInputSnapshot input)
+        internal void ProcessInput(LocalPlayerInputSnapshot input)
         {
             if (spinState == null || !input.SecondaryButtonIsPressed)
             {
@@ -48,8 +48,8 @@ namespace PoolTable.Gameplay.Shots
             }
 
             spinState.Adjust(
-                input.Delta.x * normalizedUnitsPerPointerUnit,
-                input.Delta.y * normalizedUnitsPerPointerUnit);
+                (input.PointerDelta.x + input.ActionAxis.x * 100f * Time.deltaTime) * normalizedUnitsPerPointerUnit,
+                (input.PointerDelta.y + input.ActionAxis.y * 100f * Time.deltaTime) * normalizedUnitsPerPointerUnit);
         }
 
         public void ResetToCenter()
