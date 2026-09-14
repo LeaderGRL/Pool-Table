@@ -419,7 +419,9 @@ namespace PoolTable.Tests.PlayMode
                 rigidbody.useGravity = false;
                 rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
                 rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-                ballObject.AddComponent<BallRailCollisionResponse>();
+                var railResponse = ballObject.AddComponent<BallRailCollisionResponse>();
+                var resolvedRailObservations = new List<RailCollisionObservation>();
+                railResponse.RailCollisionResolved += resolvedRailObservations.Add;
                 ballObject.transform.position = Vector3.zero;
                 rigidbody.linearVelocity = Vector3.right * 2f;
 
@@ -428,11 +430,27 @@ namespace PoolTable.Tests.PlayMode
                     yield return new WaitForFixedUpdate();
                 }
 
+                yield return new WaitForFixedUpdate();
+
                 Assert.That(rigidbody.linearVelocity.x, Is.LessThan(-1f));
                 Assert.That(
                     Mathf.Abs(rigidbody.linearVelocity.x),
                     Is.LessThan(2f),
                     "Multiple rail colliders in one physics step must share one custom restitution response.");
+                Assert.That(
+                    resolvedRailObservations,
+                    Has.Count.EqualTo(1),
+                    "Overlapping rail colliders in one physics step must emit one aggregated rail observation.");
+
+                var expectedResponse = RailCollisionResponseModel.CalculateManifoldResponse(
+                    Vector3.right * 2f,
+                    Vector3.zero,
+                    new[] { Vector3.left, Vector3.left },
+                    BilliardsPhysicalSpecification.BallRadiusMeters);
+                var expectedImpulse = (expectedResponse.LinearVelocity - (Vector3.right * 2f)) * rigidbody.mass;
+                Assert.That(
+                    Vector3.Distance(resolvedRailObservations[0].AppliedLinearImpulse, expectedImpulse),
+                    Is.LessThan(0.000001f));
             }
             finally
             {

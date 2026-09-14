@@ -46,6 +46,7 @@ namespace PoolTable.Physics.Instrumentation
                 return;
             }
 
+            _railCollisionResponse?.FlushPendingObservation();
             EmitKinematicSample(Time.fixedTimeAsDouble);
             _isRecording = false;
         }
@@ -96,18 +97,22 @@ namespace PoolTable.Physics.Instrumentation
                 collision.impulse.magnitude);
         }
 
-        private void OnRailCollisionResolved(Collision collision, Vector3 appliedLinearImpulse)
+        private void OnRailCollisionResolved(RailCollisionObservation observation)
         {
             if (!_isRecording)
             {
                 return;
             }
 
-            EmitCollisionObservation(
-                collision,
-                null,
-                SimulationCollisionKind.Rail,
-                appliedLinearImpulse.magnitude);
+            CollisionObserved?.Invoke(
+                this,
+                new ProbeCollisionObservation(
+                    observation.SimulationTimeSeconds,
+                    null,
+                    SimulationCollisionKind.Rail,
+                    observation.RelativeSpeedMetersPerSecond,
+                    observation.AppliedLinearImpulse.magnitude,
+                    observation.ContactPointMeters));
         }
 
         private void EmitCollisionObservation(
@@ -150,6 +155,7 @@ namespace PoolTable.Physics.Instrumentation
                 return;
             }
 
+            _railCollisionResponse?.FlushPendingObservation();
             EmitKinematicSample(simulationTimeSeconds);
             _isRecording = false;
         }

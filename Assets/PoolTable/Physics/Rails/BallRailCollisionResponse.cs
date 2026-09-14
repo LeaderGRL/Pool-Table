@@ -16,8 +16,10 @@ namespace PoolTable.Physics.Rails
         private Vector3 _stepIncomingAngularVelocity;
         private RailCollisionResponse _stepAppliedResponse;
         private Vector3 _pendingNativeRailImpulse;
+        private RailCollisionObservation _pendingObservation;
+        private bool _hasPendingObservation;
 
-        internal event Action<Collision, Vector3> RailCollisionResolved;
+        internal event Action<RailCollisionObservation> RailCollisionResolved;
 
         private void Awake()
         {
@@ -26,9 +28,15 @@ namespace PoolTable.Physics.Rails
 
         private void FixedUpdate()
         {
+            FlushPendingObservation();
             _processedRailColliders.Clear();
             _railNormals.Clear();
             _pendingNativeRailImpulse = Vector3.zero;
+        }
+
+        private void OnDisable()
+        {
+            FlushPendingObservation();
         }
 
         private void OnCollisionEnter(Collision collision)
@@ -92,7 +100,32 @@ namespace PoolTable.Physics.Rails
 
             _pendingNativeRailImpulse = Vector3.zero;
             _stepAppliedResponse = response;
-            RailCollisionResolved?.Invoke(collision, appliedLinearImpulse);
+
+            if (!_hasPendingObservation)
+            {
+                _pendingObservation = new RailCollisionObservation(
+                    Time.fixedTimeAsDouble,
+                    collision.relativeVelocity.magnitude,
+                    collision.GetContact(0).point,
+                    appliedLinearImpulse);
+                _hasPendingObservation = true;
+                return;
+            }
+
+            _pendingObservation = _pendingObservation.WithAdditionalImpulse(appliedLinearImpulse);
+        }
+
+        internal void FlushPendingObservation()
+        {
+            if (!_hasPendingObservation)
+            {
+                return;
+            }
+
+            var observation = _pendingObservation;
+            _pendingObservation = default;
+            _hasPendingObservation = false;
+            RailCollisionResolved?.Invoke(observation);
         }
 
         internal static Vector3 ApplyRailCorrection(
@@ -116,6 +149,35 @@ namespace PoolTable.Physics.Rails
             var appliedRailVelocityChange = customRailVelocityChange
                 + new Vector3(0f, nativeRailVelocityChange.y, 0f);
             return appliedRailVelocityChange * rigidbody.mass;
+        }
+    }
+
+    internal readonly struct RailCollisionObservation
+    {
+        public RailCollisionObservation(
+            double simulationTimeSeconds,
+            float relativeSpeedMetersPerSecond,
+            Vector3 contactPointMeters,
+            Vector3 appliedLinearImpulse)
+        {
+            SimulationTimeSeconds = simulationTimeSeconds;
+            RelativeSpeedMetersPerSecond = relativeSpeedMetersPerSecond;
+            ContactPointMeters = contactPointMeters;
+            AppliedLinearImpulse = appliedLinearImpulse;
+        }
+
+        public double SimulationTimeSeconds { get; }
+        public float RelativeSpeedMetersPerSecond { get; }
+        public Vector3 ContactPointMeters { get; }
+        public Vector3 AppliedLinearImpulse { get; }
+
+        public RailCollisionObservation WithAdditionalImpulse(Vector3 appliedLinearImpulse)
+        {
+            return new RailCollisionObservation(
+                SimulationTimeSeconds,
+                RelativeSpeedMetersPerSecond,
+                ContactPointMeters,
+                AppliedLinearImpulse + appliedLinearImpulse);
         }
     }
 }
