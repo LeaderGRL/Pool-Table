@@ -11,6 +11,7 @@ namespace PoolTable.Physics.Instrumentation
     public sealed class RigidbodySimulationProbe : MonoBehaviour
     {
         private Rigidbody _rigidbody;
+        private BallRailCollisionResponse _railCollisionResponse;
         private bool _isRecording;
 
         internal event Action<RigidbodySimulationProbe, ProbeKinematicSample> KinematicSampled;
@@ -23,6 +24,11 @@ namespace PoolTable.Physics.Instrumentation
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody>();
+            _railCollisionResponse = GetComponent<BallRailCollisionResponse>();
+            if (_railCollisionResponse != null)
+            {
+                _railCollisionResponse.RailCollisionResolved += OnRailCollisionResolved;
+            }
         }
 
         private void FixedUpdate()
@@ -44,18 +50,75 @@ namespace PoolTable.Physics.Instrumentation
             _isRecording = false;
         }
 
+        private void OnDestroy()
+        {
+            if (_railCollisionResponse != null)
+            {
+                _railCollisionResponse.RailCollisionResolved -= OnRailCollisionResolved;
+            }
+        }
+
         private void OnCollisionEnter(Collision collision)
         {
-            if (!_isRecording)
+            ObserveCollision(collision, requireImpulse: false);
+        }
+
+        private void OnCollisionStay(Collision collision)
+        {
+            ObserveCollision(collision, requireImpulse: true);
+        }
+
+        private void ObserveCollision(Collision collision, bool requireImpulse)
+        {
+            if (!_isRecording || (requireImpulse && collision.impulse.sqrMagnitude <= Mathf.Epsilon))
             {
                 return;
             }
 
             var otherProbe = ResolveOtherBallProbe(collision);
             var kind = ClassifyCollision(collision, otherProbe);
+            if (kind == SimulationCollisionKind.Rail && _railCollisionResponse != null)
+            {
+                return;
+            }
+
+            if (requireImpulse
+                && kind != SimulationCollisionKind.Ball
+                && kind != SimulationCollisionKind.Rail)
+            {
+                return;
+            }
+
+            EmitCollisionObservation(
+                collision,
+                otherProbe,
+                kind,
+                collision.impulse.magnitude);
+        }
+
+        private void OnRailCollisionResolved(Collision collision, Vector3 appliedLinearImpulse)
+        {
+            if (!_isRecording)
+            {
+                return;
+            }
+
+            EmitCollisionObservation(
+                collision,
+                null,
+                SimulationCollisionKind.Rail,
+                appliedLinearImpulse.magnitude);
+        }
+
+        private void EmitCollisionObservation(
+            Collision collision,
+            RigidbodySimulationProbe otherProbe,
+            SimulationCollisionKind kind,
+            float impulseNewtonSeconds)
+        {
             var contactPoint = collision.contactCount > 0
                 ? collision.GetContact(0).point
-                : transform.position;
+                : Body.position;
 
             CollisionObserved?.Invoke(
                 this,
@@ -64,7 +127,7 @@ namespace PoolTable.Physics.Instrumentation
                     otherProbe,
                     kind,
                     collision.relativeVelocity.magnitude,
-                    collision.impulse.magnitude,
+                    impulseNewtonSeconds,
                     contactPoint));
         }
 
@@ -104,7 +167,7 @@ namespace PoolTable.Physics.Instrumentation
                 this,
                 new ProbeKinematicSample(
                     simulationTimeSeconds,
-                    transform.position,
+                    _rigidbody.position,
                     _rigidbody.linearVelocity,
                     _rigidbody.angularVelocity,
                     energy));

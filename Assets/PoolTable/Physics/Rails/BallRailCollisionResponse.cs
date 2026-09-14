@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using PoolTable.Physics.Configuration;
 using UnityEngine;
@@ -15,6 +16,8 @@ namespace PoolTable.Physics.Rails
         private Vector3 _stepIncomingAngularVelocity;
         private RailCollisionResponse _stepAppliedResponse;
         private Vector3 _pendingNativeRailImpulse;
+
+        internal event Action<Collision, Vector3> RailCollisionResolved;
 
         private void Awake()
         {
@@ -81,7 +84,7 @@ namespace PoolTable.Physics.Rails
                 return;
             }
 
-            ApplyRailCorrection(
+            var appliedLinearImpulse = ApplyRailCorrection(
                 _rigidbody,
                 _pendingNativeRailImpulse,
                 _stepAppliedResponse,
@@ -89,9 +92,10 @@ namespace PoolTable.Physics.Rails
 
             _pendingNativeRailImpulse = Vector3.zero;
             _stepAppliedResponse = response;
+            RailCollisionResolved?.Invoke(collision, appliedLinearImpulse);
         }
 
-        internal static void ApplyRailCorrection(
+        internal static Vector3 ApplyRailCorrection(
             Rigidbody rigidbody,
             Vector3 nativeRailImpulse,
             RailCollisionResponse previousResponse,
@@ -108,6 +112,10 @@ namespace PoolTable.Physics.Rails
             var customRailVelocityChange = combinedResponse.LinearVelocity - previousResponse.LinearVelocity;
             rigidbody.linearVelocity += customRailVelocityChange - planarNativeRailVelocityChange;
             rigidbody.angularVelocity += combinedResponse.AngularVelocity - previousResponse.AngularVelocity;
+
+            var appliedRailVelocityChange = customRailVelocityChange
+                + new Vector3(0f, nativeRailVelocityChange.y, 0f);
+            return appliedRailVelocityChange * rigidbody.mass;
         }
     }
 }

@@ -980,6 +980,51 @@ namespace PoolTable.Tests.PlayMode
                 "The controlled cue-ball/object-ball impact must be captured once using typed ball IDs.");
         }
 
+        [UnityTest]
+        public IEnumerator PoolTableScene_ShotInstrumentationRecordsPersistentRackImpulseTransfer()
+        {
+            yield return LoadPoolTableScene();
+
+            var compositionRoot = Object.FindFirstObjectByType<PoolTableSceneCompositionRoot>();
+            Assert.That(compositionRoot, Is.Not.Null);
+            var instrumentation = compositionRoot.ShotSimulationInstrumentation;
+            Assert.That(instrumentation, Is.Not.Null);
+
+            var identities = compositionRoot.BallsRoot.GetComponentsInChildren<BallIdentity>(true);
+            var cueBall = identities.Single(identity => identity.Id.IsCueBall);
+            var objectBalls = identities.Where(identity => !identity.Id.IsCueBall).ToArray();
+            var apexBall = objectBalls.OrderBy(identity => identity.transform.position.x).First();
+
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+
+            var cueBody = cueBall.GetComponent<Rigidbody>();
+            cueBody.useGravity = false;
+            cueBody.linearVelocity = Vector3.zero;
+            cueBody.angularVelocity = Vector3.zero;
+            cueBody.position = apexBall.GetComponent<Rigidbody>().position
+                - (Vector3.right * BilliardsPhysicalSpecification.BallDiameterMeters * 1.5f);
+            cueBody.linearVelocity = Vector3.right * 2f;
+            UnityEngine.Physics.SyncTransforms();
+
+            instrumentation.BeginShot();
+            for (var step = 0; step < 40; step++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            var report = instrumentation.CompleteShot();
+            Assert.That(
+                report.Collisions.Any(collision =>
+                    collision.Kind == SimulationCollisionKind.Ball
+                    && collision.Ball != cueBall.Id
+                    && collision.OtherBall.HasValue
+                    && collision.OtherBall.Value != cueBall.Id
+                    && collision.ImpulseNewtonSeconds > 0f),
+                Is.True,
+                "A break must record impulse transfer through object-ball contacts that already existed in the rack.");
+        }
+
         private static IEnumerator LoadPoolTableScene()
         {
             Assert.That(SceneManager.sceneCountInBuildSettings, Is.GreaterThan(0));

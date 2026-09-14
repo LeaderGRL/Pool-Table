@@ -107,7 +107,7 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
-        public void ShotSimulationRecorder_DeduplicatesMirroredBallCollisionCallbacks()
+        public void ShotSimulationRecorder_DeduplicatesRepeatedBallCollisionCallbacksWithinStep()
         {
             var firstObject = new GameObject("InstrumentationBall1");
             var secondObject = new GameObject("InstrumentationBall2");
@@ -138,6 +138,15 @@ namespace PoolTable.Tests.EditMode
                     new ProbeCollisionObservation(
                         10.005d,
                         firstProbe,
+                        SimulationCollisionKind.Ball,
+                        2f,
+                        0.15f,
+                        Vector3.zero));
+                recorder.RecordCollision(
+                    firstProbe,
+                    new ProbeCollisionObservation(
+                        10.005d,
+                        secondProbe,
                         SimulationCollisionKind.Ball,
                         2f,
                         0.15f,
