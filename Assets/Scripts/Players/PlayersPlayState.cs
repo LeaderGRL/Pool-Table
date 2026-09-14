@@ -7,6 +7,7 @@ public class PlayersPlayState : PlayersBaseState
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {
+        player.SetAimingEnabled(true);
         GameManager.instance.turnNumber++;
 
         //player.setPosition();
@@ -83,8 +84,6 @@ public class PlayersPlayState : PlayersBaseState
         {
             player.SwitchState(player.shootState);
         }
-        player.setPosition();
-        player.setRotation();
     }
 
     public override void FixedUpdateState(PlayersStateManagement player)
@@ -109,23 +108,6 @@ public class PlayersPlayState : PlayersBaseState
     public override void OnCollisionEnter(PlayersStateManagement player, Collision collision)
     {
         
-    }
-
-    protected void TurnArround(PlayersStateManagement player)
-    {
-        float mouseRotationX = LegacyMouseInput.Delta.x;
-        float mouseRotationY = LegacyMouseInput.Delta.y;
-
-        player.Cam.transform.RotateAround(player.WhiteBall.transform.position, Vector3.up, mouseRotationX);
-        player.Cam.transform.RotateAround(player.WhiteBall.transform.position, Vector3.forward, mouseRotationY);
-
-        //limit the rotation
-        //Vector3 rotation = player.Cam.transform.eulerAngles;
-        //rotation.x = Mathf.Clamp(rotation.x, 0, 90);
-        //rotation.y = Mathf.Clamp(rotation.y, 0, 90);
-        //rotation.z = Mathf.Clamp(rotation.z, 0, 90);
-        //player.Cam.transform.eulerAngles = rotation;
-       
     }
 
     public override void OnMouseDown(PlayersStateManagement player)

@@ -2273,8 +2273,22 @@ MonoBehaviour:
   spin: 3
   CameraOffset: {x: 0, y: 0.06666667, z: 0}
   CameraDistance: 2
-  rotationSpeed: 5
-  angleLimit: 45
+  aimingController: {fileID: 534474671}
+--- !u!114 &534474671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 534474663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2ae029b0733142d8afb0e9e8dd9bc2a7, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  cueBall: {fileID: 86719732}
+  cueDistance: 1.6666667
+  yawDegreesPerPointerUnit: 1
 --- !u!114 &534474668
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3010,8 +3024,7 @@ MonoBehaviour:
   spin: 0
   CameraOffset: {x: 0, y: 0.15, z: 0}
   CameraDistance: 1
-  rotationSpeed: 5
-  angleLimit: 45
+  aimingController: {fileID: 0}
 --- !u!114 &714982921
 MonoBehaviour:
   m_ObjectHideFlags: 0

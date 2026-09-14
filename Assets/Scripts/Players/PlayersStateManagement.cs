@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -22,15 +20,7 @@ public class PlayersStateManagement : MonoBehaviour
     public float spin;
     public Vector3 CameraOffset;
     public float CameraDistance;
-
-    public float rotationSpeed = 5.0f;
-    public float angleLimit = 45.0f;
-
-    private float angle = 0.0f;
-
-    private Vector3 velocity;
-    private float mouseRotationX = 0;
-    private float mouseRotationY = 0;
+    public Behaviour aimingController;
 
     private void Awake()
     {
@@ -47,9 +37,6 @@ public class PlayersStateManagement : MonoBehaviour
         {
             Destroy(this);
         }
-
-        mouseRotationX = transform.eulerAngles.x;
-        mouseRotationY = transform.eulerAngles.y;
 
         currentPlayerState = playState;
 
@@ -88,55 +75,12 @@ public class PlayersStateManagement : MonoBehaviour
         return transform.GetComponent<Rigidbody>().linearVelocity;
     }
 
-    public Vector3 getDirection()
+    public void SetAimingEnabled(bool enabled)
     {
-        return (transform.position - WhiteBall.transform.position).normalized;
-    }
-
-    public void setPosition()
-    {
-        transform.position = WhiteBall.transform.position + getDirection() * distance;
-        //transform.position = Vector3.MoveTowards(transform.position, (transform.position - WhiteBall.transform.position) * distance + WhiteBall.transform.position, 1f);
-    }
-
-    public void setRotation()
-    {
-        var targetRotation = Quaternion.LookRotation(WhiteBall.transform.position - transform.position);
-
-        // Smoothly rotate towards the target point.
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 2f * Time.deltaTime);
-        
-        turnArround();
-    }
-
-    public void turnArround()
-    {
-        mouseRotationX = LegacyMouseInput.Delta.x;
-        mouseRotationY = LegacyMouseInput.Delta.y;
-
-        //Debug.Log(transform.eulerAngles.x + " , " + transform.eulerAngles.y + " , " + transform.eulerAngles.z);
-
- 
-        if (transform.eulerAngles.x < 1f)
+        if (aimingController != null)
         {
-            if (mouseRotationY < 0)
-            {
-                transform.RotateAround(WhiteBall.transform.position, Vector3.forward, mouseRotationY);
-            }
+            aimingController.enabled = enabled;
         }
-        else
-        {
-            transform.RotateAround(WhiteBall.transform.position, Vector3.forward, mouseRotationY);
-        }
-
-        transform.RotateAround(WhiteBall.transform.position, Vector3.up, mouseRotationX);
-
-        transform.rotation = Quaternion.Euler(
-            Mathf.Clamp(transform.rotation.eulerAngles.x, -90f, 90f),
-            transform.rotation.eulerAngles.y,
-            Mathf.Clamp(transform.rotation.eulerAngles.z, -90f, 90f)
-        );
-
     }
 
     public void shoot()

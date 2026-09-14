@@ -9,6 +9,7 @@ public class PlayersShootState : PlayersBaseState
     private Vector3 lastPos = Vector3.zero;
     public override void EnterState(PlayersStateManagement player)
     {
+        player.SetAimingEnabled(false);
         player.WhiteBall.GetComponent<BallStateManager>().hasCollide = false; //reset the collide state
         player.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = false; //reset the hitTheGoodBall state
     }

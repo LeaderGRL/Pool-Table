@@ -18,6 +18,7 @@ public class PlayersSpectateState : PlayersBaseState
     private bool cameraHasMoved;
     public override void EnterState(PlayersStateManagement player)
     {
+        player.SetAimingEnabled(false);
         cameraHasMoved = false;
         balls = GameObject.Find("Balls");
         targetPosition = player.transform.position + Vector3.left;
