@@ -14,7 +14,7 @@ namespace PoolTable.Tests.EditMode
             {
                 ["PoolTable.Core"] = Array.Empty<string>(),
                 ["PoolTable.Physics"] = new[] { "PoolTable.Core" },
-                ["PoolTable.Input"] = new[] { "PoolTable.Core" },
+                ["PoolTable.Input"] = new[] { "PoolTable.Core", "Unity.InputSystem" },
                 ["PoolTable.Gameplay"] = new[] { "PoolTable.Core", "PoolTable.Physics", "PoolTable.Input" },
                 ["PoolTable.Networking"] = new[] { "PoolTable.Core", "PoolTable.Gameplay" },
                 ["PoolTable.Presentation"] = new[] { "PoolTable.Core", "PoolTable.Gameplay" },

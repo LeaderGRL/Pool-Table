@@ -2,7 +2,8 @@
     "name": "PoolTable.Input",
     "rootNamespace": "PoolTable.Input",
     "references": [
-        "PoolTable.Core"
+        "PoolTable.Core",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

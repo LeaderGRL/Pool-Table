@@ -29,7 +29,7 @@ public class Cue : MonoBehaviour
 
         //Debug.Log("Y Axis : " + Input.GetAxis("Mouse Y"));
 
-        if (Input.GetMouseButton(0))
+        if (LegacyMouseInput.PrimaryButtonIsPressed)
         {
             shoot();
         }
@@ -70,8 +70,8 @@ public class Cue : MonoBehaviour
 
     protected void turnArround()
     {
-        float mouseRotationX = Input.GetAxis("Mouse X");
-        float mouseRotationY = Input.GetAxis("Mouse Y");
+        float mouseRotationX = LegacyMouseInput.Delta.x;
+        float mouseRotationY = LegacyMouseInput.Delta.y;
 
         transform.RotateAround(WhiteBall.transform.position, Vector3.up, mouseRotationX);
         transform.RotateAround(WhiteBall.transform.position, Vector3.forward, mouseRotationY);
@@ -81,7 +81,7 @@ public class Cue : MonoBehaviour
     {
         //Debug.Log("Shoot");
         
-        float mouseAxisY = Input.GetAxis("Mouse Y");
+        float mouseAxisY = LegacyMouseInput.Delta.y;
         
         lockCamera(true);
 
@@ -99,7 +99,7 @@ public class Cue : MonoBehaviour
 
         //Debug.Log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: " + collision.contacts[0].point);
         //Vector3 forceDirection = (collision.contacts[0].point - transform.position).normalized;
-        collision.rigidbody.AddForce(transform.up * -Input.GetAxis("Mouse Y") * 10 *  force, ForceMode.Impulse);
+        collision.rigidbody.AddForce(transform.up * -LegacyMouseInput.Delta.y * 10 * force, ForceMode.Impulse);
         //collision.rigidbody.AddForce(forceDirection * gameObject.GetComponent<Rigidbody>().velocity.magnitude * 100, ForceMode.Impulse);
         if (collision.gameObject.tag == "ball")
         {

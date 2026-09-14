@@ -79,7 +79,7 @@ public class PlayersPlayState : PlayersBaseState
 
     public override void UpdateState(PlayersStateManagement player)
     {
-        if (Input.GetMouseButton(0))
+        if (LegacyMouseInput.PrimaryButtonIsPressed)
         {
             player.SwitchState(player.shootState);
         }
@@ -113,8 +113,8 @@ public class PlayersPlayState : PlayersBaseState
 
     protected void TurnArround(PlayersStateManagement player)
     {
-        float mouseRotationX = Input.GetAxis("Mouse X");
-        float mouseRotationY = Input.GetAxis("Mouse Y");
+        float mouseRotationX = LegacyMouseInput.Delta.x;
+        float mouseRotationY = LegacyMouseInput.Delta.y;
 
         player.Cam.transform.RotateAround(player.WhiteBall.transform.position, Vector3.up, mouseRotationX);
         player.Cam.transform.RotateAround(player.WhiteBall.transform.position, Vector3.forward, mouseRotationY);
