@@ -37,6 +37,12 @@ The current scripts under `Assets/Scripts` remain in `Assembly-CSharp`. Issue #2
 
 Future architecture issues should move behavior behind these boundaries in small vertical steps. New dependencies must follow the graph above instead of adding reverse references or cycles.
 
+## Input System transition
+
+`PoolTable.Input` owns the modern player-input boundary and references Unity's Input System package directly. `MouseInputReader` is the first adapter: it exposes raw pointer delta and primary-button state as an immutable snapshot without making aiming, shot-power, spin, camera, or match-state decisions.
+
+The project now runs with the new Input System backend only. Legacy gameplay remains in `Assembly-CSharp`, which deliberately does not auto-reference the modern asmdefs, so `Assets/Scripts/Input/LegacyMouseInput.cs` is a temporary compatibility shim that reads the same Input System mouse device while those MonoBehaviours are migrated in later Phase 5 issues. Its `0.1` pointer-delta scale preserves the previous `Mouse X` / `Mouse Y` Input Manager sensitivity. New gameplay code must use `PoolTable.Input` instead of extending this compatibility shim.
+
 ## Scene composition
 
 `PoolTableSceneCompositionRoot` is the scene-level bootstrap for explicitly wired runtime adapters. It lives in `PoolTable.Presentation` and receives its scene dependencies through serialized references.

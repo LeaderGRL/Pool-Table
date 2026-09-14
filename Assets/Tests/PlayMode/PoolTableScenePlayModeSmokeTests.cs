@@ -52,6 +52,27 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PoolTableScene_UsesInputSystemUiModule()
+        {
+            yield return LoadPoolTableScene();
+
+            var eventSystem = GameObject.Find("EventSystem");
+            Assert.That(eventSystem, Is.Not.Null);
+
+            var componentTypeNames = eventSystem
+                .GetComponents<Component>()
+                .Select(component => component.GetType().FullName)
+                .ToArray();
+
+            Assert.That(
+                componentTypeNames,
+                Does.Contain("UnityEngine.InputSystem.UI.InputSystemUIInputModule"));
+            Assert.That(
+                componentTypeNames,
+                Does.Not.Contain("UnityEngine.EventSystems.StandaloneInputModule"));
+        }
+
+        [UnityTest]
         public IEnumerator PoolTableScene_TypedBallIdentitiesFeedGameplayShotResolution()
         {
             yield return LoadPoolTableScene();

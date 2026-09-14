@@ -146,14 +146,14 @@ Every rule must have EditMode tests before being connected to gameplay.
     The explicit model uses calibrated normal restitution and tangential Coulomb friction, keeps native rail PhysicMaterial bounce/friction disabled, and couples tangential contact slip with side spin through the solid-sphere inertia relation. Scene rails are identified explicitly and every billiard ball uses the Unity collision-response adapter. Reference: GitHub issue #62 / PR #63.
 31. `DONE` **Physics: Rebuild pocket detection and capture**
     Six metric capture volumes map the physical pockets to stable `PocketId` values, and each typed billiard ball now emits one idempotent `PocketedBall` observation when captured. Captured rigidbodies are stopped and removed from active simulation without destroying the underlying object, allowing the cue ball to be explicitly restored for future ball-in-hand placement. The legacy global `pocket_destroy` detector is removed from the scene. Reference: GitHub issue #64 / PR #65.
-32. `PR` **Physics: Add shot simulation instrumentation**
+32. `DONE` **Physics: Add shot simulation instrumentation**
     Record fixed-step per-ball trajectories, linear/angular velocity, solid-sphere kinetic energy, stopping time, and typed collision observations behind explicit shot begin/complete boundaries. Gameplay maps stable `BallId` values to Physics probes without introducing a reverse Physics -> Gameplay dependency, and immutable reports provide calibration aggregates without deciding WPA rules or multiplayer authority. Reference: GitHub issue #66.
 
 The goal is not to make PhysX deterministic across machines. In multiplayer, only the host simulation will be authoritative.
 
 ## Phase 5 — player controls
 
-33. `TODO` **Input: Migrate project to Unity Input System**
+33. `PR` **Input: Migrate project to Unity Input System**
 34. `TODO` **Gameplay: Implement aiming state**
 35. `TODO` **Gameplay: Implement shot power control**
 36. `TODO` **Gameplay: Implement cue-ball spin control**
@@ -219,4 +219,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 4 work is **Physics: Add shot simulation instrumentation** (issue #66). After it is merged, continue with **Input: Migrate project to Unity Input System**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 5 work is **Input: Migrate project to Unity Input System** (issue #68). After it is merged, continue with **Gameplay: Implement aiming state**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.

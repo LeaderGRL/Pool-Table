@@ -111,8 +111,8 @@ public class PlayersStateManagement : MonoBehaviour
 
     public void turnArround()
     {
-        mouseRotationX = Input.GetAxis("Mouse X");
-        mouseRotationY = Input.GetAxis("Mouse Y");
+        mouseRotationX = LegacyMouseInput.Delta.x;
+        mouseRotationY = LegacyMouseInput.Delta.y;
 
         //Debug.Log(transform.eulerAngles.x + " , " + transform.eulerAngles.y + " , " + transform.eulerAngles.z);
 
@@ -121,15 +121,15 @@ public class PlayersStateManagement : MonoBehaviour
         {
             if (mouseRotationY < 0)
             {
-                transform.RotateAround(WhiteBall.transform.position, Vector3.forward, Input.GetAxis("Mouse Y"));
+                transform.RotateAround(WhiteBall.transform.position, Vector3.forward, mouseRotationY);
             }
         }
         else
         {
-            transform.RotateAround(WhiteBall.transform.position, Vector3.forward, Input.GetAxis("Mouse Y"));
+            transform.RotateAround(WhiteBall.transform.position, Vector3.forward, mouseRotationY);
         }
 
-        transform.RotateAround(WhiteBall.transform.position, Vector3.up, Input.GetAxis("Mouse X"));
+        transform.RotateAround(WhiteBall.transform.position, Vector3.up, mouseRotationX);
 
         transform.rotation = Quaternion.Euler(
             Mathf.Clamp(transform.rotation.eulerAngles.x, -90f, 90f),
@@ -141,7 +141,7 @@ public class PlayersStateManagement : MonoBehaviour
 
     public void shoot()
     {
-        float mouseAxisY = Mathf.Clamp(Input.GetAxis("Mouse Y"), -1f, 1f);
+        float mouseAxisY = Mathf.Clamp(LegacyMouseInput.Delta.y, -1f, 1f);
 
         lockCamera(true);
 

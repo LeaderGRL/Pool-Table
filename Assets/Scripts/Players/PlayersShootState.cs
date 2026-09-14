@@ -33,7 +33,7 @@ public class PlayersShootState : PlayersBaseState
         //Vector3 mousePosition = Input.mousePosition;
 
         // Normalize the mouse position to a value between 0 and 1
-        float normalizedMousePosition = Mathf.Clamp(-Input.GetAxis("Mouse Y"), -1, 1);
+        float normalizedMousePosition = Mathf.Clamp(-LegacyMouseInput.Delta.y, -1, 1);
 
 
         ApplyShotVelocityChange(
