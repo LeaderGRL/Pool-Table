@@ -89,8 +89,8 @@ namespace PoolTable.Input
                 readPointerDelta(),
                 readPointerPrimaryAction() || readGamepadPrimaryAction(),
                 readPointerSecondaryAction() || readGamepadSecondaryAction(),
-                ApplyRadialDeadzone(readAimAxis(), stickDeadzone),
-                ApplyRadialDeadzone(readActionAxis(), stickDeadzone));
+                readAimAxis(),
+                readActionAxis());
         }
 
         internal static Vector2 ApplyRadialDeadzone(Vector2 value, float deadzone)
