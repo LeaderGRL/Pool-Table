@@ -10,7 +10,7 @@ namespace PoolTable.Gameplay.Aiming
     {
         [SerializeField] private GameObject cueBall;
         [SerializeField] private float cueDistance = 1.6666667f;
-        [SerializeField] private float yawDegreesPerPointerUnit = 1f;
+        [SerializeField] private float yawDegreesPerPointerUnit = 0.1f;
 
         private AimingState aimingState;
         private MouseInputReader mouseInputReader;
@@ -94,7 +94,12 @@ namespace PoolTable.Gameplay.Aiming
             transform.position = cueBall.transform.position
                 - (direction * cueDistance)
                 + (Vector3.up * cueHeightOffset);
-            transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+
+            var directionToCueBall = cueBall.transform.position - transform.position;
+            if (directionToCueBall.sqrMagnitude > 0.000001f)
+            {
+                transform.rotation = Quaternion.LookRotation(directionToCueBall, Vector3.up);
+            }
         }
     }
 }

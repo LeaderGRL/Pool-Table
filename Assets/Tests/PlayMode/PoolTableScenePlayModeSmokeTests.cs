@@ -778,13 +778,22 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(aimingController.CueDistance, Is.EqualTo(1.6666667f).Within(0.0001f));
             Assert.That(
                 aimingController.YawDegreesPerPointerUnit,
-                Is.EqualTo(1f).Within(0.0001f),
-                "Modern aiming must preserve the previous effective one-degree yaw per pointer-delta unit baseline.");
+                Is.EqualTo(0.1f).Within(0.0001f),
+                "Modern aiming must preserve the legacy 0.1 sensitivity applied to raw Input System pointer delta.");
 
             var direction = aimingController.Direction;
             var magnitudeSquared = (direction.X * direction.X) + (direction.Y * direction.Y);
             Assert.That(magnitudeSquared, Is.EqualTo(1f).Within(0.00001f));
-            Assert.That(playerController.transform.forward.y, Is.EqualTo(0f).Within(0.0001f));
+
+            var directionToCueBall = (aimingController.CueBall.transform.position - playerController.transform.position).normalized;
+            Assert.That(
+                Vector3.Dot(playerController.transform.forward, directionToCueBall),
+                Is.EqualTo(1f).Within(0.0001f),
+                "The physical cue must point through the cue-ball center while gameplay aim stays planar.");
+
+            var planarForward = Vector3.ProjectOnPlane(playerController.transform.forward, Vector3.up).normalized;
+            Assert.That(planarForward.x, Is.EqualTo(direction.X).Within(0.0001f));
+            Assert.That(planarForward.z, Is.EqualTo(direction.Y).Within(0.0001f));
 
             var controllerType = playerController.GetType();
             Assert.That(controllerType.GetMethod("setRotation"), Is.Null, "Legacy player code must no longer own cue rotation.");
@@ -807,8 +816,16 @@ namespace PoolTable.Tests.PlayMode
 
             Assert.That(aimingController.Direction.X, Is.EqualTo(direction.X).Within(0.00001f));
             Assert.That(aimingController.Direction.Y, Is.EqualTo(direction.Y).Within(0.00001f));
-            Assert.That(playerController.transform.forward.x, Is.EqualTo(direction.X).Within(0.0001f));
-            Assert.That(playerController.transform.forward.z, Is.EqualTo(direction.Y).Within(0.0001f));
+
+            directionToCueBall = (aimingController.CueBall.transform.position - playerController.transform.position).normalized;
+            Assert.That(
+                Vector3.Dot(playerController.transform.forward, directionToCueBall),
+                Is.EqualTo(1f).Within(0.0001f),
+                "Re-enabling aiming must restore a cue pose that intersects the cue-ball center.");
+
+            planarForward = Vector3.ProjectOnPlane(playerController.transform.forward, Vector3.up).normalized;
+            Assert.That(planarForward.x, Is.EqualTo(direction.X).Within(0.0001f));
+            Assert.That(planarForward.z, Is.EqualTo(direction.Y).Within(0.0001f));
         }
 
         [UnityTest]

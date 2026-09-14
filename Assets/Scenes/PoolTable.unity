@@ -2288,7 +2288,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   cueBall: {fileID: 86719732}
   cueDistance: 1.6666667
-  yawDegreesPerPointerUnit: 1
+  yawDegreesPerPointerUnit: 0.1
 --- !u!114 &534474668
 MonoBehaviour:
   m_ObjectHideFlags: 0

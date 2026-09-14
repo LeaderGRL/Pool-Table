@@ -121,7 +121,7 @@ Future physics code should produce observations that can be translated into `Sho
 
 `PoolTable.Gameplay.Aiming.AimingState` owns the canonical aim as a normalized `ShotDirection`. It is table-plane data rather than a value inferred from a cue transform, so future shot-power, spin, controller, and networking code can consume the same explicit direction.
 
-`CueAimingController` is the Unity scene adapter. It reads horizontal pointer delta through `PoolTable.Input.MouseInputReader`, rotates the planar aiming state around the table vertical axis, and applies the resulting position and forward direction to the cue around the cue ball. The initial sensitivity keeps the previous effective mouse behavior at one degree of yaw per pointer-delta unit.
+`CueAimingController` is the Unity scene adapter. It reads horizontal pointer delta through `PoolTable.Input.MouseInputReader`, rotates the planar aiming state around the table vertical axis, and uses that direction to orbit the cue around the cue ball. The cue transform then looks at the cue-ball center so scene geometry can keep its vertical offset without contaminating the planar gameplay direction. The `0.1` yaw scale preserves the effective sensitivity of the legacy Input System compatibility shim.
 
 The legacy `PlayersStateManagement` assembly does not become a dependency of Gameplay. During migration it stores the modern controller only as a generic Unity `Behaviour`: play enables aiming, while shoot and spectate disable it. Legacy shot-power input remains in the old shoot state until the dedicated Phase 5 power-control issue replaces it.
 
