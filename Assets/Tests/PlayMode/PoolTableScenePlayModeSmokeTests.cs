@@ -462,6 +462,79 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator RigidbodySimulationProbe_BeginRecordingDiscardsPendingRailObservation()
+        {
+            var railObject = new GameObject("PendingRailObservationTestRail");
+            var ballObject = new GameObject("PendingRailObservationTestBall");
+            var material = new PhysicsMaterial("PendingRailObservationTestMaterial")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+            var previousSimulationMode = UnityEngine.Physics.simulationMode;
+
+            try
+            {
+                UnityEngine.Physics.simulationMode = SimulationMode.Script;
+
+                const float railCenterX = 0.2f;
+                const float railHalfWidth = 0.05f;
+                var railCollider = railObject.AddComponent<BoxCollider>();
+                railCollider.size = new Vector3(railHalfWidth * 2f, 0.2f, 0.5f);
+                railCollider.sharedMaterial = material;
+                railObject.AddComponent<RailSurface>();
+                railObject.transform.position = new Vector3(railCenterX, 0f, 0f);
+
+                var ballCollider = ballObject.AddComponent<SphereCollider>();
+                ballCollider.radius = BilliardsPhysicalSpecification.BallRadiusMeters;
+                ballCollider.sharedMaterial = material;
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+                rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+                rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                var railResponse = ballObject.AddComponent<BallRailCollisionResponse>();
+                var probe = ballObject.AddComponent<RigidbodySimulationProbe>();
+                var observations = new List<ProbeCollisionObservation>();
+                probe.CollisionObserved += (_, observation) => observations.Add(observation);
+
+                rigidbody.position = new Vector3(
+                    railCenterX - railHalfWidth - BilliardsPhysicalSpecification.BallRadiusMeters - 0.001f,
+                    0f,
+                    0f);
+                rigidbody.linearVelocity = Vector3.right * 2f;
+                UnityEngine.Physics.SyncTransforms();
+
+                UnityEngine.Physics.Simulate(BilliardsSimulationConfiguration.FixedTimestepSeconds);
+                Assert.That(rigidbody.linearVelocity.x, Is.LessThan(0f), "The scripted step must create a pending rail observation.");
+
+                rigidbody.position = Vector3.zero;
+                rigidbody.linearVelocity = Vector3.zero;
+                UnityEngine.Physics.SyncTransforms();
+
+                probe.BeginRecording(1d);
+                railResponse.FlushPendingObservation();
+                probe.StopRecording(1.01d);
+
+                Assert.That(
+                    observations,
+                    Is.Empty,
+                    "A rail observation created before the shot boundary must not leak into the new recording.");
+            }
+            finally
+            {
+                UnityEngine.Physics.simulationMode = previousSimulationMode;
+                Object.DestroyImmediate(ballObject);
+                Object.DestroyImmediate(railObject);
+                Object.DestroyImmediate(material);
+            }
+
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator RailCollisionResponse_ReboundsRenewedImpactDuringPersistentContact()
         {
             var railObject = new GameObject("PersistentRailCollisionResponseTestRail");

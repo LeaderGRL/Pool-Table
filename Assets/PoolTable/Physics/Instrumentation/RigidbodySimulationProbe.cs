@@ -144,6 +144,7 @@ namespace PoolTable.Physics.Instrumentation
             }
 
             _rigidbody ??= GetComponent<Rigidbody>();
+            _railCollisionResponse?.FlushPendingObservation();
             _isRecording = true;
             EmitKinematicSample(simulationTimeSeconds);
         }
