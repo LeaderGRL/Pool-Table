@@ -7,6 +7,7 @@ public class PlayersPlayState : PlayersBaseState
     {
         player.SetShotPowerEnabled(false);
         player.SetAimingEnabled(true);
+        player.SetSpinControlEnabled(true);
         GameManager.instance.turnNumber++;
 
         //player.setPosition();

@@ -719,8 +719,11 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(playerController, Is.Not.Null);
 
             var shotPowerController = playerController.GetComponent<ShotPowerController>();
+            var spinController = playerController.GetComponent<CueBallSpinController>();
             Assert.That(shotPowerController, Is.Not.Null, "The active cue must own the modern shot-power adapter.");
+            Assert.That(spinController, Is.Not.Null, "The active cue must own the modern cue-ball spin adapter.");
             Assert.That(shotPowerController.enabled, Is.False, "Shot power must stay disabled while aiming.");
+            Assert.That(spinController.Spin.IsCentered, Is.True);
 
             var cueBall = shotPowerController.CueBall;
             var originalMass = cueBall.mass;
@@ -765,10 +768,15 @@ namespace PoolTable.Tests.PlayMode
                 yield return new WaitForFixedUpdate();
 
                 Assert.That(shotPowerController.ShotCommitted, Is.True);
+                Assert.That(spinController.Spin.IsCentered, Is.True, "A committed shot must leave the next shot centered.");
                 Assert.That(
                     shotPowerController.enabled,
                     Is.False,
                     "A physically committed shot must disable further power input.");
+                Assert.That(
+                    Mathf.Abs(cueBall.angularVelocity.y),
+                    Is.LessThan(0.0001f),
+                    "Centered strikes must not introduce side spin.");
 
                 measuredSpeeds[massIndex] = Vector3.ProjectOnPlane(cueBall.linearVelocity, Vector3.up).magnitude;
             }
@@ -799,10 +807,13 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(playerController, Is.Not.Null);
 
             var aimingController = playerController.GetComponent<CueAimingController>();
+            var spinController = playerController.GetComponent<CueBallSpinController>();
             var shotPowerController = playerController.GetComponent<ShotPowerController>();
             Assert.That(aimingController, Is.Not.Null, "The active cue must use the modern gameplay aiming adapter.");
+            Assert.That(spinController, Is.Not.Null, "The active cue must use the modern gameplay spin adapter.");
             Assert.That(shotPowerController, Is.Not.Null, "The active cue must use the modern gameplay shot-power adapter.");
             Assert.That(aimingController.isActiveAndEnabled, Is.True, "Aiming must be enabled while the player is in play state.");
+            Assert.That(spinController.isActiveAndEnabled, Is.True, "Spin selection must be enabled while the player is aiming.");
             Assert.That(shotPowerController.enabled, Is.False, "Shot power must be disabled while the player is aiming.");
             Assert.That(aimingController.CueBall, Is.Not.Null);
             Assert.That(aimingController.CueDistance, Is.EqualTo(1.6666667f).Within(0.0001f));
@@ -810,10 +821,24 @@ namespace PoolTable.Tests.PlayMode
                 aimingController.YawDegreesPerPointerUnit,
                 Is.EqualTo(0.1f).Within(0.0001f),
                 "Modern aiming must preserve the legacy 0.1 sensitivity applied to raw Input System pointer delta.");
+            Assert.That(
+                spinController.NormalizedUnitsPerPointerUnit,
+                Is.EqualTo(0.01f).Within(0.0001f),
+                "Spin selection must map pointer movement into normalized cue-tip contact units.");
+            Assert.That(shotPowerController.SpinController, Is.SameAs(spinController));
 
             var direction = aimingController.Direction;
             var magnitudeSquared = (direction.X * direction.X) + (direction.Y * direction.Y);
             Assert.That(magnitudeSquared, Is.EqualTo(1f).Within(0.00001f));
+
+            var spinInput = new PointerInputSnapshot(new Vector2(20f, -10f), false, true);
+            aimingController.ProcessInput(spinInput);
+            spinController.ProcessInput(spinInput);
+
+            Assert.That(aimingController.Direction.X, Is.EqualTo(direction.X).Within(0.00001f));
+            Assert.That(aimingController.Direction.Y, Is.EqualTo(direction.Y).Within(0.00001f));
+            Assert.That(spinController.Spin.Side, Is.EqualTo(0.2f).Within(0.00001f));
+            Assert.That(spinController.Spin.Vertical, Is.EqualTo(-0.1f).Within(0.00001f));
 
             var directionToCueBall = (aimingController.CueBall.transform.position - playerController.transform.position).normalized;
             Assert.That(
@@ -825,24 +850,48 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(planarForward.x, Is.EqualTo(direction.X).Within(0.0001f));
             Assert.That(planarForward.z, Is.EqualTo(direction.Y).Within(0.0001f));
 
+            aimingController.ProcessInput(new PointerInputSnapshot(new Vector2(15f, 0f), false));
+            Assert.That(
+                aimingController.Direction.X,
+                Is.EqualTo(direction.X).Within(0.00001f),
+                "The secondary-button release frame must not leak the final spin-drag delta into cue yaw.");
+            Assert.That(aimingController.Direction.Y, Is.EqualTo(direction.Y).Within(0.00001f));
+
+            aimingController.ProcessInput(new PointerInputSnapshot(new Vector2(15f, 0f), false));
+            Assert.That(
+                Mathf.Abs(aimingController.Direction.X - direction.X)
+                    + Mathf.Abs(aimingController.Direction.Y - direction.Y),
+                Is.GreaterThan(0.00001f),
+                "Cue yaw must resume on the frame after the secondary-button release transition.");
+
+            aimingController.ProcessInput(new PointerInputSnapshot(new Vector2(-15f, 0f), false));
+            Assert.That(aimingController.Direction.X, Is.EqualTo(direction.X).Within(0.00001f));
+            Assert.That(aimingController.Direction.Y, Is.EqualTo(direction.Y).Within(0.00001f));
+
             var controllerType = playerController.GetType();
             Assert.That(controllerType.GetMethod("setRotation"), Is.Null, "Legacy player code must no longer own cue rotation.");
             Assert.That(controllerType.GetMethod("turnArround"), Is.Null, "Legacy pointer-driven rotation must be removed.");
 
             var aimingBehaviour = controllerType.GetField("aimingController").GetValue(playerController);
+            var spinBehaviour = controllerType.GetField("spinController").GetValue(playerController);
             var shotPowerBehaviour = controllerType.GetField("shotPowerController").GetValue(playerController);
             Assert.That(aimingBehaviour, Is.SameAs(aimingController));
+            Assert.That(spinBehaviour, Is.SameAs(spinController));
             Assert.That(shotPowerBehaviour, Is.SameAs(shotPowerController));
 
             var switchState = controllerType.GetMethod("SwitchState");
             var shootState = controllerType.GetField("shootState").GetValue(playerController);
             switchState.Invoke(playerController, new[] { shootState });
             Assert.That(aimingController.enabled, Is.False, "Aiming must be disabled while the cue is in shoot state.");
+            Assert.That(spinController.enabled, Is.False, "Spin selection must stop while shot power is active.");
             Assert.That(shotPowerController.enabled, Is.True, "Shot power must be enabled while the cue is in shoot state.");
+            Assert.That(spinController.Spin.Side, Is.EqualTo(0.2f).Within(0.00001f));
+            Assert.That(spinController.Spin.Vertical, Is.EqualTo(-0.1f).Within(0.00001f));
 
             var spectateState = controllerType.GetField("spectateState").GetValue(playerController);
             switchState.Invoke(playerController, new[] { spectateState });
             Assert.That(aimingController.enabled, Is.False, "Aiming must remain disabled while spectating.");
+            Assert.That(spinController.enabled, Is.False, "Spin selection must remain disabled while spectating.");
             Assert.That(shotPowerController.enabled, Is.False, "Shot power must be disabled while spectating.");
 
             playerController.transform.rotation = Quaternion.Euler(0f, 123f, 0f);
@@ -860,6 +909,64 @@ namespace PoolTable.Tests.PlayMode
             planarForward = Vector3.ProjectOnPlane(playerController.transform.forward, Vector3.up).normalized;
             Assert.That(planarForward.x, Is.EqualTo(direction.X).Within(0.0001f));
             Assert.That(planarForward.z, Is.EqualTo(direction.Y).Within(0.0001f));
+
+            spinController.ResetToCenter();
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_SelectedCueBallSpinReachesCommittedStrike()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var playerController = FindActiveMonoBehaviourByTypeName(activeScene, "PlayersStateManagement");
+            Assert.That(playerController, Is.Not.Null);
+
+            var spinController = playerController.GetComponent<CueBallSpinController>();
+            var shotPowerController = playerController.GetComponent<ShotPowerController>();
+            Assert.That(spinController, Is.Not.Null);
+            Assert.That(shotPowerController, Is.Not.Null);
+
+            spinController.ProcessInput(new PointerInputSnapshot(new Vector2(50f, 0f), false, true));
+            Assert.That(spinController.Spin.Side, Is.EqualTo(0.5f).Within(0.00001f));
+            Assert.That(spinController.Spin.Vertical, Is.Zero.Within(0.00001f));
+
+            var controllerType = playerController.GetType();
+            var switchState = controllerType.GetMethod("SwitchState");
+            var shootState = controllerType.GetField("shootState").GetValue(playerController);
+            switchState.Invoke(playerController, new[] { shootState });
+
+            Assert.That(spinController.enabled, Is.False);
+            Assert.That(shotPowerController.enabled, Is.True);
+            Assert.That(spinController.Spin.Side, Is.EqualTo(0.5f).Within(0.00001f));
+
+            var cueBall = shotPowerController.CueBall;
+            cueBall.linearVelocity = Vector3.zero;
+            cueBall.angularVelocity = Vector3.zero;
+
+            for (var stroke = 0; stroke < 18; stroke++)
+            {
+                shotPowerController.ProcessInput(
+                    new PointerInputSnapshot(new Vector2(0f, 10f), true));
+            }
+
+            shotPowerController.ProcessInput(new PointerInputSnapshot(Vector2.zero, false));
+
+            Assert.That(shotPowerController.ShotCommitted, Is.False);
+            Assert.That(
+                spinController.Spin.Side,
+                Is.EqualTo(0.5f).Within(0.00001f),
+                "Queueing the shot must preserve the selected contact point until physics commits it.");
+            Assert.That(Mathf.Abs(cueBall.angularVelocity.y), Is.LessThan(0.0001f));
+
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(shotPowerController.ShotCommitted, Is.True);
+            Assert.That(spinController.Spin.IsCentered, Is.True, "A committed strike must reset spin for the next shot.");
+            Assert.That(
+                cueBall.angularVelocity.y,
+                Is.GreaterThan(0.1f),
+                "Positive side contact must produce positive vertical-axis side spin.");
         }
 
         [UnityTest]

@@ -15,6 +15,7 @@ namespace PoolTable.Gameplay.Aiming
         private AimingState aimingState;
         private MouseInputReader mouseInputReader;
         private float cueHeightOffset;
+        private bool secondaryButtonWasPressedLastFrame;
 
         public GameObject CueBall => cueBall;
 
@@ -33,6 +34,8 @@ namespace PoolTable.Gameplay.Aiming
 
         private void OnEnable()
         {
+            secondaryButtonWasPressedLastFrame = false;
+
             if (mouseInputReader == null)
             {
                 mouseInputReader = new MouseInputReader();
@@ -48,13 +51,24 @@ namespace PoolTable.Gameplay.Aiming
 
         private void Update()
         {
+            ProcessInput(mouseInputReader.Read());
+        }
+
+        internal void ProcessInput(PointerInputSnapshot input)
+        {
             if (aimingState == null || cueBall == null)
             {
                 return;
             }
 
-            var input = mouseInputReader.Read();
-            aimingState.RotateDegrees(input.Delta.x * yawDegreesPerPointerUnit);
+            var suppressYaw = input.SecondaryButtonIsPressed || secondaryButtonWasPressedLastFrame;
+            secondaryButtonWasPressedLastFrame = input.SecondaryButtonIsPressed;
+
+            if (!suppressYaw)
+            {
+                aimingState.RotateDegrees(input.Delta.x * yawDegreesPerPointerUnit);
+            }
+
             ApplyCuePose();
         }
 

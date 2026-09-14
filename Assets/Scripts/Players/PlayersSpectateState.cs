@@ -19,6 +19,7 @@ public class PlayersSpectateState : PlayersBaseState
     public override void EnterState(PlayersStateManagement player)
     {
         player.SetAimingEnabled(false);
+        player.SetSpinControlEnabled(false);
         player.SetShotPowerEnabled(false);
         cameraHasMoved = false;
         balls = GameObject.Find("Balls");
