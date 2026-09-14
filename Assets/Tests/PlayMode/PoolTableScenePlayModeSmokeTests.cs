@@ -8,10 +8,12 @@ using PoolTable.Core.Match;
 using PoolTable.Core.Rules;
 using PoolTable.Core.Shots;
 using PoolTable.Gameplay.Balls;
+using PoolTable.Gameplay.Instrumentation;
 using PoolTable.Gameplay.Match;
 using PoolTable.Gameplay.Pockets;
 using PoolTable.Physics.Cloth;
 using PoolTable.Physics.Configuration;
+using PoolTable.Physics.Instrumentation;
 using PoolTable.Physics.Pockets;
 using PoolTable.Physics.Rails;
 using PoolTable.Presentation;
@@ -417,7 +419,9 @@ namespace PoolTable.Tests.PlayMode
                 rigidbody.useGravity = false;
                 rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
                 rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-                ballObject.AddComponent<BallRailCollisionResponse>();
+                var railResponse = ballObject.AddComponent<BallRailCollisionResponse>();
+                var resolvedRailObservations = new List<RailCollisionObservation>();
+                railResponse.RailCollisionResolved += resolvedRailObservations.Add;
                 ballObject.transform.position = Vector3.zero;
                 rigidbody.linearVelocity = Vector3.right * 2f;
 
@@ -426,11 +430,27 @@ namespace PoolTable.Tests.PlayMode
                     yield return new WaitForFixedUpdate();
                 }
 
+                yield return new WaitForFixedUpdate();
+
                 Assert.That(rigidbody.linearVelocity.x, Is.LessThan(-1f));
                 Assert.That(
                     Mathf.Abs(rigidbody.linearVelocity.x),
                     Is.LessThan(2f),
                     "Multiple rail colliders in one physics step must share one custom restitution response.");
+                Assert.That(
+                    resolvedRailObservations,
+                    Has.Count.EqualTo(1),
+                    "Overlapping rail colliders in one physics step must emit one aggregated rail observation.");
+
+                var expectedResponse = RailCollisionResponseModel.CalculateManifoldResponse(
+                    Vector3.right * 2f,
+                    Vector3.zero,
+                    new[] { Vector3.left, Vector3.left },
+                    BilliardsPhysicalSpecification.BallRadiusMeters);
+                var expectedImpulse = (expectedResponse.LinearVelocity - (Vector3.right * 2f)) * rigidbody.mass;
+                Assert.That(
+                    Vector3.Distance(resolvedRailObservations[0].AppliedLinearImpulse, expectedImpulse),
+                    Is.LessThan(0.000001f));
             }
             finally
             {
@@ -439,6 +459,79 @@ namespace PoolTable.Tests.PlayMode
                 Object.DestroyImmediate(secondRailObject);
                 Object.DestroyImmediate(material);
             }
+        }
+
+        [UnityTest]
+        public IEnumerator RigidbodySimulationProbe_BeginRecordingDiscardsPendingRailObservation()
+        {
+            var railObject = new GameObject("PendingRailObservationTestRail");
+            var ballObject = new GameObject("PendingRailObservationTestBall");
+            var material = new PhysicsMaterial("PendingRailObservationTestMaterial")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                bounciness = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum,
+            };
+            var previousSimulationMode = UnityEngine.Physics.simulationMode;
+
+            try
+            {
+                UnityEngine.Physics.simulationMode = SimulationMode.Script;
+
+                const float railCenterX = 0.2f;
+                const float railHalfWidth = 0.05f;
+                var railCollider = railObject.AddComponent<BoxCollider>();
+                railCollider.size = new Vector3(railHalfWidth * 2f, 0.2f, 0.5f);
+                railCollider.sharedMaterial = material;
+                railObject.AddComponent<RailSurface>();
+                railObject.transform.position = new Vector3(railCenterX, 0f, 0f);
+
+                var ballCollider = ballObject.AddComponent<SphereCollider>();
+                ballCollider.radius = BilliardsPhysicalSpecification.BallRadiusMeters;
+                ballCollider.sharedMaterial = material;
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+                rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+                rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                var railResponse = ballObject.AddComponent<BallRailCollisionResponse>();
+                var probe = ballObject.AddComponent<RigidbodySimulationProbe>();
+                var observations = new List<ProbeCollisionObservation>();
+                probe.CollisionObserved += (_, observation) => observations.Add(observation);
+
+                rigidbody.position = new Vector3(
+                    railCenterX - railHalfWidth - BilliardsPhysicalSpecification.BallRadiusMeters - 0.001f,
+                    0f,
+                    0f);
+                rigidbody.linearVelocity = Vector3.right * 2f;
+                UnityEngine.Physics.SyncTransforms();
+
+                UnityEngine.Physics.Simulate(BilliardsSimulationConfiguration.FixedTimestepSeconds);
+                Assert.That(rigidbody.linearVelocity.x, Is.LessThan(0f), "The scripted step must create a pending rail observation.");
+
+                rigidbody.position = Vector3.zero;
+                rigidbody.linearVelocity = Vector3.zero;
+                UnityEngine.Physics.SyncTransforms();
+
+                probe.BeginRecording(1d);
+                railResponse.FlushPendingObservation();
+                probe.StopRecording(1.01d);
+
+                Assert.That(
+                    observations,
+                    Is.Empty,
+                    "A rail observation created before the shot boundary must not leak into the new recording.");
+            }
+            finally
+            {
+                UnityEngine.Physics.simulationMode = previousSimulationMode;
+                Object.DestroyImmediate(ballObject);
+                Object.DestroyImmediate(railObject);
+                Object.DestroyImmediate(material);
+            }
+
+            yield return null;
         }
 
         [UnityTest]
@@ -912,6 +1005,115 @@ namespace PoolTable.Tests.PlayMode
                 playerOneTurn.activeInHierarchy,
                 Is.Not.EqualTo(playerTwoTurn.activeInHierarchy),
                 "Exactly one turn indicator must be active in the scene hierarchy after startup.");
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_ShotInstrumentationRecordsAllBallsAndBallCollision()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var compositionRoot = Object.FindFirstObjectByType<PoolTableSceneCompositionRoot>();
+            Assert.That(compositionRoot, Is.Not.Null);
+
+            var instrumentation = compositionRoot.ShotSimulationInstrumentation;
+            Assert.That(instrumentation, Is.Not.Null, "The composition root must expose shot simulation instrumentation.");
+            Assert.That(instrumentation.isActiveAndEnabled, Is.True);
+            Assert.That(instrumentation.RegisteredBallCount, Is.EqualTo(16));
+
+            var probes = compositionRoot.BallsRoot.GetComponentsInChildren<RigidbodySimulationProbe>(true);
+            Assert.That(probes, Has.Length.EqualTo(16), "Every billiard ball must expose one simulation probe.");
+
+            var identities = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallIdentity>())
+                .Where(identity => identity != null)
+                .ToArray();
+            var cueBall = identities.Single(identity => identity.Id.Number == 0);
+            var oneBall = identities.Single(identity => identity.Id.Number == 1);
+            var cueBody = cueBall.GetComponent<Rigidbody>();
+            var oneBody = oneBall.GetComponent<Rigidbody>();
+
+            cueBody.useGravity = false;
+            oneBody.useGravity = false;
+            cueBody.linearVelocity = Vector3.zero;
+            oneBody.linearVelocity = Vector3.zero;
+            cueBody.angularVelocity = Vector3.zero;
+            oneBody.angularVelocity = Vector3.zero;
+            cueBody.position = new Vector3(-0.05f, 2f, 0f);
+            oneBody.position = new Vector3(0.05f, 2f, 0f);
+            cueBody.linearVelocity = Vector3.right;
+            oneBody.linearVelocity = Vector3.left;
+            UnityEngine.Physics.SyncTransforms();
+
+            instrumentation.BeginShot();
+            for (var step = 0; step < 16; step++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            var report = instrumentation.CompleteShot();
+
+            Assert.That(report, Is.SameAs(instrumentation.LastReport));
+            Assert.That(report.Tracks, Has.Count.EqualTo(16));
+            Assert.That(report.DurationSeconds, Is.GreaterThanOrEqualTo(BilliardsSimulationConfiguration.FixedTimestepSeconds));
+            Assert.That(report.TryGetTrack(cueBall.Id, out var cueTrack), Is.True);
+            Assert.That(report.TryGetTrack(oneBall.Id, out var oneTrack), Is.True);
+            Assert.That(cueTrack.Samples, Has.Count.GreaterThan(2));
+            Assert.That(oneTrack.Samples, Has.Count.GreaterThan(2));
+            Assert.That(cueTrack.DistanceTraveledMeters, Is.GreaterThan(0f));
+            Assert.That(oneTrack.DistanceTraveledMeters, Is.GreaterThan(0f));
+            Assert.That(
+                report.Collisions.Any(collision =>
+                    collision.Kind == SimulationCollisionKind.Ball
+                    && collision.Ball == cueBall.Id
+                    && collision.OtherBall == oneBall.Id),
+                Is.True,
+                "The controlled cue-ball/object-ball impact must be captured once using typed ball IDs.");
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_ShotInstrumentationRecordsPersistentRackImpulseTransfer()
+        {
+            yield return LoadPoolTableScene();
+
+            var compositionRoot = Object.FindFirstObjectByType<PoolTableSceneCompositionRoot>();
+            Assert.That(compositionRoot, Is.Not.Null);
+            var instrumentation = compositionRoot.ShotSimulationInstrumentation;
+            Assert.That(instrumentation, Is.Not.Null);
+
+            var identities = compositionRoot.BallsRoot.GetComponentsInChildren<BallIdentity>(true);
+            var cueBall = identities.Single(identity => identity.Id.IsCueBall);
+            var objectBalls = identities.Where(identity => !identity.Id.IsCueBall).ToArray();
+            var apexBall = objectBalls.OrderBy(identity => identity.transform.position.x).First();
+
+            yield return new WaitForFixedUpdate();
+            yield return new WaitForFixedUpdate();
+
+            var cueBody = cueBall.GetComponent<Rigidbody>();
+            cueBody.useGravity = false;
+            cueBody.linearVelocity = Vector3.zero;
+            cueBody.angularVelocity = Vector3.zero;
+            cueBody.position = apexBall.GetComponent<Rigidbody>().position
+                - (Vector3.right * BilliardsPhysicalSpecification.BallDiameterMeters * 1.5f);
+            cueBody.linearVelocity = Vector3.right * 2f;
+            UnityEngine.Physics.SyncTransforms();
+
+            instrumentation.BeginShot();
+            for (var step = 0; step < 40; step++)
+            {
+                yield return new WaitForFixedUpdate();
+            }
+
+            var report = instrumentation.CompleteShot();
+            Assert.That(
+                report.Collisions.Any(collision =>
+                    collision.Kind == SimulationCollisionKind.Ball
+                    && collision.Ball != cueBall.Id
+                    && collision.OtherBall.HasValue
+                    && collision.OtherBall.Value != cueBall.Id
+                    && collision.ImpulseNewtonSeconds > 0f),
+                Is.True,
+                "A break must record impulse transfer through object-ball contacts that already existed in the rack.");
         }
 
         private static IEnumerator LoadPoolTableScene()

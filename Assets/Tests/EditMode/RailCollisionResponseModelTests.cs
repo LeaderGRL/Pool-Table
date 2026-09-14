@@ -334,6 +334,51 @@ namespace PoolTable.Tests.EditMode
                 Object.DestroyImmediate(ballObject);
             }
         }
+
+        [Test]
+        public void ApplyRailCorrection_ReturnsNetLinearImpulseAppliedByRailModel()
+        {
+            var ballObject = new GameObject("ReportedRailImpulseTestBall");
+
+            try
+            {
+                var rigidbody = ballObject.AddComponent<Rigidbody>();
+                rigidbody.useGravity = false;
+                rigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
+
+                var incomingLinearVelocity = new Vector3(2f, -0.4f, 0.5f);
+                var incomingAngularVelocity = Vector3.up * 3f;
+                var response = RailCollisionResponseModel.CalculateResponse(
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    Vector3.left,
+                    Radius);
+                var nativeRailVelocityChange = new Vector3(-1.75f, 0.65f, 0f);
+                rigidbody.linearVelocity = incomingLinearVelocity + nativeRailVelocityChange;
+                rigidbody.angularVelocity = incomingAngularVelocity;
+                var previousResponse = new RailCollisionResponse(
+                    incomingLinearVelocity,
+                    incomingAngularVelocity,
+                    false);
+
+                var appliedImpulse = BallRailCollisionResponse.ApplyRailCorrection(
+                    rigidbody,
+                    nativeRailVelocityChange * rigidbody.mass,
+                    previousResponse,
+                    response);
+
+                var expectedVelocityChange = response.LinearVelocity - incomingLinearVelocity
+                    + new Vector3(0f, nativeRailVelocityChange.y, 0f);
+                Assert.That(
+                    appliedImpulse,
+                    Is.EqualTo(expectedVelocityChange * rigidbody.mass));
+            }
+            finally
+            {
+                Object.DestroyImmediate(ballObject);
+            }
+        }
+
         [Test]
         public void ApplyRailCorrection_CoalescesMultipleRailCollidersWithoutDoubleRestitution()
         {
