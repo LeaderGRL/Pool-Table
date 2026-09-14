@@ -117,6 +117,14 @@ Break shots intentionally return a resolution that requires explicit break follo
 
 Future physics code should produce observations that can be translated into `ShotFacts`; it should not decide WPA outcomes itself. Presentation and networking adapters consume the `ShotResolution` / resulting `MatchState` from Gameplay instead of reading legacy singleton state.
 
+## Gameplay aiming
+
+`PoolTable.Gameplay.Aiming.AimingState` owns the canonical aim as a normalized `ShotDirection`. It is table-plane data rather than a value inferred from a cue transform, so future shot-power, spin, controller, and networking code can consume the same explicit direction.
+
+`CueAimingController` is the Unity scene adapter. It reads horizontal pointer delta through `PoolTable.Input.MouseInputReader`, rotates the planar aiming state around the table vertical axis, and uses that direction to orbit the cue around the cue ball. The cue transform then looks at the cue-ball center so scene geometry can keep its vertical offset without contaminating the planar gameplay direction. The `0.1` yaw scale preserves the effective sensitivity of the legacy Input System compatibility shim.
+
+The legacy `PlayersStateManagement` assembly does not become a dependency of Gameplay. During migration it stores the modern controller only as a generic Unity `Behaviour`: play enables aiming, while shoot and spectate disable it. Legacy shot-power input remains in the old shoot state until the dedicated Phase 5 power-control issue replaces it.
+
 ## Metric billiards scale
 
 `PoolTable.Physics.Configuration.BilliardsPhysicalSpecification` is the authoritative dimensional reference for the new simulation. Physics world space uses the Unity convention of one world unit per meter. Regulation pool balls therefore use a 0.05715 m diameter and 0.028575 m radius, while the 9-foot reference playing surface is 2.54 m by 1.27 m.

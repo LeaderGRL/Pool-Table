@@ -153,8 +153,9 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
 
 ## Phase 5 — player controls
 
-33. `PR` **Input: Migrate project to Unity Input System**
-34. `TODO` **Gameplay: Implement aiming state**
+33. `DONE` **Input: Migrate project to Unity Input System**
+34. `PR` **Gameplay: Implement aiming state**
+    The modern Gameplay layer owns normalized planar aim direction through `AimingState`, while `CueAimingController` adapts Unity Input System pointer delta into the scene cue pose. Legacy player states only enable or disable that adapter during the incremental migration. Reference: GitHub issue #70.
 35. `TODO` **Gameplay: Implement shot power control**
 36. `TODO` **Gameplay: Implement cue-ball spin control**
 37. `TODO` **Gameplay: Add controller input support**
@@ -219,4 +220,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 5 work is **Input: Migrate project to Unity Input System** (issue #68). After it is merged, continue with **Gameplay: Implement aiming state**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 5 work is **Gameplay: Implement aiming state** (issue #70). After it is merged, continue with **Gameplay: Implement shot power control**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
