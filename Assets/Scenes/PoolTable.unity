@@ -2268,12 +2268,11 @@ MonoBehaviour:
   Cam: {fileID: 963194225}
   Cue_Camera: {fileID: 583553788}
   distance: 1.6666667
-  maxShotSpeedMetersPerSecond: 6.6666667
-  cueStrokeDistancePerInput: 0.02
   spin: 3
   CameraOffset: {x: 0, y: 0.06666667, z: 0}
   CameraDistance: 2
   aimingController: {fileID: 534474671}
+  shotPowerController: {fileID: 534474672}
 --- !u!114 &534474671
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2289,6 +2288,24 @@ MonoBehaviour:
   cueBall: {fileID: 86719732}
   cueDistance: 1.6666667
   yawDegreesPerPointerUnit: 0.1
+--- !u!114 &534474672
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 534474663}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b9200a4c7bb4e34908d48c9e8e04fe1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  cueBall: {fileID: 86719738}
+  aimingController: {fileID: 534474671}
+  maximumCuePullbackMeters: 0.35
+  pointerDeltaSensitivity: 0.1
+  cueStrokeMetersPerPointerUnit: 0.02
+  maximumShotSpeedMetersPerSecond: 6.6666667
 --- !u!114 &534474668
 MonoBehaviour:
   m_ObjectHideFlags: 0

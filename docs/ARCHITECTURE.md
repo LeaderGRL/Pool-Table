@@ -123,7 +123,15 @@ Future physics code should produce observations that can be translated into `Sho
 
 `CueAimingController` is the Unity scene adapter. It reads horizontal pointer delta through `PoolTable.Input.MouseInputReader`, rotates the planar aiming state around the table vertical axis, and uses that direction to orbit the cue around the cue ball. The cue transform then looks at the cue-ball center so scene geometry can keep its vertical offset without contaminating the planar gameplay direction. The `0.1` yaw scale preserves the effective sensitivity of the legacy Input System compatibility shim.
 
-The legacy `PlayersStateManagement` assembly does not become a dependency of Gameplay. During migration it stores the modern controller only as a generic Unity `Behaviour`: play enables aiming, while shoot and spectate disable it. Legacy shot-power input remains in the old shoot state until the dedicated Phase 5 power-control issue replaces it.
+The legacy `PlayersStateManagement` assembly does not become a dependency of Gameplay. During migration it stores the modern controllers only as generic Unity `Behaviour` references and transfers authority between them: play enables aiming, shoot enables shot power, and spectate disables both.
+
+## Gameplay shot power
+
+`PoolTable.Gameplay.Shots.ShotPowerState` owns the local cue pullback in meters and derives normalized shot power from that bounded distance. It contains no Unity input or scene dependencies, so the power curve can be tested independently and later fed by mouse, controller, or network-facing adapters without duplicating the domain state.
+
+`ShotPowerController` is the Unity scene adapter. It reads vertical pointer delta through `PoolTable.Input.MouseInputReader`, preserves the previous effective `0.1` pointer sensitivity, moves the cue backward from its aiming rest pose, and commits exactly one shot when the primary button is released with usable power. Direction comes from `CueAimingController.Direction`; the configured normalized power is mapped to the existing 6.6666667 m/s maximum shot-speed baseline; and `PoolTable.Physics.Cue.CueBallStrikeModel` performs the physical linear/angular velocity conversion. Spin remains centered until the dedicated Phase 5 spin-control issue.
+
+The legacy shoot state no longer samples pointer delta or applies force. It only enables the modern shot-power adapter, locks the legacy camera during the temporary migration, resets legacy collision flags, and advances to spectating after the adapter commits and disables itself. This leaves one authoritative shot path while the remaining legacy state machine is removed incrementally.
 
 ## Metric billiards scale
 
