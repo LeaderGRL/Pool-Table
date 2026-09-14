@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayersPlayState : PlayersBaseState
@@ -7,6 +5,7 @@ public class PlayersPlayState : PlayersBaseState
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {
+        player.SetShotPowerEnabled(false);
         player.SetAimingEnabled(true);
         GameManager.instance.turnNumber++;
 
@@ -112,7 +111,5 @@ public class PlayersPlayState : PlayersBaseState
 
     public override void OnMouseDown(PlayersStateManagement player)
     {
-        //Vector3 power = Vector3.right * 100;
-        //player.WhiteBall.GetComponent<Rigidbody>().AddForce(power, ForceMode.Impulse);
     }
 }

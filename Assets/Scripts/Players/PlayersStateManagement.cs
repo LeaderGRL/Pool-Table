@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class PlayersStateManagement : MonoBehaviour
 {
@@ -14,13 +13,11 @@ public class PlayersStateManagement : MonoBehaviour
     public GameObject Cam;
     public GameObject Cue_Camera;
     public float distance;
-    [FormerlySerializedAs("force")]
-    public float maxShotSpeedMetersPerSecond;
-    public float cueStrokeDistancePerInput = 0.02f;
     public float spin;
     public Vector3 CameraOffset;
     public float CameraDistance;
     public Behaviour aimingController;
+    public Behaviour shotPowerController;
 
     private void Awake()
     {
@@ -83,13 +80,17 @@ public class PlayersStateManagement : MonoBehaviour
         }
     }
 
-    public void shoot()
+    public void SetShotPowerEnabled(bool enabled)
     {
-        float mouseAxisY = Mathf.Clamp(LegacyMouseInput.Delta.y, -1f, 1f);
+        if (shotPowerController != null)
+        {
+            shotPowerController.enabled = enabled;
+        }
+    }
 
-        lockCamera(true);
-
-        transform.position -= transform.forward * mouseAxisY * cueStrokeDistancePerInput;
+    public bool IsShotPowerEnabled()
+    {
+        return shotPowerController != null && shotPowerController.enabled;
     }
 
     public void lockCamera(bool lockCamera)

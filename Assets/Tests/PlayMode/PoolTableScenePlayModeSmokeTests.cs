@@ -12,6 +12,8 @@ using PoolTable.Gameplay.Balls;
 using PoolTable.Gameplay.Instrumentation;
 using PoolTable.Gameplay.Match;
 using PoolTable.Gameplay.Pockets;
+using PoolTable.Gameplay.Shots;
+using PoolTable.Input;
 using PoolTable.Physics.Cloth;
 using PoolTable.Physics.Configuration;
 using PoolTable.Physics.Instrumentation;
@@ -708,7 +710,7 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator PoolTableScene_LegacyShotSpeedIsIndependentOfBallMass()
+        public IEnumerator PoolTableScene_ModernShotPowerIsIndependentOfBallMass()
         {
             yield return LoadPoolTableScene();
 
@@ -716,50 +718,63 @@ namespace PoolTable.Tests.PlayMode
             var playerController = FindActiveMonoBehaviourByTypeName(activeScene, "PlayersStateManagement");
             Assert.That(playerController, Is.Not.Null);
 
-            var controllerType = playerController.GetType();
-            var maxShotSpeedMetersPerSecond =
-                (float)controllerType.GetField("maxShotSpeedMetersPerSecond").GetValue(playerController);
-            var shootState = controllerType.GetField("shootState").GetValue(playerController);
-            var applyShotVelocityChange = shootState.GetType().GetMethod(
-                "ApplyShotVelocityChange",
-                BindingFlags.Static | BindingFlags.NonPublic);
+            var shotPowerController = playerController.GetComponent<ShotPowerController>();
+            Assert.That(shotPowerController, Is.Not.Null, "The active cue must own the modern shot-power adapter.");
+            Assert.That(shotPowerController.enabled, Is.False, "Shot power must stay disabled while aiming.");
 
-            Assert.That(applyShotVelocityChange, Is.Not.Null);
+            var cueBall = shotPowerController.CueBall;
+            var originalMass = cueBall.mass;
+            var originalPosition = cueBall.position;
+            var originalRotation = cueBall.rotation;
+            var measuredSpeeds = new float[2];
+            var masses = new[] { BilliardsSimulationConfiguration.BallMassKilograms, 1f };
 
-            var regulationProbe = new GameObject("RegulationMassShotProbe");
-            var legacyMassProbe = new GameObject("LegacyMassShotProbe");
-            var regulationRigidbody = regulationProbe.AddComponent<Rigidbody>();
-            var legacyRigidbody = legacyMassProbe.AddComponent<Rigidbody>();
+            for (var massIndex = 0; massIndex < masses.Length; massIndex++)
+            {
+                cueBall.mass = masses[massIndex];
+                cueBall.position = originalPosition;
+                cueBall.rotation = originalRotation;
+                cueBall.linearVelocity = Vector3.zero;
+                cueBall.angularVelocity = Vector3.zero;
 
-            regulationRigidbody.useGravity = false;
-            legacyRigidbody.useGravity = false;
-            regulationRigidbody.linearDamping = 0f;
-            legacyRigidbody.linearDamping = 0f;
-            regulationRigidbody.mass = BilliardsSimulationConfiguration.BallMassKilograms;
-            legacyRigidbody.mass = 1f;
+                shotPowerController.enabled = true;
+                Assert.That(shotPowerController.NormalizedPower, Is.Zero);
 
-            applyShotVelocityChange.Invoke(
-                null,
-                new object[] { regulationRigidbody, Vector3.right, 1f, maxShotSpeedMetersPerSecond });
-            applyShotVelocityChange.Invoke(
-                null,
-                new object[] { legacyRigidbody, Vector3.right, 1f, maxShotSpeedMetersPerSecond });
+                for (var stroke = 0; stroke < 18; stroke++)
+                {
+                    shotPowerController.ProcessInput(
+                        new PointerInputSnapshot(new Vector2(0f, 10f), true));
+                }
 
-            yield return new WaitForFixedUpdate();
+                Assert.That(shotPowerController.NormalizedPower, Is.EqualTo(1f).Within(0.000001f));
+                Assert.That(
+                    shotPowerController.PullbackMeters,
+                    Is.EqualTo(shotPowerController.MaximumCuePullbackMeters).Within(0.000001f));
+
+                shotPowerController.ProcessInput(new PointerInputSnapshot(Vector2.zero, false));
+
+                Assert.That(shotPowerController.ShotCommitted, Is.True);
+                Assert.That(shotPowerController.enabled, Is.False, "A committed shot must disable further power input.");
+
+                yield return new WaitForFixedUpdate();
+
+                measuredSpeeds[massIndex] = Vector3.ProjectOnPlane(cueBall.linearVelocity, Vector3.up).magnitude;
+            }
 
             Assert.That(
-                regulationRigidbody.linearVelocity.x,
-                Is.EqualTo(maxShotSpeedMetersPerSecond).Within(0.0001f));
+                measuredSpeeds[0],
+                Is.EqualTo(measuredSpeeds[1]).Within(0.0001f),
+                "Modern cue-ball shot speed must not change when Rigidbody mass changes.");
             Assert.That(
-                legacyRigidbody.linearVelocity.x,
-                Is.EqualTo(maxShotSpeedMetersPerSecond).Within(0.0001f));
-            Assert.That(
-                regulationRigidbody.linearVelocity,
-                Is.EqualTo(legacyRigidbody.linearVelocity),
-                "Cue-ball shot speed must not change when Rigidbody mass changes.");
+                measuredSpeeds[0],
+                Is.GreaterThan(shotPowerController.MaximumShotSpeedMetersPerSecond - 0.1f),
+                "A full-power shot must remain close to the configured target speed after one physics step.");
 
-            Object.Destroy(regulationProbe);
-            Object.Destroy(legacyMassProbe);
+            cueBall.mass = originalMass;
+            cueBall.position = originalPosition;
+            cueBall.rotation = originalRotation;
+            cueBall.linearVelocity = Vector3.zero;
+            cueBall.angularVelocity = Vector3.zero;
         }
 
         [UnityTest]
@@ -772,8 +787,11 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(playerController, Is.Not.Null);
 
             var aimingController = playerController.GetComponent<CueAimingController>();
+            var shotPowerController = playerController.GetComponent<ShotPowerController>();
             Assert.That(aimingController, Is.Not.Null, "The active cue must use the modern gameplay aiming adapter.");
+            Assert.That(shotPowerController, Is.Not.Null, "The active cue must use the modern gameplay shot-power adapter.");
             Assert.That(aimingController.isActiveAndEnabled, Is.True, "Aiming must be enabled while the player is in play state.");
+            Assert.That(shotPowerController.enabled, Is.False, "Shot power must be disabled while the player is aiming.");
             Assert.That(aimingController.CueBall, Is.Not.Null);
             Assert.That(aimingController.CueDistance, Is.EqualTo(1.6666667f).Within(0.0001f));
             Assert.That(
@@ -800,16 +818,20 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(controllerType.GetMethod("turnArround"), Is.Null, "Legacy pointer-driven rotation must be removed.");
 
             var aimingBehaviour = controllerType.GetField("aimingController").GetValue(playerController);
+            var shotPowerBehaviour = controllerType.GetField("shotPowerController").GetValue(playerController);
             Assert.That(aimingBehaviour, Is.SameAs(aimingController));
+            Assert.That(shotPowerBehaviour, Is.SameAs(shotPowerController));
 
             var switchState = controllerType.GetMethod("SwitchState");
             var shootState = controllerType.GetField("shootState").GetValue(playerController);
             switchState.Invoke(playerController, new[] { shootState });
             Assert.That(aimingController.enabled, Is.False, "Aiming must be disabled while the cue is in shoot state.");
+            Assert.That(shotPowerController.enabled, Is.True, "Shot power must be enabled while the cue is in shoot state.");
 
             var spectateState = controllerType.GetField("spectateState").GetValue(playerController);
             switchState.Invoke(playerController, new[] { spectateState });
             Assert.That(aimingController.enabled, Is.False, "Aiming must remain disabled while spectating.");
+            Assert.That(shotPowerController.enabled, Is.False, "Shot power must be disabled while spectating.");
 
             playerController.transform.rotation = Quaternion.Euler(0f, 123f, 0f);
             aimingController.enabled = true;
@@ -855,20 +877,29 @@ namespace PoolTable.Tests.PlayMode
                 (float)controllerType.GetField("distance").GetValue(playerController),
                 Is.EqualTo(1.6666667f).Within(0.0001f),
                 "The legacy cue controller distance must use the metric table scale.");
-            var cueStrokeDistancePerInput =
-                (float)controllerType.GetField("cueStrokeDistancePerInput").GetValue(playerController);
+
+            var shotPowerController = playerController.GetComponent<ShotPowerController>();
+            Assert.That(shotPowerController, Is.Not.Null);
             Assert.That(
-                cueStrokeDistancePerInput,
+                shotPowerController.MaximumCuePullbackMeters,
+                Is.EqualTo(0.35f).Within(0.0001f),
+                "The modern cue controller must clamp visual pullback to an explicit metric range.");
+            Assert.That(
+                shotPowerController.PointerDeltaSensitivity,
+                Is.EqualTo(0.1f).Within(0.0001f),
+                "Modern shot power must preserve the legacy pointer-delta sensitivity while reading raw Input System input.");
+            Assert.That(
+                shotPowerController.CueStrokeMetersPerPointerUnit,
                 Is.EqualTo(0.02f).Within(0.0001f),
                 "The cue stroke must use the metric controller scale.");
             Assert.That(
-                cueStrokeDistancePerInput,
+                shotPowerController.CueStrokeMetersPerPointerUnit,
                 Is.LessThan(BilliardsPhysicalSpecification.BallRadiusMeters),
                 "A single normalized cue stroke input must move less than one regulation ball radius.");
             Assert.That(
-                (float)controllerType.GetField("maxShotSpeedMetersPerSecond").GetValue(playerController),
+                shotPowerController.MaximumShotSpeedMetersPerSecond,
                 Is.EqualTo(6.6666667f).Within(0.0001f),
-                "The legacy cue controller must express shot strength as a metric target speed.");
+                "The modern cue controller must express shot strength as a metric target speed.");
             Assert.That(
                 (Vector3)controllerType.GetField("CameraOffset").GetValue(playerController),
                 Is.EqualTo(new Vector3(0f, 0.06666667f, 0f)),
