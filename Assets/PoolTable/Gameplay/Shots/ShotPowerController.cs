@@ -22,6 +22,8 @@ namespace PoolTable.Gameplay.Shots
         private Quaternion restRotation;
         private bool hasRestPose;
         private bool previousPrimaryButtonPressed;
+        private bool strikeQueued;
+        private CueBallStrikeMotion queuedStrike;
 
         public Rigidbody CueBall => cueBall;
 
@@ -56,6 +58,8 @@ namespace PoolTable.Gameplay.Shots
 
             shotPowerState = new ShotPowerState(maximumCuePullbackMeters);
             ShotCommitted = false;
+            strikeQueued = false;
+            queuedStrike = default;
             restPosition = transform.position;
             restRotation = transform.rotation;
             hasRestPose = true;
@@ -78,9 +82,23 @@ namespace PoolTable.Gameplay.Shots
             ProcessInput(mouseInputReader.Read());
         }
 
+        private void FixedUpdate()
+        {
+            if (!strikeQueued || ShotCommitted || cueBall == null)
+            {
+                return;
+            }
+
+            cueBall.AddForce(queuedStrike.LinearVelocityChange, ForceMode.VelocityChange);
+            cueBall.angularVelocity += queuedStrike.AngularVelocityChange;
+            strikeQueued = false;
+            ShotCommitted = true;
+            enabled = false;
+        }
+
         internal void ProcessInput(PointerInputSnapshot input)
         {
-            if (shotPowerState == null || cueBall == null || aimingController == null || ShotCommitted)
+            if (shotPowerState == null || cueBall == null || aimingController == null || strikeQueued || ShotCommitted)
             {
                 return;
             }
@@ -93,32 +111,29 @@ namespace PoolTable.Gameplay.Shots
             }
             else if (previousPrimaryButtonPressed)
             {
-                TryCommitShot();
+                TryQueueShot();
             }
 
             previousPrimaryButtonPressed = input.PrimaryButtonIsPressed;
         }
 
-        private bool TryCommitShot()
+        private bool TryQueueShot()
         {
-            if (ShotCommitted || !shotPowerState.HasUsablePower)
+            if (strikeQueued || ShotCommitted || !shotPowerState.HasUsablePower)
             {
                 return false;
             }
 
             var direction = aimingController.Direction;
             var shotSpeed = shotPowerState.NormalizedPower * maximumShotSpeedMetersPerSecond;
-            var motion = CueBallStrikeModel.CalculateVelocityChange(
+            queuedStrike = CueBallStrikeModel.CalculateVelocityChange(
                 new Vector3(direction.X, 0f, direction.Y),
                 shotSpeed,
                 default,
                 BilliardsPhysicalSpecification.BallRadiusMeters);
 
             RestoreCuePose();
-            cueBall.AddForce(motion.LinearVelocityChange, ForceMode.VelocityChange);
-            cueBall.angularVelocity += motion.AngularVelocityChange;
-            ShotCommitted = true;
-            enabled = false;
+            strikeQueued = true;
             return true;
         }
 

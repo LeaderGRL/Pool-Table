@@ -753,10 +753,22 @@ namespace PoolTable.Tests.PlayMode
 
                 shotPowerController.ProcessInput(new PointerInputSnapshot(Vector2.zero, false));
 
-                Assert.That(shotPowerController.ShotCommitted, Is.True);
-                Assert.That(shotPowerController.enabled, Is.False, "A committed shot must disable further power input.");
+                Assert.That(
+                    shotPowerController.ShotCommitted,
+                    Is.False,
+                    "Releasing the cue must queue the strike until the next physics step.");
+                Assert.That(
+                    shotPowerController.enabled,
+                    Is.True,
+                    "Shot power must remain active until the queued strike reaches FixedUpdate.");
 
                 yield return new WaitForFixedUpdate();
+
+                Assert.That(shotPowerController.ShotCommitted, Is.True);
+                Assert.That(
+                    shotPowerController.enabled,
+                    Is.False,
+                    "A physically committed shot must disable further power input.");
 
                 measuredSpeeds[massIndex] = Vector3.ProjectOnPlane(cueBall.linearVelocity, Vector3.up).magnitude;
             }
