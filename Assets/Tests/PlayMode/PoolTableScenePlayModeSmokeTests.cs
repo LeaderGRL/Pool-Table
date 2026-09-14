@@ -850,6 +850,24 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(planarForward.x, Is.EqualTo(direction.X).Within(0.0001f));
             Assert.That(planarForward.z, Is.EqualTo(direction.Y).Within(0.0001f));
 
+            aimingController.ProcessInput(new PointerInputSnapshot(new Vector2(15f, 0f), false));
+            Assert.That(
+                aimingController.Direction.X,
+                Is.EqualTo(direction.X).Within(0.00001f),
+                "The secondary-button release frame must not leak the final spin-drag delta into cue yaw.");
+            Assert.That(aimingController.Direction.Y, Is.EqualTo(direction.Y).Within(0.00001f));
+
+            aimingController.ProcessInput(new PointerInputSnapshot(new Vector2(15f, 0f), false));
+            Assert.That(
+                Mathf.Abs(aimingController.Direction.X - direction.X)
+                    + Mathf.Abs(aimingController.Direction.Y - direction.Y),
+                Is.GreaterThan(0.00001f),
+                "Cue yaw must resume on the frame after the secondary-button release transition.");
+
+            aimingController.ProcessInput(new PointerInputSnapshot(new Vector2(-15f, 0f), false));
+            Assert.That(aimingController.Direction.X, Is.EqualTo(direction.X).Within(0.00001f));
+            Assert.That(aimingController.Direction.Y, Is.EqualTo(direction.Y).Within(0.00001f));
+
             var controllerType = playerController.GetType();
             Assert.That(controllerType.GetMethod("setRotation"), Is.Null, "Legacy player code must no longer own cue rotation.");
             Assert.That(controllerType.GetMethod("turnArround"), Is.Null, "Legacy pointer-driven rotation must be removed.");
