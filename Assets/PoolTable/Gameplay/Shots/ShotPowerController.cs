@@ -110,7 +110,8 @@ namespace PoolTable.Gameplay.Shots
 
             if (input.PrimaryButtonIsPressed)
             {
-                var pointerPullback = input.PointerDelta.y * pointerDeltaSensitivity * cueStrokeMetersPerPointerUnit;
+                var pointerInput = Mathf.Clamp(input.PointerDelta.y * pointerDeltaSensitivity, -1f, 1f);
+                var pointerPullback = pointerInput * cueStrokeMetersPerPointerUnit;
                 var controllerPullback = input.ActionAxis.y * controllerPullbackMetersPerSecond * Time.deltaTime;
                 shotPowerState.AdjustPullback(pointerPullback + controllerPullback);
                 ApplyCuePullbackPose();
@@ -166,3 +167,4 @@ namespace PoolTable.Gameplay.Shots
         }
     }
 }
+
