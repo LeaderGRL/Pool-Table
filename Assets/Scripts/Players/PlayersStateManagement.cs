@@ -13,10 +13,10 @@ public class PlayersStateManagement : MonoBehaviour
     public GameObject Cam;
     public GameObject Cue_Camera;
     public float distance;
-    public float spin;
     public Vector3 CameraOffset;
     public float CameraDistance;
     public Behaviour aimingController;
+    public Behaviour spinController;
     public Behaviour shotPowerController;
 
     private void Awake()
@@ -85,6 +85,14 @@ public class PlayersStateManagement : MonoBehaviour
         if (shotPowerController != null)
         {
             shotPowerController.enabled = enabled;
+        }
+    }
+
+    public void SetSpinControlEnabled(bool enabled)
+    {
+        if (spinController != null)
+        {
+            spinController.enabled = enabled;
         }
     }
 

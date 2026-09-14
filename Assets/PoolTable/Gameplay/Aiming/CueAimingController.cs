@@ -48,13 +48,21 @@ namespace PoolTable.Gameplay.Aiming
 
         private void Update()
         {
+            ProcessInput(mouseInputReader.Read());
+        }
+
+        internal void ProcessInput(PointerInputSnapshot input)
+        {
             if (aimingState == null || cueBall == null)
             {
                 return;
             }
 
-            var input = mouseInputReader.Read();
-            aimingState.RotateDegrees(input.Delta.x * yawDegreesPerPointerUnit);
+            if (!input.SecondaryButtonIsPressed)
+            {
+                aimingState.RotateDegrees(input.Delta.x * yawDegreesPerPointerUnit);
+            }
+
             ApplyCuePose();
         }
 

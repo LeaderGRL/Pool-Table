@@ -11,6 +11,7 @@ namespace PoolTable.Gameplay.Shots
     {
         [SerializeField] private Rigidbody cueBall;
         [SerializeField] private CueAimingController aimingController;
+        [SerializeField] private CueBallSpinController spinController;
         [SerializeField] private float maximumCuePullbackMeters = 0.35f;
         [SerializeField] private float pointerDeltaSensitivity = 0.1f;
         [SerializeField] private float cueStrokeMetersPerPointerUnit = 0.02f;
@@ -28,6 +29,8 @@ namespace PoolTable.Gameplay.Shots
         public Rigidbody CueBall => cueBall;
 
         public CueAimingController AimingController => aimingController;
+
+        public CueBallSpinController SpinController => spinController;
 
         public float MaximumCuePullbackMeters => maximumCuePullbackMeters;
 
@@ -91,6 +94,7 @@ namespace PoolTable.Gameplay.Shots
 
             cueBall.AddForce(queuedStrike.LinearVelocityChange, ForceMode.VelocityChange);
             cueBall.angularVelocity += queuedStrike.AngularVelocityChange;
+            spinController?.ResetToCenter();
             strikeQueued = false;
             ShotCommitted = true;
             enabled = false;
@@ -129,7 +133,7 @@ namespace PoolTable.Gameplay.Shots
             queuedStrike = CueBallStrikeModel.CalculateVelocityChange(
                 new Vector3(direction.X, 0f, direction.Y),
                 shotSpeed,
-                default,
+                spinController?.Spin ?? default,
                 BilliardsPhysicalSpecification.BallRadiusMeters);
 
             RestoreCuePose();

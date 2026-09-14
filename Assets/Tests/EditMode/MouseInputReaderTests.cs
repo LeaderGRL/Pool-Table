@@ -11,12 +11,14 @@ namespace PoolTable.Tests.EditMode
         {
             var reader = new MouseInputReader(
                 () => new Vector2(12.5f, -7.25f),
+                () => true,
                 () => true);
 
             var snapshot = reader.Read();
 
             Assert.That(snapshot.Delta, Is.EqualTo(new Vector2(12.5f, -7.25f)));
             Assert.That(snapshot.PrimaryButtonIsPressed, Is.True);
+            Assert.That(snapshot.SecondaryButtonIsPressed, Is.True);
         }
 
         [Test]
@@ -27,6 +29,9 @@ namespace PoolTable.Tests.EditMode
                 Throws.ArgumentNullException);
             Assert.That(
                 () => new MouseInputReader(() => Vector2.zero, null),
+                Throws.ArgumentNullException);
+            Assert.That(
+                () => new MouseInputReader(() => Vector2.zero, () => false, null),
                 Throws.ArgumentNullException);
         }
     }

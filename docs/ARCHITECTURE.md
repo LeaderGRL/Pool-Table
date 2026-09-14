@@ -39,7 +39,7 @@ Future architecture issues should move behavior behind these boundaries in small
 
 ## Input System transition
 
-`PoolTable.Input` owns the modern player-input boundary and references Unity's Input System package directly. `MouseInputReader` is the first adapter: it exposes raw pointer delta and primary-button state as an immutable snapshot without making aiming, shot-power, spin, camera, or match-state decisions.
+`PoolTable.Input` owns the modern player-input boundary and references Unity's Input System package directly. `MouseInputReader` is the first adapter: it exposes raw pointer delta plus primary- and secondary-button state as an immutable snapshot without making aiming, shot-power, spin, camera, or match-state decisions.
 
 The project now runs with the new Input System backend only. Legacy gameplay remains in `Assembly-CSharp`, which deliberately does not auto-reference the modern asmdefs, so `Assets/Scripts/Input/LegacyMouseInput.cs` is a temporary compatibility shim that reads the same Input System mouse device while those MonoBehaviours are migrated in later Phase 5 issues. Its `0.1` pointer-delta scale preserves the previous `Mouse X` / `Mouse Y` Input Manager sensitivity. New gameplay code must use `PoolTable.Input` instead of extending this compatibility shim.
 
@@ -121,17 +121,23 @@ Future physics code should produce observations that can be translated into `Sho
 
 `PoolTable.Gameplay.Aiming.AimingState` owns the canonical aim as a normalized `ShotDirection`. It is table-plane data rather than a value inferred from a cue transform, so future shot-power, spin, controller, and networking code can consume the same explicit direction.
 
-`CueAimingController` is the Unity scene adapter. It reads horizontal pointer delta through `PoolTable.Input.MouseInputReader`, rotates the planar aiming state around the table vertical axis, and uses that direction to orbit the cue around the cue ball. The cue transform then looks at the cue-ball center so scene geometry can keep its vertical offset without contaminating the planar gameplay direction. The `0.1` yaw scale preserves the effective sensitivity of the legacy Input System compatibility shim.
+`CueAimingController` is the Unity scene adapter. It reads horizontal pointer delta through `PoolTable.Input.MouseInputReader`, rotates the planar aiming state around the table vertical axis, and uses that direction to orbit the cue around the cue ball. The cue transform then looks at the cue-ball center so scene geometry can keep its vertical offset without contaminating the planar gameplay direction. The `0.1` yaw scale preserves the effective sensitivity of the legacy Input System compatibility shim. While the secondary-button spin gesture is active, aiming ignores pointer movement so one physical input delta cannot change both aim and cue-tip contact.
 
-The legacy `PlayersStateManagement` assembly does not become a dependency of Gameplay. During migration it stores the modern controllers only as generic Unity `Behaviour` references and transfers authority between them: play enables aiming, shoot enables shot power, and spectate disables both.
+The legacy `PlayersStateManagement` assembly does not become a dependency of Gameplay. During migration it stores the modern controllers only as generic Unity `Behaviour` references and transfers authority between them: play enables aiming and spin selection, shoot enables shot power, and spectate disables all three.
 
 ## Gameplay shot power
 
 `PoolTable.Gameplay.Shots.ShotPowerState` owns the local cue pullback in meters and derives normalized shot power from that bounded distance. It contains no Unity input or scene dependencies, so the power curve can be tested independently and later fed by mouse, controller, or network-facing adapters without duplicating the domain state.
 
-`ShotPowerController` is the Unity scene adapter. It reads vertical pointer delta through `PoolTable.Input.MouseInputReader`, preserves the previous effective `0.1` pointer sensitivity, moves the cue backward from its aiming rest pose, and commits exactly one shot when the primary button is released with usable power. Direction comes from `CueAimingController.Direction`; the configured normalized power is mapped to the existing 6.6666667 m/s maximum shot-speed baseline; and `PoolTable.Physics.Cue.CueBallStrikeModel` performs the physical linear/angular velocity conversion. Spin remains centered until the dedicated Phase 5 spin-control issue.
+`ShotPowerController` is the Unity scene adapter. It reads vertical pointer delta through `PoolTable.Input.MouseInputReader`, preserves the previous effective `0.1` pointer sensitivity, moves the cue backward from its aiming rest pose, and commits exactly one shot when the primary button is released with usable power. Direction comes from `CueAimingController.Direction`; the configured normalized power is mapped to the existing 6.6666667 m/s maximum shot-speed baseline; selected cue-tip contact comes from `CueBallSpinController`; and `PoolTable.Physics.Cue.CueBallStrikeModel` performs the physical linear/angular velocity conversion on the next fixed physics step.
 
 The legacy shoot state no longer samples pointer delta or applies force. It only enables the modern shot-power adapter, locks the legacy camera during the temporary migration, resets legacy collision flags, and advances to spectating after the adapter commits and disables itself. This leaves one authoritative shot path while the remaining legacy state machine is removed incrementally.
+
+## Gameplay cue-ball spin
+
+`PoolTable.Gameplay.Shots.CueBallSpinState` owns the currently selected normalized cue-tip contact point. Pointer adjustments are accumulated inside the same unit disc enforced by the Core `CueBallSpin` contract, so Gameplay cannot hand an invalid contact point to Physics.
+
+`CueBallSpinController` is the Unity scene adapter for mouse spin selection. Holding the secondary mouse button and moving the pointer adjusts side and vertical contact without rotating the aim. The selected value survives the transition from aiming into shot-power input, is read by `ShotPowerController` when the shot is queued, and is reset to center only after the queued strike is physically committed in `FixedUpdate`. This keeps input selection, shot orchestration, and physical strike calculation in separate layers while making the selected spin part of the same authoritative local shot path.
 
 ## Metric billiards scale
 

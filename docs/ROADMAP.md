@@ -156,9 +156,10 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
 33. `DONE` **Input: Migrate project to Unity Input System**
 34. `DONE` **Gameplay: Implement aiming state**
     The modern Gameplay layer owns normalized planar aim direction through `AimingState`, while `CueAimingController` adapts Unity Input System pointer delta into the scene cue pose. Legacy player states only enable or disable that adapter during the incremental migration. Reference: GitHub issue #70 / PR #71.
-35. `PR` **Gameplay: Implement shot power control**
+35. `DONE` **Gameplay: Implement shot power control**
     Move cue pullback and shot commitment into the modern Gameplay layer. `ShotPowerState` owns bounded metric pullback and normalized power, while `ShotPowerController` adapts Input System pointer delta, reuses the canonical aim direction, and delegates physical cue-ball velocity changes to `CueBallStrikeModel`. The legacy player state machine only transfers control between aiming, shot power, and spectating. Preserve the existing 6.6666667 m/s maximum shot-speed baseline and the effective legacy pointer sensitivity. Reference: GitHub issue #72 / PR #73.
-36. `TODO` **Gameplay: Implement cue-ball spin control**
+36. `PR` **Gameplay: Implement cue-ball spin control**
+    Add a modern Gameplay-owned cue-tip contact state and mouse adapter. Holding the secondary mouse button adjusts normalized side/follow/draw contact without rotating the aim; the selected value persists into shot-power input, feeds the existing `CueBallStrikeModel`, and resets only after the fixed-step strike commits. Legacy player states only enable or disable the modern adapter. Reference: GitHub issue #74.
 37. `TODO` **Gameplay: Add controller input support**
 38. `TODO` **Gameplay: Implement ball-in-hand placement**
 39. `TODO` **Camera: Rebuild aiming camera**
@@ -221,4 +222,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 5 work is **Gameplay: Implement shot power control** (issue #72). After it is merged, continue with **Gameplay: Implement cue-ball spin control**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 5 work is **Gameplay: Implement cue-ball spin control** (issue #74). After it is merged, continue with **Gameplay: Add controller input support**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.

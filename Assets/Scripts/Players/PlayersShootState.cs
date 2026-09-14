@@ -5,6 +5,7 @@ public class PlayersShootState : PlayersBaseState
     public override void EnterState(PlayersStateManagement player)
     {
         player.SetAimingEnabled(false);
+        player.SetSpinControlEnabled(false);
         player.SetShotPowerEnabled(true);
         player.lockCamera(true);
         player.WhiteBall.GetComponent<BallStateManager>().hasCollide = false;
