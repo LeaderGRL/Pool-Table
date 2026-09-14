@@ -159,7 +159,7 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
 35. `DONE` **Gameplay: Implement shot power control**
     Move cue pullback and shot commitment into the modern Gameplay layer. `ShotPowerState` owns bounded metric pullback and normalized power, while `ShotPowerController` adapts Input System pointer delta, reuses the canonical aim direction, and delegates physical cue-ball velocity changes to `CueBallStrikeModel`. The legacy player state machine only transfers control between aiming, shot power, and spectating. Preserve the existing 6.6666667 m/s maximum shot-speed baseline and the effective legacy pointer sensitivity. Reference: GitHub issue #72 / PR #73.
 36. `PR` **Gameplay: Implement cue-ball spin control**
-    Add a modern Gameplay-owned cue-tip contact state and mouse adapter. Holding the secondary mouse button adjusts normalized side/follow/draw contact without rotating the aim; the selected value persists into shot-power input, feeds the existing `CueBallStrikeModel`, and resets only after the fixed-step strike commits. Legacy player states only enable or disable the modern adapter. Reference: GitHub issue #74.
+    Add a modern Gameplay-owned cue-tip contact state and mouse adapter. Holding the secondary mouse button adjusts normalized side/follow/draw contact without rotating the aim; the selected value persists into shot-power input, feeds the existing `CueBallStrikeModel`, and resets only after the fixed-step strike commits. Legacy player states only enable or disable the modern adapter. Reference: GitHub issue #74 / PR #75.
 37. `TODO` **Gameplay: Add controller input support**
 38. `TODO` **Gameplay: Implement ball-in-hand placement**
 39. `TODO` **Camera: Rebuild aiming camera**
