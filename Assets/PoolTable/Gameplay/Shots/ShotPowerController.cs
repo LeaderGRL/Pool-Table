@@ -15,6 +15,7 @@ namespace PoolTable.Gameplay.Shots
         [SerializeField] private float maximumCuePullbackMeters = 0.35f;
         [SerializeField] private float pointerDeltaSensitivity = 0.1f;
         [SerializeField] private float cueStrokeMetersPerPointerUnit = 0.02f;
+        [SerializeField] private float controllerPullbackMetersPerSecond = 0.5f;
         [SerializeField] private float maximumShotSpeedMetersPerSecond = 6.6666667f;
 
         private LocalPlayerInputReader localPlayerInputReader;
@@ -109,7 +110,9 @@ namespace PoolTable.Gameplay.Shots
 
             if (input.PrimaryButtonIsPressed)
             {
-                var pointerDelta = Mathf.Clamp((input.PointerDelta.y * pointerDeltaSensitivity) + input.ActionAxis.y * Time.deltaTime, -1f, 1f);
+                var pointerInput = input.PointerDelta.y * pointerDeltaSensitivity;
+                var controllerInput = input.ActionAxis.y * controllerPullbackMetersPerSecond * Time.deltaTime;
+                var pointerDelta = Mathf.Clamp(pointerInput + controllerInput, -1f, 1f);
                 shotPowerState.AdjustPullback(pointerDelta * cueStrokeMetersPerPointerUnit);
                 ApplyCuePullbackPose();
             }
