@@ -1,10 +1,15 @@
 using UnityEngine;
+using PoolTable.Input;
 
 public class PlayersPlayState : PlayersBaseState
 {
+    private LocalPlayerInputReader localPlayerInputReader;
+
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {
+        localPlayerInputReader ??= new LocalPlayerInputReader();
+
         player.SetShotPowerEnabled(false);
         player.SetAimingEnabled(true);
         player.SetSpinControlEnabled(true);
@@ -80,7 +85,9 @@ public class PlayersPlayState : PlayersBaseState
 
     public override void UpdateState(PlayersStateManagement player)
     {
-        if (LegacyMouseInput.PrimaryButtonIsPressed)
+        localPlayerInputReader ??= new LocalPlayerInputReader();
+
+        if (localPlayerInputReader.Read().PrimaryActionIsPressed)
         {
             player.SwitchState(player.shootState);
         }
