@@ -29,6 +29,8 @@ using UnityEngine.TestTools;
 
 namespace PoolTable.Tests.PlayMode
 {
+    [Category("Functional")]
+    [Category("SceneSmoke")]
     public sealed class PoolTableScenePlayModeSmokeTests
     {
         private const string PoolTableScenePath = "Assets/Scenes/PoolTable.unity";

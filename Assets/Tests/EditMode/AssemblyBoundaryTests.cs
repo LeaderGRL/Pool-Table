@@ -22,6 +22,13 @@ namespace PoolTable.Tests.EditMode
 
         private static readonly string[] RuntimeAssemblyNames = ExpectedRuntimeReferences.Keys.ToArray();
 
+        private static readonly IReadOnlyDictionary<string, string[]> ExpectedTestOnlyReferences =
+            new Dictionary<string, string[]>
+            {
+                ["EditMode"] = Array.Empty<string>(),
+                ["PlayMode"] = new[] { "Unity.InputSystem", "Unity.InputSystem.TestFramework" },
+            };
+
         [Test]
         public void RuntimeAssemblies_KeepExpectedDependencyGraph()
         {
@@ -58,7 +65,11 @@ namespace PoolTable.Tests.EditMode
                 $"PoolTable.{testMode}.Tests.asmdef");
             var definition = LoadAssemblyDefinition(path);
 
-            Assert.That(definition.references, Is.EquivalentTo(RuntimeAssemblyNames));
+            var expectedReferences = RuntimeAssemblyNames
+                .Concat(ExpectedTestOnlyReferences[testMode])
+                .ToArray();
+
+            Assert.That(definition.references, Is.EquivalentTo(expectedReferences));
         }
 
         private static string GetRuntimeAssemblyPath(string assemblyName)
