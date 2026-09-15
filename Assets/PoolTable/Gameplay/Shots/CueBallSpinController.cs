@@ -42,7 +42,7 @@ namespace PoolTable.Gameplay.Shots
 
         internal void ProcessInput(LocalPlayerInputSnapshot input)
         {
-            if (spinState == null || !input.SecondaryButtonIsPressed)
+            if (spinState == null || !input.SecondaryActionIsPressed)
             {
                 return;
             }

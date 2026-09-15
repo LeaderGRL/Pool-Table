@@ -108,7 +108,7 @@ namespace PoolTable.Gameplay.Shots
                 return;
             }
 
-            if (input.PrimaryButtonIsPressed)
+            if (input.PrimaryActionIsPressed)
             {
                 var pointerInput = Mathf.Clamp(input.PointerDelta.y * pointerDeltaSensitivity, -1f, 1f);
                 var pointerPullback = pointerInput * cueStrokeMetersPerPointerUnit;
@@ -121,7 +121,7 @@ namespace PoolTable.Gameplay.Shots
                 TryQueueShot();
             }
 
-            previousPrimaryButtonPressed = input.PrimaryButtonIsPressed;
+            previousPrimaryButtonPressed = input.PrimaryActionIsPressed;
         }
 
         private bool TryQueueShot()
@@ -167,4 +167,3 @@ namespace PoolTable.Gameplay.Shots
         }
     }
 }
-

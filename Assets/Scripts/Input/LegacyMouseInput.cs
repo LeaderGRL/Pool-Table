@@ -5,7 +5,9 @@ internal static class LegacyMouseInput
 {
     private const float LegacyAxisSensitivity = 0.1f;
 
-    public static bool PrimaryButtonIsPressed => Mouse.current?.leftButton.isPressed ?? false;
+    public static bool PrimaryButtonIsPressed =>
+        (Mouse.current?.leftButton.isPressed ?? false)
+        || (Gamepad.current?.rightTrigger.isPressed ?? false);
 
     public static Vector2 Delta
     {
