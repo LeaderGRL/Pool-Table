@@ -11,13 +11,17 @@ namespace PoolTable.Input
             bool primaryActionIsPressed,
             bool secondaryActionIsPressed = false,
             Vector2 aimAxis = default,
-            Vector2 actionAxis = default)
+            Vector2 actionAxis = default,
+            Vector2 pointerPosition = default,
+            bool hasPointerPosition = false)
         {
             PointerDelta = pointerDelta;
             PrimaryActionIsPressed = primaryActionIsPressed;
             SecondaryActionIsPressed = secondaryActionIsPressed;
             AimAxis = aimAxis;
             ActionAxis = actionAxis;
+            PointerPosition = pointerPosition;
+            HasPointerPosition = hasPointerPosition;
         }
 
         public Vector2 PointerDelta { get; }
@@ -29,6 +33,10 @@ namespace PoolTable.Input
         public Vector2 AimAxis { get; }
 
         public Vector2 ActionAxis { get; }
+
+        public Vector2 PointerPosition { get; }
+
+        public bool HasPointerPosition { get; }
     }
 
     public sealed class LocalPlayerInputReader
@@ -42,6 +50,8 @@ namespace PoolTable.Input
         private readonly Func<Vector2> readActionAxis;
         private readonly Func<bool> readGamepadPrimaryAction;
         private readonly Func<bool> readGamepadSecondaryAction;
+        private readonly Func<Vector2> readPointerPosition;
+        private readonly Func<bool> readPointerPositionAvailability;
         private readonly float stickDeadzone;
 
         public LocalPlayerInputReader()
@@ -53,7 +63,9 @@ namespace PoolTable.Input
                 ReadCurrentActionAxis,
                 ReadCurrentGamepadPrimaryAction,
                 ReadCurrentGamepadSecondaryAction,
-                DefaultStickDeadzone)
+                DefaultStickDeadzone,
+                ReadCurrentPointerPosition,
+                HasCurrentPointerPosition)
         {
         }
 
@@ -65,7 +77,9 @@ namespace PoolTable.Input
             Func<Vector2> readActionAxis,
             Func<bool> readGamepadPrimaryAction,
             Func<bool> readGamepadSecondaryAction,
-            float stickDeadzone = DefaultStickDeadzone)
+            float stickDeadzone = DefaultStickDeadzone,
+            Func<Vector2> readPointerPosition = null,
+            Func<bool> readPointerPositionAvailability = null)
         {
             this.readPointerDelta = readPointerDelta ?? throw new ArgumentNullException(nameof(readPointerDelta));
             this.readPointerPrimaryAction = readPointerPrimaryAction ?? throw new ArgumentNullException(nameof(readPointerPrimaryAction));
@@ -74,6 +88,8 @@ namespace PoolTable.Input
             this.readActionAxis = readActionAxis ?? throw new ArgumentNullException(nameof(readActionAxis));
             this.readGamepadPrimaryAction = readGamepadPrimaryAction ?? throw new ArgumentNullException(nameof(readGamepadPrimaryAction));
             this.readGamepadSecondaryAction = readGamepadSecondaryAction ?? throw new ArgumentNullException(nameof(readGamepadSecondaryAction));
+            this.readPointerPosition = readPointerPosition ?? ReadCurrentPointerPosition;
+            this.readPointerPositionAvailability = readPointerPositionAvailability ?? HasCurrentPointerPosition;
 
             if (!float.IsFinite(stickDeadzone) || stickDeadzone < 0f || stickDeadzone >= 1f)
             {
@@ -90,7 +106,9 @@ namespace PoolTable.Input
                 readPointerPrimaryAction() || readGamepadPrimaryAction(),
                 readPointerSecondaryAction() || readGamepadSecondaryAction(),
                 readAimAxis(),
-                readActionAxis());
+                readActionAxis(),
+                readPointerPosition(),
+                readPointerPositionAvailability());
         }
 
         internal static Vector2 ApplyRadialDeadzone(Vector2 value, float deadzone)
@@ -114,6 +132,17 @@ namespace PoolTable.Input
         {
             var mouse = Mouse.current;
             return mouse == null ? Vector2.zero : mouse.delta.ReadValue();
+        }
+
+        private static Vector2 ReadCurrentPointerPosition()
+        {
+            var mouse = Mouse.current;
+            return mouse == null ? Vector2.zero : mouse.position.ReadValue();
+        }
+
+        private static bool HasCurrentPointerPosition()
+        {
+            return Mouse.current != null;
         }
 
         private static bool ReadCurrentPointerPrimaryAction()

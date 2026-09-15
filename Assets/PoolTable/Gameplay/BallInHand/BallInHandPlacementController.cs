@@ -9,17 +9,41 @@ using UnityEngine;
 
 namespace PoolTable.Gameplay.BallInHand
 {
+    internal interface ICursorStateAccessor
+    {
+        CursorLockMode LockState { get; set; }
+
+        bool Visible { get; set; }
+    }
+
+    internal sealed class UnityCursorStateAccessor : ICursorStateAccessor
+    {
+        public CursorLockMode LockState
+        {
+            get => Cursor.lockState;
+            set => Cursor.lockState = value;
+        }
+
+        public bool Visible
+        {
+            get => Cursor.visible;
+            set => Cursor.visible = value;
+        }
+    }
+
     public sealed class BallInHandPlacementController : MonoBehaviour
     {
         private const string LegacyPlacementCompletedMessage = "OnModernBallInHandPlacementCompleted";
 
         [SerializeField] private Transform cueBall;
         [SerializeField] private Transform ballsRoot;
+        [SerializeField] private Camera placementCamera;
         [SerializeField, Min(0f)] private float pointerMetersPerPixel = 0.0015f;
         [SerializeField, Min(0f)] private float controllerMetersPerSecond = 0.75f;
 
         private readonly LocalPlayerInputReader inputReader = new LocalPlayerInputReader();
         private readonly List<Vector2> occupiedBallCenters = new List<Vector2>(15);
+        private ICursorStateAccessor cursorStateAccessor = new UnityCursorStateAccessor();
 
         private Rigidbody cueBallRigidbody;
         private BallPocketCapture cueBallPocketCapture;
@@ -28,6 +52,9 @@ namespace PoolTable.Gameplay.BallInHand
         private bool primaryActionWasPressed;
         private bool originalIsKinematic;
         private bool originalDetectCollisions;
+        private CursorLockMode originalCursorLockState;
+        private bool originalCursorVisible;
+        private bool cursorStateCaptured;
 
         public event Action<MatchState> PlacementCompleted;
 
@@ -38,6 +65,12 @@ namespace PoolTable.Gameplay.BallInHand
         public MatchState LastCompletedMatchState { get; private set; }
 
         internal Vector2 CurrentPlanarPosition => new Vector2(cueBall.position.x, cueBall.position.z);
+
+        internal ICursorStateAccessor CursorStateAccessor
+        {
+            get => cursorStateAccessor;
+            set => cursorStateAccessor = value ?? throw new ArgumentNullException(nameof(value));
+        }
 
         private void Awake()
         {
@@ -119,6 +152,7 @@ namespace PoolTable.Gameplay.BallInHand
                 LegacyPlacementCompletedMessage,
                 SendMessageOptions.DontRequireReceiver);
             IsPlacing = false;
+            RestoreCursorState();
             enabled = false;
 
             if (completedState != null)
@@ -137,18 +171,57 @@ namespace PoolTable.Gameplay.BallInHand
                 return;
             }
 
-            var tableLengthDelta = (input.PointerDelta.y * pointerMetersPerPixel)
-                + (input.ActionAxis.y * controllerMetersPerSecond * Mathf.Max(0f, deltaTime));
-            var tableWidthDelta = (input.PointerDelta.x * pointerMetersPerPixel)
-                + (input.ActionAxis.x * controllerMetersPerSecond * Mathf.Max(0f, deltaTime));
-            var next = BallInHandPlacementGeometry.ClampToPlacementArea(
-                CurrentPlanarPosition + new Vector2(tableLengthDelta, tableWidthDelta),
+            var next = CurrentPlanarPosition;
+            var pointerMoved = input.PointerDelta.sqrMagnitude > 0.000001f;
+
+            if (pointerMoved && input.HasPointerPosition && TryProjectPointerToTable(input.PointerPosition, out var pointerTarget))
+            {
+                next = pointerTarget;
+            }
+            else if (pointerMoved && !input.HasPointerPosition)
+            {
+                next += new Vector2(
+                    input.PointerDelta.y * pointerMetersPerPixel,
+                    input.PointerDelta.x * pointerMetersPerPixel);
+            }
+
+            next += new Vector2(
+                input.ActionAxis.y * controllerMetersPerSecond * Mathf.Max(0f, deltaTime),
+                input.ActionAxis.x * controllerMetersPerSecond * Mathf.Max(0f, deltaTime));
+
+            var clampedNext = BallInHandPlacementGeometry.ClampToPlacementArea(
+                next,
                 placementArea);
 
             cueBall.position = new Vector3(
-                next.x,
+                clampedNext.x,
                 BilliardsPhysicalSpecification.BallCenterHeightMeters,
-                next.y);
+                clampedNext.y);
+        }
+
+        internal bool TryProjectPointerToTable(Vector2 pointerPosition, out Vector2 planarPosition)
+        {
+            planarPosition = default;
+            var camera = placementCamera != null ? placementCamera : Camera.main;
+
+            if (camera == null || !camera.pixelRect.Contains(pointerPosition))
+            {
+                return false;
+            }
+
+            var ray = camera.ScreenPointToRay(pointerPosition);
+            var tablePlane = new Plane(
+                Vector3.up,
+                new Vector3(0f, BilliardsPhysicalSpecification.BallCenterHeightMeters, 0f));
+
+            if (!tablePlane.Raycast(ray, out var distance) || distance < 0f)
+            {
+                return false;
+            }
+
+            var point = ray.GetPoint(distance);
+            planarPosition = new Vector2(point.x, point.z);
+            return true;
         }
 
         private void BeginPlacement(CueBallPlacementArea area)
@@ -174,9 +247,15 @@ namespace PoolTable.Gameplay.BallInHand
                 BilliardsPhysicalSpecification.BallCenterHeightMeters,
                 start.y);
 
+            CaptureCursorStateForPlacement();
             primaryActionWasPressed = true;
             IsPlacing = true;
             enabled = true;
+        }
+
+        private void OnDisable()
+        {
+            RestoreCursorState();
         }
 
         private void EnsurePlacementIsInactive()
@@ -229,6 +308,28 @@ namespace PoolTable.Gameplay.BallInHand
             {
                 cueBallRigidbody.WakeUp();
             }
+        }
+
+        private void CaptureCursorStateForPlacement()
+        {
+            originalCursorLockState = cursorStateAccessor.LockState;
+            originalCursorVisible = cursorStateAccessor.Visible;
+            cursorStateCaptured = true;
+
+            cursorStateAccessor.LockState = CursorLockMode.Confined;
+            cursorStateAccessor.Visible = true;
+        }
+
+        private void RestoreCursorState()
+        {
+            if (!cursorStateCaptured)
+            {
+                return;
+            }
+
+            cursorStateAccessor.LockState = originalCursorLockState;
+            cursorStateAccessor.Visible = originalCursorVisible;
+            cursorStateCaptured = false;
         }
     }
 }

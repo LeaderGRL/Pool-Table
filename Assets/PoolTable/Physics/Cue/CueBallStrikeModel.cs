@@ -31,20 +31,28 @@ namespace PoolTable.Physics.Cue
             ValidatePositiveFinite(shotSpeedChangeMetersPerSecond, nameof(shotSpeedChangeMetersPerSecond));
             ValidatePositiveFinite(ballRadiusMeters, nameof(ballRadiusMeters));
 
-            var planarDirection = new Vector3(shotDirection.x, 0f, shotDirection.z);
-            if (!IsFinite(planarDirection) || planarDirection.sqrMagnitude <= MinimumDirectionMagnitudeSquared)
+            if (!IsFinite(shotDirection) || shotDirection.sqrMagnitude <= MinimumDirectionMagnitudeSquared)
+            {
+                throw new System.ArgumentException("Cue strike direction must be finite and non-zero.", nameof(shotDirection));
+            }
+
+            var normalizedStrikeDirection = shotDirection.normalized;
+            var planarDirection = new Vector3(normalizedStrikeDirection.x, 0f, normalizedStrikeDirection.z);
+            var planarMagnitude = planarDirection.magnitude;
+            if (planarMagnitude * planarMagnitude <= MinimumDirectionMagnitudeSquared)
             {
                 throw new System.ArgumentException("Cue strike direction must be finite and non-zero on the table plane.", nameof(shotDirection));
             }
 
             planarDirection.Normalize();
-            var linearVelocityChange = planarDirection * shotSpeedChangeMetersPerSecond;
+            var linearVelocityChange = planarDirection * (shotSpeedChangeMetersPerSecond * planarMagnitude);
 
-            var cueFaceRight = Vector3.Cross(planarDirection, Vector3.up).normalized;
+            var cueFaceRight = Vector3.Cross(normalizedStrikeDirection, Vector3.up).normalized;
+            var cueFaceUp = Vector3.Cross(cueFaceRight, normalizedStrikeDirection).normalized;
             var maximumContactOffset =
                 ballRadiusMeters * BilliardsSimulationConfiguration.CueTipMaximumContactOffsetRatio;
             var contactOffset = maximumContactOffset
-                * ((cueFaceRight * spin.Side) + (Vector3.up * spin.Vertical));
+                * ((cueFaceRight * spin.Side) + (cueFaceUp * spin.Vertical));
 
             var inverseInertiaPerUnitMass =
                 1f / (SolidSphereInertiaFactor * ballRadiusMeters * ballRadiusMeters);

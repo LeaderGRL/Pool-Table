@@ -11,10 +11,13 @@ namespace PoolTable.Gameplay.Aiming
         [SerializeField] private GameObject cueBall;
         [SerializeField] private float cueDistance = 1.6666667f;
         [SerializeField] private float yawDegreesPerPointerUnit = 0.1f;
+        [SerializeField] private float pitchDegreesPerPointerUnit = 0.1f;
+        [SerializeField] private float minimumElevationDegrees = 0f;
+        [SerializeField] private float maximumElevationDegrees = 20f;
+        [SerializeField] private float controllerPitchDegreesPerSecond = 30f;
 
         private AimingState aimingState;
         private LocalPlayerInputReader localPlayerInputReader;
-        private float cueHeightOffset;
         private bool secondaryButtonWasPressedLastFrame;
 
         public GameObject CueBall => cueBall;
@@ -23,8 +26,30 @@ namespace PoolTable.Gameplay.Aiming
 
         public float YawDegreesPerPointerUnit => yawDegreesPerPointerUnit;
 
+        public float PitchDegreesPerPointerUnit => pitchDegreesPerPointerUnit;
+
+        public float MinimumElevationDegrees => minimumElevationDegrees;
+
+        public float MaximumElevationDegrees => maximumElevationDegrees;
+
+        public float ElevationDegrees => aimingState?.ElevationDegrees
+            ?? throw new InvalidOperationException("Aiming state is not initialized.");
+
         public ShotDirection Direction => aimingState?.Direction
             ?? throw new InvalidOperationException("Aiming state is not initialized.");
+
+        public Vector3 StrikeDirection
+        {
+            get
+            {
+                var elevationRadians = ElevationDegrees * Mathf.Deg2Rad;
+                var planarScale = Mathf.Cos(elevationRadians);
+                return new Vector3(
+                    Direction.X * planarScale,
+                    -Mathf.Sin(elevationRadians),
+                    Direction.Y * planarScale);
+            }
+        }
 
         private void Awake()
         {
@@ -61,12 +86,15 @@ namespace PoolTable.Gameplay.Aiming
                 return;
             }
 
-            var suppressYaw = input.SecondaryActionIsPressed || secondaryButtonWasPressedLastFrame;
+            var suppressAim = input.SecondaryActionIsPressed || secondaryButtonWasPressedLastFrame;
             secondaryButtonWasPressedLastFrame = input.SecondaryActionIsPressed;
 
-            if (!suppressYaw)
+            if (!suppressAim)
             {
                 aimingState.RotateDegrees((input.PointerDelta.x * yawDegreesPerPointerUnit) + (input.AimAxis.x * Time.deltaTime * 120f));
+                aimingState.AdjustElevationDegrees(
+                    (input.PointerDelta.y * pitchDegreesPerPointerUnit)
+                    + (input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond));
             }
 
             ApplyCuePose();
@@ -80,21 +108,20 @@ namespace PoolTable.Gameplay.Aiming
                 return;
             }
 
-            var forward = transform.forward;
+            var towardBall = cueBall.transform.position - transform.position;
+            var forward = towardBall.sqrMagnitude > 0.000001f ? towardBall.normalized : transform.forward.normalized;
             var planarDirection = new Vector2(forward.x, forward.z);
-            if (planarDirection.sqrMagnitude <= 0.000001f)
-            {
-                var towardBall = cueBall.transform.position - transform.position;
-                planarDirection = new Vector2(towardBall.x, towardBall.z);
-            }
-
             if (planarDirection.sqrMagnitude <= 0.000001f)
             {
                 planarDirection = Vector2.up;
             }
 
-            cueHeightOffset = transform.position.y - cueBall.transform.position.y;
-            aimingState = new AimingState(new ShotDirection(planarDirection.x, planarDirection.y));
+            var initialElevationDegrees = Mathf.Asin(Mathf.Clamp(-forward.y, -1f, 1f)) * Mathf.Rad2Deg;
+            aimingState = new AimingState(
+                new ShotDirection(planarDirection.x, planarDirection.y),
+                initialElevationDegrees,
+                minimumElevationDegrees,
+                maximumElevationDegrees);
         }
 
         private void ApplyCuePose()
@@ -104,10 +131,8 @@ namespace PoolTable.Gameplay.Aiming
                 return;
             }
 
-            var direction = new Vector3(Direction.X, 0f, Direction.Y);
-            transform.position = cueBall.transform.position
-                - (direction * cueDistance)
-                + (Vector3.up * cueHeightOffset);
+            var strikeDirection = StrikeDirection;
+            transform.position = cueBall.transform.position - (strikeDirection * cueDistance);
 
             var directionToCueBall = cueBall.transform.position - transform.position;
             if (directionToCueBall.sqrMagnitude > 0.000001f)

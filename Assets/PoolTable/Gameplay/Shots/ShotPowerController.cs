@@ -131,10 +131,9 @@ namespace PoolTable.Gameplay.Shots
                 return false;
             }
 
-            var direction = aimingController.Direction;
             var shotSpeed = shotPowerState.NormalizedPower * maximumShotSpeedMetersPerSecond;
             queuedStrike = CueBallStrikeModel.CalculateVelocityChange(
-                new Vector3(direction.X, 0f, direction.Y),
+                aimingController.StrikeDirection,
                 shotSpeed,
                 spinController?.Spin ?? default,
                 BilliardsPhysicalSpecification.BallRadiusMeters);
