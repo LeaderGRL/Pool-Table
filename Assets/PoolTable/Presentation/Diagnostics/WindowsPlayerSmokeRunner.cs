@@ -222,10 +222,7 @@ namespace PoolTable.Presentation.Diagnostics
             StopAllBalls();
 
             SetSmokeGamepadState(0f, 0f, 0f, 1f, 0f, 1f);
-            for (var frame = 0; frame < 3; frame++)
-            {
-                yield return null;
-            }
+            yield return new WaitForSecondsRealtime(InputObservationSeconds);
 
             ThrowIfRuntimeErrors();
             Require(GetLegacyCurrentStateName(player) == "PlayersShootState", "The player must enter the shoot state.");
