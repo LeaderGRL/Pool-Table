@@ -8,6 +8,7 @@ using PoolTable.Core.Match;
 using PoolTable.Core.Rules;
 using PoolTable.Core.Shots;
 using PoolTable.Gameplay.Aiming;
+using PoolTable.Gameplay.BallInHand;
 using PoolTable.Gameplay.Balls;
 using PoolTable.Gameplay.Instrumentation;
 using PoolTable.Gameplay.Match;
@@ -355,6 +356,95 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cueCapture.IsCaptured, Is.False);
             Assert.That(cueCapture.CapturedPocket, Is.Null);
             Assert.That(Vector3.Distance(cueBall.transform.position, cueInitialPosition), Is.LessThan(0.0001f));
+            Assert.That(pocketedBalls.Contains(cueBall), Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator BallInHandPlacement_RestoresCapturedCueBallOnlyAfterLegalConfirmation()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var controller = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallInHandPlacementController>())
+                .Single(candidate => candidate != null);
+            var identities = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallIdentity>())
+                .Where(identity => identity != null)
+                .ToArray();
+            var cueBallIdentity = identities.Single(identity => identity.IsCueBall);
+            var objectBallIdentity = identities.Single(identity => identity.Id.Number == 1);
+            var cueBall = cueBallIdentity.gameObject;
+            var cueBody = cueBall.GetComponent<Rigidbody>();
+            var cueCapture = cueBall.GetComponent<BallPocketCapture>();
+            var legacyPlayerState = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => FindMonoBehaviourByTypeName(gameObject, "PlayersStateManagement"))
+                .First(component => component != null && component.gameObject.activeInHierarchy);
+            var placementField = legacyPlayerState.GetType().GetField("ballInHandPlacementController");
+
+            Assert.That(controller.enabled, Is.False);
+            Assert.That(placementField, Is.Not.Null);
+            Assert.That(placementField.GetValue(legacyPlayerState), Is.SameAs(controller));
+
+            var anyLegacyBallManager = FindActiveMonoBehaviourByTypeName(activeScene, "BallStateManager");
+            var ballManagerType = anyLegacyBallManager.GetType();
+            var legacyAuthority = ballManagerType
+                .GetField("instance", BindingFlags.Public | BindingFlags.Static)
+                .GetValue(null) as MonoBehaviour;
+            var pocketedBalls = legacyAuthority.GetType()
+                .GetMethod("getPocketedBalls")
+                .Invoke(legacyAuthority, null) as IDictionary;
+
+            cueBody.linearVelocity = new Vector3(0.8f, 0f, 0.2f);
+            cueBody.angularVelocity = new Vector3(2f, 3f, 4f);
+            Assert.That(cueCapture.TryCapture(new PocketId(1), out _), Is.True);
+            Assert.That(cueBall.activeSelf, Is.False);
+            Assert.That(pocketedBalls.Contains(cueBall), Is.True);
+
+            var openTable = OpenTableRule.EnterAfterBreak(MatchState.CreateInitial(MatchPlayerId.PlayerOne));
+            var granted = BallInHandRule.GrantAfterStandardFoul(
+                openTable,
+                new FoulResolution(ShotFoul.CueBallScratch));
+
+            controller.BeginPlacement(granted);
+
+            Assert.That(controller.enabled, Is.True);
+            Assert.That(controller.IsPlacing, Is.True);
+            Assert.That(cueBall.activeSelf, Is.True);
+            Assert.That(cueCapture.IsCaptured, Is.True);
+            Assert.That(cueBody.isKinematic, Is.True);
+            Assert.That(cueBody.detectCollisions, Is.False);
+
+            cueBall.transform.position = new Vector3(
+                objectBallIdentity.transform.position.x,
+                BilliardsPhysicalSpecification.BallCenterHeightMeters,
+                objectBallIdentity.transform.position.z);
+
+            Assert.That(controller.TryConfirmPlacement(), Is.False);
+            Assert.That(controller.IsPlacing, Is.True);
+            Assert.That(controller.LastCompletedMatchState, Is.Null);
+            Assert.That(granted.HasBallInHand, Is.True);
+            Assert.That(cueCapture.IsCaptured, Is.True);
+
+            var acceptedPosition = new Vector3(
+                BilliardsPhysicalSpecification.HeadStringX,
+                BilliardsPhysicalSpecification.BallCenterHeightMeters,
+                0f);
+            cueBall.transform.position = acceptedPosition;
+
+            Assert.That(controller.TryConfirmPlacement(), Is.True);
+            Assert.That(controller.enabled, Is.False);
+            Assert.That(controller.IsPlacing, Is.False);
+            Assert.That(controller.LastCompletedMatchState, Is.Not.Null);
+            Assert.That(controller.LastCompletedMatchState.HasBallInHand, Is.False);
+            Assert.That(controller.LastCompletedMatchState.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(cueCapture.IsCaptured, Is.False);
+            Assert.That(cueCapture.CapturedPocket, Is.Null);
+            Assert.That(cueBody.isKinematic, Is.False);
+            Assert.That(cueBody.detectCollisions, Is.True);
+            Assert.That(cueBody.linearVelocity, Is.EqualTo(Vector3.zero));
+            Assert.That(cueBody.angularVelocity, Is.EqualTo(Vector3.zero));
+            Assert.That(Vector3.Distance(cueBall.transform.position, acceptedPosition), Is.LessThan(0.0001f));
             Assert.That(pocketedBalls.Contains(cueBall), Is.False);
         }
 

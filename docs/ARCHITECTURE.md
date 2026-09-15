@@ -139,6 +139,14 @@ The legacy shoot state no longer samples pointer delta or applies force. It only
 
 `CueBallSpinController` is the Unity scene adapter for mouse spin selection. Holding the secondary mouse button and moving the pointer adjusts side and vertical contact without rotating the aim. The selected value survives the transition from aiming into shot-power input, is read by `ShotPowerController` when the shot is queued, and is reset to center only after the queued strike is physically committed in `FixedUpdate`. This keeps input selection, shot orchestration, and physical strike calculation in separate layers while making the selected spin part of the same authoritative local shot path.
 
+## Gameplay ball-in-hand placement
+
+`PoolTable.Gameplay.BallInHand.BallInHandPlacementGeometry` owns physical cue-ball placement legality in table-plane coordinates. It derives the playable center bounds from `BilliardsPhysicalSpecification`, enforces `AboveHeadString` on the negative-X head side, and rejects positions whose regulation cue-ball circle overlaps an active object ball. Core remains free of Unity geometry and continues to represent only the recipient and allowed placement area.
+
+`BallInHandPlacementSession` is the domain-aware Gameplay boundary. It starts only from an active `MatchState` ball-in-hand, keeps the recorded recipient and placement area, and calls `BallInHandRule.CompletePlacement` only after the physical candidate is legal. This keeps the existing Core rule as the single authority for consuming ball-in-hand.
+
+`BallInHandPlacementController` is the Unity scene adapter. Mouse pointer delta and controller action-axis input move the cue ball across the table plane while placement is active. Confirmation revalidates bounds and overlap, restores a captured cue ball through `BallPocketCapture.Restore`, clears linear/angular velocity, then disables the placement adapter. The current legacy player state machine temporarily references this controller as a generic `Behaviour`: a scratch starts placement instead of teleporting the cue ball, aiming/spin/shot-power adapters remain disabled while placement is active, and the legacy pocketed-ball bookkeeping is cleared after a successful modern placement. This bridge exists only while `GameManager` and the legacy player states still own the scene turn loop.
+
 ## Metric billiards scale
 
 `PoolTable.Physics.Configuration.BilliardsPhysicalSpecification` is the authoritative dimensional reference for the new simulation. Physics world space uses the Unity convention of one world unit per meter. Regulation pool balls therefore use a 0.05715 m diameter and 0.028575 m radius, while the 9-foot reference playing surface is 2.54 m by 1.27 m.
