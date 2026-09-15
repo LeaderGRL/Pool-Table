@@ -472,6 +472,9 @@ namespace PoolTable.Tests.PlayMode
                 openTable,
                 new FoulResolution(ShotFoul.CueBallScratch));
 
+            var cursorState = new TestCursorStateAccessor(CursorLockMode.Locked, false);
+            controller.CursorStateAccessor = cursorState;
+
             controller.BeginPlacement(granted);
 
             Assert.That(controller.enabled, Is.True);
@@ -480,6 +483,8 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cueCapture.IsCaptured, Is.True);
             Assert.That(cueBody.isKinematic, Is.True);
             Assert.That(cueBody.detectCollisions, Is.False);
+            Assert.That(cursorState.LockState, Is.EqualTo(CursorLockMode.Confined));
+            Assert.That(cursorState.Visible, Is.True);
 
             var placementCamera = Camera.main;
             Assert.That(placementCamera, Is.Not.Null);
@@ -563,6 +568,8 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cueBody.angularVelocity, Is.EqualTo(Vector3.zero));
             Assert.That(Vector3.Distance(cueBall.transform.position, acceptedPosition), Is.LessThan(0.0001f));
             Assert.That(pocketedBalls.Contains(cueBall), Is.False);
+            Assert.That(cursorState.LockState, Is.EqualTo(CursorLockMode.Locked));
+            Assert.That(cursorState.Visible, Is.False);
         }
 
         [UnityTest]
@@ -1669,6 +1676,19 @@ namespace PoolTable.Tests.PlayMode
             yield return null;
             yield return null;
             yield return null;
+        }
+
+        private sealed class TestCursorStateAccessor : ICursorStateAccessor
+        {
+            public TestCursorStateAccessor(CursorLockMode lockState, bool visible)
+            {
+                LockState = lockState;
+                Visible = visible;
+            }
+
+            public CursorLockMode LockState { get; set; }
+
+            public bool Visible { get; set; }
         }
 
         private static bool SceneContainsObject(Scene scene, string objectName)

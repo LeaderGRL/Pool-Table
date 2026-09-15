@@ -187,7 +187,7 @@ Rendering work is paused while the current playable build is made easier to vali
     Execute the established Unity test contract in hosted CI with explicit license handling, preserved XML/log/scenario artifacts, category-based targeting for focused manual jobs, and fork-safe handling that keeps Unity credentials away from untrusted pull request code. Reference: GitHub issue #94 / PR #95.
 
 40E. `PR` **Gameplay: Improve ball-in-hand placement precision**
-    Replace mouse-delta-to-meters placement with direct pointer projection onto the table while preserving controller-relative movement, playable-surface clamping, restricted head-string placement, pocket clearance, overlap rejection, and legal confirmation. Reference: GitHub issue #96 / PR #97.
+    Replace mouse-delta-to-meters placement with direct pointer projection onto the table while preserving controller-relative movement, playable-surface clamping, restricted head-string placement, pocket clearance, overlap rejection, and legal confirmation. During mouse placement the cursor is temporarily confined and shown so absolute screen-space placement remains usable even though normal gameplay locks the cursor, then the previous cursor state is restored after placement. The PR review follow-up is validated with EditMode 305/305, PlayMode 26/26, and repository validation passing. Reference: GitHub issue #96 / PR #97.
 
 40F. `PR` **Gameplay: Add limited cue elevation**
     Extend modern aiming with vertical cue elevation from 0 to 20 degrees. Horizontal input keeps planar yaw, vertical input controls elevation, spin drag suppresses both axes through its release frame, and the strike model preserves stable planar PhysX motion while accounting for cue elevation. Reference: GitHub issue #96 / PR #97.
