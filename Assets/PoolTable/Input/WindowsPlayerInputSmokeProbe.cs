@@ -11,15 +11,28 @@ namespace PoolTable.Input
 
         public static void InjectGamepadState()
         {
-            RemoveGamepad();
+            SetGamepadState(0.75f, -0.25f, -0.4f, 0.8f, 1f, 1f);
+        }
 
-            smokeGamepad = InputSystem.AddDevice<Gamepad>();
+        public static void SetGamepadState(
+            float aimX,
+            float aimY,
+            float actionX,
+            float actionY,
+            float secondaryAction,
+            float primaryAction)
+        {
+            if (smokeGamepad == null)
+            {
+                smokeGamepad = InputSystem.AddDevice<Gamepad>();
+            }
+
             var state = new GamepadState
             {
-                leftStick = new Vector2(0.75f, -0.25f),
-                rightStick = new Vector2(-0.4f, 0.8f),
-                leftTrigger = 1f,
-                rightTrigger = 1f,
+                leftStick = new Vector2(aimX, aimY),
+                rightStick = new Vector2(actionX, actionY),
+                leftTrigger = secondaryAction,
+                rightTrigger = primaryAction,
             };
 
             InputSystem.QueueStateEvent(smokeGamepad, state);

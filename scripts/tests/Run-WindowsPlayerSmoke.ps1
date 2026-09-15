@@ -114,6 +114,14 @@ function Invoke-PlayerSmoke {
     $exitCode = $process.ExitCode
     $process.Dispose()
 
+    if (Test-Path $LogPath -PathType Leaf) {
+        $playerLog = Get-Content $LogPath -Raw
+        $runtimeFailurePattern = '(?im)^(?:[A-Za-z_][A-Za-z0-9_.]*Exception:|Unhandled Exception:|Assertion failed|Error:)'
+        if ($playerLog -match $runtimeFailurePattern) {
+            throw "Windows player log contains a runtime exception or error. See $LogPath."
+        }
+    }
+
     if (-not (Test-Path $ReportPath -PathType Leaf)) {
         throw "Windows player did not produce $ReportPath. Exit code: $exitCode. See $LogPath."
     }
