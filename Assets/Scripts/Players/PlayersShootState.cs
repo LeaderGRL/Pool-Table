@@ -4,10 +4,11 @@ public class PlayersShootState : PlayersBaseState
 {
     public override void EnterState(PlayersStateManagement player)
     {
+        player.SetSpectateCameraEnabled(false);
         player.SetAimingEnabled(false);
         player.SetSpinControlEnabled(false);
         player.SetShotPowerEnabled(true);
-        player.lockCamera(true);
+        player.SetShotCameraEnabled(true);
         player.WhiteBall.GetComponent<BallStateManager>().hasCollide = false;
         player.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall = false;
     }

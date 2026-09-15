@@ -10,15 +10,13 @@ public class PlayersStateManagement : MonoBehaviour
     public PlayersShootState shootState = new PlayersShootState();
 
     public GameObject WhiteBall;
-    public GameObject Cam;
-    public GameObject Cue_Camera;
     public float distance;
-    public Vector3 CameraOffset;
-    public float CameraDistance;
     public Behaviour aimingController;
     public Behaviour spinController;
     public Behaviour shotPowerController;
     public Behaviour ballInHandPlacementController;
+    public Behaviour shotCameraController;
+    public Behaviour spectateCameraController;
 
     private void Awake()
     {
@@ -97,6 +95,22 @@ public class PlayersStateManagement : MonoBehaviour
         }
     }
 
+    public void SetShotCameraEnabled(bool enabled)
+    {
+        if (shotCameraController != null)
+        {
+            shotCameraController.enabled = enabled;
+        }
+    }
+
+    public void SetSpectateCameraEnabled(bool enabled)
+    {
+        if (spectateCameraController != null)
+        {
+            spectateCameraController.enabled = enabled;
+        }
+    }
+
     public bool IsShotPowerEnabled()
     {
         return shotPowerController != null && shotPowerController.enabled;
@@ -122,11 +136,6 @@ public class PlayersStateManagement : MonoBehaviour
     public bool IsBallInHandPlacementEnabled()
     {
         return ballInHandPlacementController != null && ballInHandPlacementController.enabled;
-    }
-
-    public void lockCamera(bool lockCamera)
-    {
-        //Cam.GetComponent<Cam>().enabled = !lockCamera;
     }
 
     private void OnCollisionEnter(Collision collision)
