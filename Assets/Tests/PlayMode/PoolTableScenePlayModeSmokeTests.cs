@@ -22,6 +22,7 @@ using PoolTable.Physics.Pockets;
 using PoolTable.Physics.Rails;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
+using PoolTable.Presentation.Camera;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -930,6 +931,12 @@ namespace PoolTable.Tests.PlayMode
             var magnitudeSquared = (direction.X * direction.X) + (direction.Y * direction.Y);
             Assert.That(magnitudeSquared, Is.EqualTo(1f).Within(0.00001f));
 
+            var outputCameraObject = GetPublicGameObjectField(playerController, "Cam");
+            var aimingCameraController = outputCameraObject.GetComponent<AimingCameraController>();
+            Assert.That(aimingCameraController, Is.Not.Null, "The output camera must use the modern aiming-camera adapter.");
+            Assert.That(aimingCameraController.AimingController, Is.SameAs(aimingController));
+            AssertAimingCameraMatchesDirection(aimingCameraController, aimingController);
+
             var spinInput = new LocalPlayerInputSnapshot(new Vector2(20f, -10f), false, true);
             aimingController.ProcessInput(spinInput);
             spinController.ProcessInput(spinInput);
@@ -962,6 +969,7 @@ namespace PoolTable.Tests.PlayMode
                     + Mathf.Abs(aimingController.Direction.Y - direction.Y),
                 Is.GreaterThan(0.00001f),
                 "Cue yaw must resume on the frame after the secondary-button release transition.");
+            AssertAimingCameraMatchesDirection(aimingCameraController, aimingController);
 
             aimingController.ProcessInput(new LocalPlayerInputSnapshot(new Vector2(-15f, 0f), false));
             Assert.That(aimingController.Direction.X, Is.EqualTo(direction.X).Within(0.00001f));
@@ -992,6 +1000,10 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(aimingController.enabled, Is.False, "Aiming must remain disabled while spectating.");
             Assert.That(spinController.enabled, Is.False, "Spin selection must remain disabled while spectating.");
             Assert.That(shotPowerController.enabled, Is.False, "Shot power must be disabled while spectating.");
+            Assert.That(
+                aimingCameraController.ApplyCameraPose(0f, true),
+                Is.False,
+                "Aiming presentation must stop driving the output camera while gameplay aiming is disabled.");
 
             playerController.transform.rotation = Quaternion.Euler(0f, 123f, 0f);
             aimingController.enabled = true;
@@ -1119,10 +1131,6 @@ namespace PoolTable.Tests.PlayMode
                 Is.EqualTo(6.6666667f).Within(0.0001f),
                 "The modern cue controller must express shot strength as a metric target speed.");
             Assert.That(
-                (Vector3)controllerType.GetField("CameraOffset").GetValue(playerController),
-                Is.EqualTo(new Vector3(0f, 0.06666667f, 0f)),
-                "The cue camera offset must be scaled with the metric cue setup.");
-            Assert.That(
                 playerController.transform.lossyScale.x,
                 Is.EqualTo(0.01f).Within(0.0001f),
                 "The active cue model must be scaled to approximately 1.5 meters.");
@@ -1193,11 +1201,21 @@ namespace PoolTable.Tests.PlayMode
 
             var outputCamera = spectateCamera.GetComponent<Camera>();
             var cinemachineBrain = FindMonoBehaviourByTypeName(spectateCamera, "CinemachineBrain");
+            var aimingCameraController = spectateCamera.GetComponent<AimingCameraController>();
+            var modernAimingController = playerController.GetComponent<CueAimingController>();
 
             Assert.That(outputCamera, Is.Not.Null, "PlayersStateManagement.Cam must reference a camera object.");
             Assert.That(outputCamera.enabled, Is.True, "The output Camera component must be enabled.");
             Assert.That(cinemachineBrain, Is.Not.Null, "The output camera must keep its CinemachineBrain.");
             Assert.That(cinemachineBrain.enabled, Is.True, "The output camera CinemachineBrain must be enabled.");
+            Assert.That(aimingCameraController, Is.Not.Null, "The output camera must own modern aiming presentation.");
+            Assert.That(modernAimingController, Is.Not.Null);
+            Assert.That(aimingCameraController.AimingController, Is.SameAs(modernAimingController));
+            Assert.That(aimingCameraController.DistanceBehindCueBall, Is.EqualTo(2.4f).Within(0.0001f));
+            Assert.That(aimingCameraController.HeightAboveCueBall, Is.EqualTo(1.05f).Within(0.0001f));
+            Assert.That(aimingCameraController.LookAheadDistance, Is.EqualTo(1.2f).Within(0.0001f));
+            Assert.That(aimingCameraController.TargetHeightOffset, Is.EqualTo(0.08f).Within(0.0001f));
+            AssertAimingCameraMatchesDirection(aimingCameraController, modernAimingController);
 
             Assert.That(cueCamera, Is.Not.Null);
             Assert.That(cueCamera.name, Is.EqualTo("Camera_Cue"));
@@ -1205,15 +1223,15 @@ namespace PoolTable.Tests.PlayMode
 
             var cueVirtualCamera = FindMonoBehaviourByTypeName(cueCamera, "CinemachineFreeLook");
             Assert.That(cueVirtualCamera, Is.Not.Null, "Camera_Cue must keep its CinemachineFreeLook component.");
-            Assert.That(cueVirtualCamera.enabled, Is.True, "Camera_Cue CinemachineFreeLook must be enabled.");
+            Assert.That(cueVirtualCamera.enabled, Is.False, "The legacy input-driven FreeLook must stay disabled.");
             Assert.That(
                 GetPublicTransformProperty(cueVirtualCamera, "LookAt"),
                 Is.EqualTo(cueBall.transform),
-                "Camera_Cue must keep the cue ball as its LookAt target.");
+                "The disabled legacy FreeLook must retain its existing scene reference for later camera migration work.");
             Assert.That(
                 GetPublicPropertyValue(cinemachineBrain, "ActiveVirtualCamera"),
-                Is.SameAs(cueVirtualCamera),
-                "The output CinemachineBrain must render Camera_Cue after startup.");
+                Is.Null,
+                "The disabled legacy FreeLook must no longer drive the output camera during aiming.");
 
             var aimingRaycast = FindMonoBehaviourByTypeName(playerController.gameObject, "Stick_Raycast");
             Assert.That(aimingRaycast, Is.Not.Null, "The active player controller must keep Stick_Raycast.");
@@ -1562,6 +1580,34 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(field.FieldType, Is.EqualTo(typeof(GameObject)));
 
             return field.GetValue(component) as GameObject;
+        }
+
+        private static void AssertAimingCameraMatchesDirection(
+            AimingCameraController cameraController,
+            CueAimingController aimingController)
+        {
+            Assert.That(cameraController.ApplyCameraPose(0f, true), Is.True);
+
+            var direction = aimingController.Direction;
+            var planarDirection = new Vector3(direction.X, 0f, direction.Y).normalized;
+            var cueBallPosition = aimingController.CueBall.transform.position;
+            var expectedPosition = cueBallPosition
+                - (planarDirection * cameraController.DistanceBehindCueBall)
+                + (Vector3.up * cameraController.HeightAboveCueBall);
+            var expectedFocusPoint = cueBallPosition
+                + (planarDirection * cameraController.LookAheadDistance)
+                + (Vector3.up * cameraController.TargetHeightOffset);
+
+            Assert.That(
+                Vector3.Distance(cameraController.transform.position, expectedPosition),
+                Is.LessThan(0.0001f),
+                "Aiming camera position must be derived from the canonical gameplay aim direction.");
+            Assert.That(
+                Vector3.Dot(
+                    cameraController.transform.forward,
+                    (expectedFocusPoint - expectedPosition).normalized),
+                Is.GreaterThan(0.999f),
+                "Aiming camera orientation must follow the canonical gameplay aim direction.");
         }
 
         private static T GetPrivateFieldValue<T>(MonoBehaviour component, string fieldName)

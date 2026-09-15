@@ -221,7 +221,7 @@ MonoBehaviour:
     m_MaxSpeed: 300
     m_AccelTime: 0.1
     m_DecelTime: 0.1
-    m_InputAxisName: 
+    m_InputAxisName:
     m_InputAxisValue: 0
     m_InvertInput: 1
     m_MinValue: -180
@@ -887,7 +887,7 @@ MonoBehaviour:
     m_MaxSpeed: 300
     m_AccelTime: 0.1
     m_DecelTime: 0.1
-    m_InputAxisName: 
+    m_InputAxisName:
     m_InputAxisValue: 0
     m_InvertInput: 1
     m_MinValue: -180
@@ -913,8 +913,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ac0b09e7857660247b1477e93731de29, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  m_Name:
+  m_EditorClassIdentifier:
 --- !u!1 &188870283
 GameObject:
   m_ObjectHideFlags: 3
@@ -2388,7 +2388,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 583553788}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 319d2fe34a804e245819465c9505ea59, type: 3}
   m_Name: 
@@ -2422,7 +2422,7 @@ MonoBehaviour:
     m_MaxSpeed: 2
     m_AccelTime: 0.2
     m_DecelTime: 0.1
-    m_InputAxisName: Mouse Y
+    m_InputAxisName:
     m_InputAxisValue: 0
     m_InvertInput: 0
     m_MinValue: 0
@@ -2446,7 +2446,7 @@ MonoBehaviour:
     m_MaxSpeed: 300
     m_AccelTime: 0.1
     m_DecelTime: 0.1
-    m_InputAxisName: Mouse X
+    m_InputAxisName:
     m_InputAxisValue: 0
     m_InvertInput: 1
     m_MinValue: -180
@@ -4120,6 +4120,7 @@ GameObject:
   - component: {fileID: 963194226}
   - component: {fileID: 963194230}
   - component: {fileID: 963194229}
+  - component: {fileID: 1946000001}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -4226,6 +4227,25 @@ MonoBehaviour:
   m_CameraActivatedEvent:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1946000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b8e24d90c34a4f9fad47bbb2c4f5b760, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  aimingController: {fileID: 534474671}
+  distanceBehindCueBall: 2.4
+  heightAboveCueBall: 1.05
+  lookAheadDistance: 1.2
+  targetHeightOffset: 0.08
+  positionSharpness: 12
+  rotationSharpness: 16
 --- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0
