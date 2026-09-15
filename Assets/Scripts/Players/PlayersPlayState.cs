@@ -7,13 +7,12 @@ public class PlayersPlayState : PlayersBaseState
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {
+        player.SetShotCameraEnabled(false);
+        player.SetSpectateCameraEnabled(false);
         player.SetShotPowerEnabled(false);
         player.SetAimingEnabled(true);
         player.SetSpinControlEnabled(true);
         GameManager.instance.turnNumber++;
-
-        //player.setPosition();
-        player.lockCamera(false);
 
         if (GameManager.instance.getTurnNumber() == 0)
         {

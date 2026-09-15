@@ -2265,15 +2265,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WhiteBall: {fileID: 86719732}
-  Cam: {fileID: 963194225}
-  Cue_Camera: {fileID: 583553788}
   distance: 1.6666667
-  CameraOffset: {x: 0, y: 0.06666667, z: 0}
-  CameraDistance: 2
   aimingController: {fileID: 534474671}
   spinController: {fileID: 534474673}
   shotPowerController: {fileID: 534474672}
   ballInHandPlacementController: {fileID: 1008307705}
+  shotCameraController: {fileID: 1946000002}
+  spectateCameraController: {fileID: 1946000003}
 --- !u!114 &534474671
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4121,6 +4119,8 @@ GameObject:
   - component: {fileID: 963194230}
   - component: {fileID: 963194229}
   - component: {fileID: 1946000001}
+  - component: {fileID: 1946000002}
+  - component: {fileID: 1946000003}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -4246,6 +4246,49 @@ MonoBehaviour:
   targetHeightOffset: 0.08
   positionSharpness: 12
   rotationSharpness: 16
+--- !u!114 &1946000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4af6dcc24f3a415c9c5fac31a315fa01, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  shotPowerController: {fileID: 534474672}
+  distanceBehindCueBall: 2.6
+  heightAboveCueBall: 1.1
+  lookAheadDistance: 1.4
+  targetHeightOffset: 0.08
+  additionalDistanceAtFullPower: 0.35
+  positionSharpness: 14
+  rotationSharpness: 18
+--- !u!114 &1946000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8930a8e7c90c44099c415eadf32e86e1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  ballsRoot: {fileID: 1362464029}
+  cueBall: {fileID: 86719738}
+  minimumMovingSpeedMetersPerSecond: 0.01
+  distanceFromAction: 3.2
+  heightAboveAction: 2.2
+  distancePerMeterSpread: 0.75
+  heightPerMeterSpread: 0.5
+  targetHeightOffset: 0.05
+  tableViewDirection: {x: -1, y: -1}
+  positionSharpness: 5
+  rotationSharpness: 7
 --- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0

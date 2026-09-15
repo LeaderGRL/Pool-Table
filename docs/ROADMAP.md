@@ -28,7 +28,7 @@ Recommended branch names:
 
 ## Current status
 
-Legend: `DONE` = merged and verified, `PARTIAL` = part of the goal is already covered but the full objective is still open, `TODO` = not started, `PR` = PR open and waiting to be merged.
+Legend: `DONE` = merged and verified, `ACTIVE` = implementation in progress, `PARTIAL` = part of the goal is already covered but the full objective is still open, `TODO` = not started, `PR` = PR open and waiting to be merged.
 
 Work already completed in support of this backlog:
 
@@ -165,9 +165,10 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
     Route the shared local input snapshot through aiming, spin, shot-power, and legacy play-state transitions so mouse and controller feed the same gameplay states without duplicating shot logic. Controller stick values remain in controller-native units, while pointer conversion stays isolated to pointer input. Reference: GitHub issue #76 / PR #77.
 38. `DONE` **Gameplay: Implement ball-in-hand placement**
     Add a Gameplay-owned placement flow that constrains the cue ball to the playable surface, respects restricted head-string placement, rejects overlap with active balls, and completes Core ball-in-hand only after legal confirmation. Captured cue balls are restored through the modern pocket adapter while the remaining legacy turn loop uses a narrow compatibility bridge. Reference: GitHub issue #78 / PR #81.
-39. `PR` **Camera: Rebuild aiming camera**
+39. `DONE` **Camera: Rebuild aiming camera**
     Rebuild aiming presentation around the modern canonical aim direction: the camera follows the cue ball and consumes `CueAimingController.Direction` without reading player input or owning gameplay state. Shot and spectate camera modernization remains step 40. Reference: GitHub issue #82 / PR #83.
-40. `TODO` **Camera: Implement shot and spectate cameras**
+40. `PR` **Camera: Implement shot and spectate cameras**
+    Move shot-power and post-strike spectate presentation into the Presentation layer while preserving the existing gameplay state transitions. The shot camera follows the cue ball using the canonical aim direction, while the spectate camera frames active ball motion without owning rules or turn state. Advanced impact impulse and cinematic shot framing remain step 51. Local validation: EditMode 300/300, PlayMode 20/20, repository validation passed. Reference: GitHub issue #84 / PR #85.
 
 ## Phase 6 — URP conversion
 
@@ -226,4 +227,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 5 work is **Camera: Rebuild aiming camera** (issue #82 / PR #83). After it is merged, continue with **Camera: Implement shot and spectate cameras**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 5 work is **Camera: Implement shot and spectate cameras** (issue #84 / PR #85). Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
