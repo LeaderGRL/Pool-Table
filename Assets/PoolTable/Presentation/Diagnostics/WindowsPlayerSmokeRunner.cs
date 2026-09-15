@@ -257,6 +257,20 @@ namespace PoolTable.Presentation.Diagnostics
             Require(GetLegacyCurrentStateName(player) == "PlayersSpectateState", "The player must enter the spectate state after the shot completes.");
             report.SpectateStateEntered = true;
 
+            var spectateVelocity = Vector3.ProjectOnPlane(cueBall.linearVelocity, Vector3.up).magnitude;
+            Require(
+                spectateVelocity > MinimumShotSpeedMetersPerSecond,
+                $"The cue ball must still be moving when spectate begins, measured {spectateVelocity:F4} m/s.");
+            yield return null;
+            ThrowIfRuntimeErrors();
+            var spectateVelocityAfterFrame = Vector3.ProjectOnPlane(cueBall.linearVelocity, Vector3.up).magnitude;
+            Require(
+                spectateVelocityAfterFrame > MinimumShotSpeedMetersPerSecond,
+                $"The cue ball must remain moving during the spectate observation frame, measured {spectateVelocityAfterFrame:F4} m/s.");
+            Require(
+                GetLegacyCurrentStateName(player) == "PlayersSpectateState",
+                "The player must remain in spectate while an active ball is still moving.");
+
             StopAllBalls();
             for (var frame = 0; frame < 10 && GetLegacyCurrentStateName(player) != "PlayersPlayState"; frame++)
             {
@@ -275,6 +289,12 @@ namespace PoolTable.Presentation.Diagnostics
         {
             var player = FindActiveLegacyComponent("PlayersStateManagement");
             Require(GetLegacyCurrentStateName(player) == "PlayersPlayState", "Ball-in-hand validation must start in the play state.");
+
+            var gameManager = FindActiveLegacyComponent("GameManager");
+            var turnBeforeScratch = InvokeLegacyMethod(gameManager, "getCurrentPlayerTurn")?.ToString();
+            Require(
+                turnBeforeScratch == "PlayerOneTurn" || turnBeforeScratch == "PlayerTwoTurn",
+                $"Ball-in-hand validation requires an active player turn, found {turnBeforeScratch ?? "null"}.");
 
             var controller = FindObjectsByType<BallInHandPlacementController>(
                     FindObjectsInactive.Include)
@@ -307,6 +327,11 @@ namespace PoolTable.Presentation.Diagnostics
             Require(cueBall.activeSelf, "Ball-in-hand placement must reactivate the captured cue ball.");
             Require(capture.IsCaptured, "The cue ball must stay captured until placement is confirmed.");
             Require(controller.IsCurrentPositionLegal, "The initial ball-in-hand candidate must be legal.");
+            var expectedTurnAfterScratch = turnBeforeScratch == "PlayerOneTurn" ? "PlayerTwoTurn" : "PlayerOneTurn";
+            var turnAfterScratch = InvokeLegacyMethod(gameManager, "getCurrentPlayerTurn")?.ToString();
+            Require(
+                turnAfterScratch == expectedTurnAfterScratch,
+                $"A scratch must transfer the turn to {expectedTurnAfterScratch}, found {turnAfterScratch ?? "null"}.");
 
             var placementStart = new Vector2(cueBall.transform.position.x, cueBall.transform.position.z);
             SetSmokeGamepadState(0f, 0f, 0.75f, 0f, 0f, 0f);
