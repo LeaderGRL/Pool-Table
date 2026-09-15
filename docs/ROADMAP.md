@@ -174,8 +174,8 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
 
 Rendering work is paused while the current playable build is made easier to validate automatically. These steps intentionally keep the existing 41–76 numbering stable.
 
-40A. `ACTIVE` **Testing: Establish functional gameplay test foundation**
-    Exercise the real Unity Input System path with virtual devices, introduce deterministic scenario checkpoints with machine-readable reports, add test categories, and provide one repeatable Unity test command. This foundation must not change gameplay behavior. Reference: GitHub issue #88.
+40A. `PR` **Testing: Establish functional gameplay test foundation**
+    Exercise the real Unity Input System path with virtual devices, introduce deterministic scenario checkpoints with machine-readable reports, add test categories, and provide one repeatable Unity test command. This foundation must not change gameplay behavior. Reference: GitHub issue #88 / PR #89.
 
 40B. `TODO` **Gameplay: Stabilize regressions found in the current playable build**
     Convert the failures observed during hands-on playtesting into focused reproduction tests and small fixes. Each gameplay fix should be isolated so regressions remain attributable and reviewable.
@@ -248,4 +248,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current work is stabilization step **40A — Testing: Establish functional gameplay test foundation** (issue #88). Rendering PR #87 is intentionally paused until the stabilization gate has a trustworthy gameplay baseline. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current work is stabilization step **40A — Testing: Establish functional gameplay test foundation** (issue #88 / PR #89). Rendering PR #87 is intentionally paused until the stabilization gate has a trustworthy gameplay baseline. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
