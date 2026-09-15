@@ -177,11 +177,11 @@ Rendering work is paused while the current playable build is made easier to vali
 40A. `DONE` **Testing: Establish functional gameplay test foundation**
     Exercise the real Unity Input System path with virtual devices, introduce deterministic scenario checkpoints with machine-readable reports, add test categories, and provide one repeatable Unity test command. This foundation must not change gameplay behavior. Reference: GitHub issue #88 / PR #89.
 
-40B. `PR` **Gameplay: Stabilize regressions found in the current playable build**
+40B. `DONE` **Gameplay: Stabilize regressions found in the current playable build**
     Convert the failures observed during hands-on playtesting into focused reproduction tests and small fixes. Current stabilization covers correct first-turn initialization and waiting for every moving ball before leaving spectate. Each gameplay fix should be isolated so regressions remain attributable and reviewable. Reference: GitHub issue #90 / PR #91.
 
-40C. `TODO` **Testing: Add Windows player smoke and functional validation**
-    Validate the built player rather than only the Editor, including startup, scene loading, core local controls, shot flow, ball-in-hand, and clean shutdown with machine-readable evidence where practical.
+40C. `PR` **Testing: Add Windows player smoke and functional validation**
+    Validate the built player rather than only the Editor, including startup, scene loading, real local Input System input, shot flow, ball-in-hand, and clean shutdown with machine-readable evidence. The Windows x64 development-player smoke now requires all 16 balls to be active, observes aiming/spin input over a stable time window, holds shot-power input over a deterministic real-time window before committing through the real play/shoot controller path and verifying cue-ball movement, verifies spectate remains active for a frame while the cue ball is still moving before returning to play once every ball stops, captures a scratch through `BallPocketCapture`, verifies the scratch transfers the active turn, moves and confirms the ball-in-hand candidate through real controller input, verifies a fresh shot can start after the placement-release guard clears, and journals runtime errors through player shutdown. Local validation passes with the Windows smoke, EditMode 300/300, PlayMode 26/26, repository validation, and `git diff --check`. Reference: GitHub issue #92 / PR #93.
 
 40D. `TODO` **CI: Run Unity EditMode and PlayMode validation on pull requests**
     Execute the established Unity test command in hosted CI with explicit license handling, preserved XML/log artifacts, and category-based targeting for focused jobs. This is the near-term implementation path for step 71.
@@ -248,4 +248,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current work is stabilization step **40B — Gameplay: Stabilize regressions found in the current playable build** (issue #90 / PR #91). Rendering PR #87 is intentionally paused until the stabilization gate has a trustworthy gameplay baseline. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current work is stabilization step **40C — Testing: Add Windows player smoke and functional validation** (issue #92 / PR #93), waiting for manual merge. Rendering PR #87 is intentionally paused until the stabilization gate has a trustworthy gameplay baseline. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
