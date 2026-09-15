@@ -162,7 +162,8 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
     Add a modern Gameplay-owned cue-tip contact state and mouse adapter. Holding the secondary mouse button adjusts normalized side/follow/draw contact without rotating the aim; the selected value persists into shot-power input, feeds the existing `CueBallStrikeModel`, and resets only after the fixed-step strike commits. Legacy player states only enable or disable the modern adapter. Reference: GitHub issue #74 / PR #75.
 37. `DONE` **Gameplay: Add controller input support**
     Route the shared local input snapshot through aiming, spin, shot-power, and legacy play-state transitions so mouse and controller feed the same gameplay states without duplicating shot logic. Controller stick values remain in controller-native units, while pointer conversion stays isolated to pointer input. Reference: GitHub issue #76 / PR #77.
-38. `TODO` **Gameplay: Implement ball-in-hand placement**
+38. `PR` **Gameplay: Implement ball-in-hand placement**
+    Add a Gameplay-owned placement flow that constrains the cue ball to the playable surface, respects restricted head-string placement, rejects overlap with active balls, and completes Core ball-in-hand only after legal confirmation. Captured cue balls are restored through the modern pocket adapter while the remaining legacy turn loop uses a narrow compatibility bridge. Reference: GitHub issue #78 / PR #81.
 39. `TODO` **Camera: Rebuild aiming camera**
 40. `TODO` **Camera: Implement shot and spectate cameras**
 
@@ -223,4 +224,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 5 work is **Gameplay: Implement ball-in-hand placement** (issue #78). After it is merged, continue with **Camera: Rebuild aiming camera**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 5 work is **Gameplay: Implement ball-in-hand placement** (issue #78 / PR #81). After it is merged, continue with **Camera: Rebuild aiming camera**. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
