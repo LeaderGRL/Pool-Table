@@ -5,6 +5,7 @@ using PoolTable.Core.Rules;
 using PoolTable.Core.Shots;
 using PoolTable.Gameplay.BallInHand;
 using PoolTable.Physics.Configuration;
+using PoolTable.Physics.Pockets;
 using UnityEngine;
 
 namespace PoolTable.Tests.EditMode
@@ -14,15 +15,20 @@ namespace PoolTable.Tests.EditMode
         [Test]
         public void IsLegal_AnywhereRequiresCueBallCenterInsidePlayingSurface()
         {
-            var legalCorner = new Vector2(
-                BallInHandPlacementGeometry.MaximumCenterX,
-                BallInHandPlacementGeometry.MaximumCenterZ);
-            var outsideLength = legalCorner + new Vector2(0.0001f, 0f);
-            var outsideWidth = legalCorner + new Vector2(0f, 0.0001f);
+            var legalLengthEdge = new Vector2(BallInHandPlacementGeometry.MaximumCenterX, 0f);
+            var legalWidthEdge = new Vector2(-0.4f, BallInHandPlacementGeometry.MaximumCenterZ);
+            var outsideLength = legalLengthEdge + new Vector2(0.0001f, 0f);
+            var outsideWidth = legalWidthEdge + new Vector2(0f, 0.0001f);
 
             Assert.That(
                 BallInHandPlacementGeometry.IsLegal(
-                    legalCorner,
+                    legalLengthEdge,
+                    CueBallPlacementArea.Anywhere,
+                    new List<Vector2>()),
+                Is.True);
+            Assert.That(
+                BallInHandPlacementGeometry.IsLegal(
+                    legalWidthEdge,
                     CueBallPlacementArea.Anywhere,
                     new List<Vector2>()),
                 Is.True);
@@ -38,6 +44,54 @@ namespace PoolTable.Tests.EditMode
                     CueBallPlacementArea.Anywhere,
                     new List<Vector2>()),
                 Is.False);
+        }
+
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(3)]
+        [TestCase(4)]
+        [TestCase(5)]
+        [TestCase(6)]
+        public void IsLegal_RejectsCueBallCenterBesidePocketOpening(int pocketIndex)
+        {
+            var pocketCenter = PocketCaptureLayout.GetCenter(new PocketId(pocketIndex));
+            var candidate = new Vector2(
+                Mathf.Clamp(
+                    pocketCenter.x,
+                    BallInHandPlacementGeometry.MinimumCenterX,
+                    BallInHandPlacementGeometry.MaximumCenterX),
+                Mathf.Clamp(
+                    pocketCenter.z,
+                    BallInHandPlacementGeometry.MinimumCenterZ,
+                    BallInHandPlacementGeometry.MaximumCenterZ));
+
+            Assert.That(candidate.x, Is.InRange(
+                BallInHandPlacementGeometry.MinimumCenterX,
+                BallInHandPlacementGeometry.MaximumCenterX));
+            Assert.That(candidate.y, Is.InRange(
+                BallInHandPlacementGeometry.MinimumCenterZ,
+                BallInHandPlacementGeometry.MaximumCenterZ));
+            Assert.That(
+                BallInHandPlacementGeometry.IsLegal(
+                    candidate,
+                    CueBallPlacementArea.Anywhere,
+                    new List<Vector2>()),
+                Is.False);
+        }
+
+        [Test]
+        public void IsLegal_AllowsRailAdjacentPlacementOutsidePocketClearance()
+        {
+            var candidate = new Vector2(
+                BilliardsPhysicalSpecification.PocketCaptureRadiusMeters * 2f,
+                BallInHandPlacementGeometry.MaximumCenterZ);
+
+            Assert.That(
+                BallInHandPlacementGeometry.IsLegal(
+                    candidate,
+                    CueBallPlacementArea.Anywhere,
+                    new List<Vector2>()),
+                Is.True);
         }
 
         [Test]
@@ -113,6 +167,21 @@ namespace PoolTable.Tests.EditMode
             var invalid = new Vector2(BallInHandPlacementGeometry.MaximumCenterX + 0.1f, 0f);
 
             var completed = session.TryComplete(invalid, occupied, out var state);
+
+            Assert.That(completed, Is.False);
+            Assert.That(session.IsCompleted, Is.False);
+            Assert.That(state, Is.SameAs(granted));
+            Assert.That(state.HasBallInHand, Is.True);
+        }
+
+        [Test]
+        public void Session_PocketOpeningCandidateDoesNotConsumeBallInHand()
+        {
+            var granted = CreateStandardBallInHand();
+            var session = new BallInHandPlacementSession(granted);
+            var candidate = new Vector2(0f, BallInHandPlacementGeometry.MaximumCenterZ);
+
+            var completed = session.TryComplete(candidate, new List<Vector2>(), out var state);
 
             Assert.That(completed, Is.False);
             Assert.That(session.IsCompleted, Is.False);

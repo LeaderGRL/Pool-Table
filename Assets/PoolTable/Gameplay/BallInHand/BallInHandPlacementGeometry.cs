@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using PoolTable.Core.Match;
+using PoolTable.Core.Shots;
 using PoolTable.Physics.Configuration;
+using PoolTable.Physics.Pockets;
 using UnityEngine;
 
 namespace PoolTable.Gameplay.BallInHand
@@ -50,6 +52,11 @@ namespace PoolTable.Gameplay.BallInHand
                 return false;
             }
 
+            if (IsInsidePocketOpeningClearance(candidate))
+            {
+                return false;
+            }
+
             if (occupiedBallCenters == null)
             {
                 return true;
@@ -73,6 +80,26 @@ namespace PoolTable.Gameplay.BallInHand
             }
 
             return true;
+        }
+
+        private static bool IsInsidePocketOpeningClearance(Vector2 candidate)
+        {
+            // The scene has no separate pocket-mouth radius. Reuse the capture radius as a
+            // conservative planar clearance around the authoritative six pocket centers.
+            var clearanceSquared = BilliardsPhysicalSpecification.PocketCaptureRadiusMeters
+                * BilliardsPhysicalSpecification.PocketCaptureRadiusMeters;
+
+            for (var index = PocketId.MinimumIndex; index <= PocketId.MaximumIndex; index++)
+            {
+                var pocketCenter = PocketCaptureLayout.GetCenter(new PocketId(index));
+                var offset = candidate - new Vector2(pocketCenter.x, pocketCenter.z);
+                if (offset.sqrMagnitude < clearanceSquared)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static Vector2 ClampToPlacementArea(Vector2 candidate, CueBallPlacementArea placementArea)
