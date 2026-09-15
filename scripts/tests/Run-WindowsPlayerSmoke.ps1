@@ -88,6 +88,9 @@ function Invoke-PlayerSmoke {
         [int]$TimeoutSeconds
     )
 
+    $runtimeErrorJournalPath = "$ReportPath.runtime-errors.log"
+    Remove-Item $runtimeErrorJournalPath -Force -ErrorAction SilentlyContinue
+
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $ExecutablePath
     $startInfo.UseShellExecute = $false
@@ -113,6 +116,10 @@ function Invoke-PlayerSmoke {
 
     $exitCode = $process.ExitCode
     $process.Dispose()
+
+    if ((Test-Path $runtimeErrorJournalPath -PathType Leaf) -and (Get-Item $runtimeErrorJournalPath).Length -gt 0) {
+        throw "Windows player emitted a runtime error during startup, validation, or shutdown. See $runtimeErrorJournalPath and $LogPath."
+    }
 
     if (Test-Path $LogPath -PathType Leaf) {
         $playerLog = Get-Content $LogPath -Raw

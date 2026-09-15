@@ -22,9 +22,10 @@ namespace PoolTable.Presentation.Diagnostics
         private const string ReportPathEnvironmentVariable = "POOLTABLE_PLAYER_SMOKE_REPORT";
         private const string InputProbeTypeName = "PoolTable.Input.WindowsPlayerInputSmokeProbe";
         private const float MinimumShotSpeedMetersPerSecond = 0.01f;
+        private const float InputObservationSeconds = 0.05f;
         private static readonly object RuntimeLogGate = new object();
         private static readonly List<string> RuntimeErrors = new List<string>();
-        private static bool runtimeLogSubscribed;
+        private static string runtimeErrorJournalPath;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void StartWhenRequested()
@@ -38,10 +39,19 @@ namespace PoolTable.Presentation.Diagnostics
             lock (RuntimeLogGate)
             {
                 RuntimeErrors.Clear();
+                runtimeErrorJournalPath = ResolveReportPath() + ".runtime-errors.log";
+                var runtimeErrorDirectory = Path.GetDirectoryName(runtimeErrorJournalPath);
+                if (string.IsNullOrWhiteSpace(runtimeErrorDirectory))
+                {
+                    throw new InvalidOperationException(
+                        $"Unable to resolve the runtime-error journal directory for {runtimeErrorJournalPath}.");
+                }
+
+                Directory.CreateDirectory(runtimeErrorDirectory);
+                File.WriteAllText(runtimeErrorJournalPath, string.Empty);
             }
 
             Application.logMessageReceivedThreaded += CaptureRuntimeError;
-            runtimeLogSubscribed = true;
 
             var host = new GameObject(nameof(WindowsPlayerSmokeRunner));
             DontDestroyOnLoad(host);
@@ -95,7 +105,6 @@ namespace PoolTable.Presentation.Diagnostics
             }
 
             RemoveSmokeGamepad();
-            StopRuntimeErrorCapture();
 
             report.Success = failure == null;
             if (failure != null)
@@ -178,7 +187,7 @@ namespace PoolTable.Presentation.Diagnostics
 
             var directionBefore = new Vector2(aiming.Direction.X, aiming.Direction.Y);
             SetSmokeGamepadState(0.75f, 0f, 0f, 0f, 0f, 0f);
-            yield return null;
+            yield return new WaitForSecondsRealtime(InputObservationSeconds);
             ThrowIfRuntimeErrors();
 
             var directionAfter = new Vector2(aiming.Direction.X, aiming.Direction.Y);
@@ -299,6 +308,17 @@ namespace PoolTable.Presentation.Diagnostics
             Require(capture.IsCaptured, "The cue ball must stay captured until placement is confirmed.");
             Require(controller.IsCurrentPositionLegal, "The initial ball-in-hand candidate must be legal.");
 
+            var placementStart = new Vector2(cueBall.transform.position.x, cueBall.transform.position.z);
+            SetSmokeGamepadState(0f, 0f, 0.75f, 0f, 0f, 0f);
+            yield return new WaitForSecondsRealtime(InputObservationSeconds);
+            ThrowIfRuntimeErrors();
+            var placementAfterMovement = new Vector2(cueBall.transform.position.x, cueBall.transform.position.z);
+            Require(
+                (placementAfterMovement - placementStart).sqrMagnitude > 0.000001f,
+                "Ball-in-hand must consume the injected controller action axis and move the cue-ball candidate.");
+            Require(controller.IsCurrentPositionLegal, "The moved ball-in-hand candidate must remain legal before confirmation.");
+
+            SetSmokeGamepadState(0f, 0f, 0f, 0f, 0f, 0f);
             yield return null;
             SetSmokeGamepadState(0f, 0f, 0f, 0f, 0f, 1f);
             yield return null;
@@ -320,6 +340,16 @@ namespace PoolTable.Presentation.Diagnostics
             ThrowIfRuntimeErrors();
             Require(GetLegacyCurrentStateName(player) == "PlayersPlayState", "Releasing placement input must leave the player ready in play state.");
             Require(!LegacyPocketedBallsContainCueBall(), "The legacy pocket registry must clear the restored cue ball.");
+
+            SetSmokeGamepadState(0f, 0f, 0f, 0f, 0f, 1f);
+            yield return null;
+            ThrowIfRuntimeErrors();
+            Require(
+                GetLegacyCurrentStateName(player) == "PlayersShootState",
+                "A new primary press after placement release must allow the player to enter the shoot state.");
+            Require(
+                (bool)InvokeLegacyMethod(player, "IsShotPowerEnabled"),
+                "Shot power must be enabled when shooting resumes after ball-in-hand placement.");
 
             report.BallInHand = true;
             report.Checkpoints.Add("ball-in-hand");
@@ -474,7 +504,12 @@ namespace PoolTable.Presentation.Diagnostics
 
             lock (RuntimeLogGate)
             {
-                RuntimeErrors.Add($"{type}: {condition}\n{stackTrace}");
+                var entry = $"{type}: {condition}\n{stackTrace}";
+                RuntimeErrors.Add(entry);
+                if (!string.IsNullOrWhiteSpace(runtimeErrorJournalPath))
+                {
+                    File.AppendAllText(runtimeErrorJournalPath, entry + Environment.NewLine + "---" + Environment.NewLine);
+                }
             }
         }
 
@@ -491,17 +526,6 @@ namespace PoolTable.Presentation.Diagnostics
                 throw new InvalidOperationException(
                     $"The player emitted {errors.Length} runtime error(s):\n{string.Join("\n---\n", errors)}");
             }
-        }
-
-        private static void StopRuntimeErrorCapture()
-        {
-            if (!runtimeLogSubscribed)
-            {
-                return;
-            }
-
-            Application.logMessageReceivedThreaded -= CaptureRuntimeError;
-            runtimeLogSubscribed = false;
         }
 
         private static Exception UnwrapReflectionException(Exception exception)
