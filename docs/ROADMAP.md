@@ -167,8 +167,8 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
     Add a Gameplay-owned placement flow that constrains the cue ball to the playable surface, respects restricted head-string placement, rejects overlap with active balls, and completes Core ball-in-hand only after legal confirmation. Captured cue balls are restored through the modern pocket adapter while the remaining legacy turn loop uses a narrow compatibility bridge. Reference: GitHub issue #78 / PR #81.
 39. `DONE` **Camera: Rebuild aiming camera**
     Rebuild aiming presentation around the modern canonical aim direction: the camera follows the cue ball and consumes `CueAimingController.Direction` without reading player input or owning gameplay state. Shot and spectate camera modernization remains step 40. Reference: GitHub issue #82 / PR #83.
-40. `ACTIVE` **Camera: Implement shot and spectate cameras**
-    Move shot-power and post-strike spectate presentation into the Presentation layer while preserving the existing gameplay state transitions. The shot camera follows the cue ball using the canonical aim direction, while the spectate camera frames active ball motion without owning rules or turn state. Advanced impact impulse and cinematic shot framing remain step 51. Local validation: EditMode 300/300, PlayMode 20/20, repository validation passed. Reference: GitHub issue #84.
+40. `PR` **Camera: Implement shot and spectate cameras**
+    Move shot-power and post-strike spectate presentation into the Presentation layer while preserving the existing gameplay state transitions. The shot camera follows the cue ball using the canonical aim direction, while the spectate camera frames active ball motion without owning rules or turn state. Advanced impact impulse and cinematic shot framing remain step 51. Local validation: EditMode 300/300, PlayMode 20/20, repository validation passed. Reference: GitHub issue #84 / PR #85.
 
 ## Phase 6 — URP conversion
 
@@ -227,4 +227,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 5 work is **Camera: Implement shot and spectate cameras** (issue #84). Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 5 work is **Camera: Implement shot and spectate cameras** (issue #84 / PR #85). Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
