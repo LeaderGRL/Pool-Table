@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayersSpectateState : PlayersBaseState
 {
-    private GameObject balls;
+    private BallStateManager[] balls;
     private Vector3 targetPosition;
     private Vector3 velocity;
 
@@ -13,7 +13,7 @@ public class PlayersSpectateState : PlayersBaseState
         player.SetSpinControlEnabled(false);
         player.SetShotPowerEnabled(false);
         player.SetSpectateCameraEnabled(true);
-        balls = GameObject.Find("Balls");
+        balls = GameObject.Find("Balls").GetComponentsInChildren<BallStateManager>();
         targetPosition = player.transform.position + Vector3.left;
     }
 
@@ -45,12 +45,15 @@ public class PlayersSpectateState : PlayersBaseState
 
     private void CheckIfBallIsMoving(PlayersStateManagement player)
     {
-        //yield return new WaitForSeconds(1);
-        if (balls.GetComponentInChildren<BallStateManager>().isBallMoving() == false)
+        foreach (var ball in balls)
         {
-            player.SwitchState(player.playState);
-            //yield break;
+            if (ball != null && ball.gameObject.activeInHierarchy && ball.isBallMoving())
+            {
+                return;
+            }
         }
+
+        player.SwitchState(player.playState);
     }
 
     public override void OnMouseDown(PlayersStateManagement player)
