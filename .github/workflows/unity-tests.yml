@@ -1,0 +1,108 @@
+name: Unity Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      category:
+        description: Optional Unity Test Framework category for a focused manual run
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unity-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unity-tests:
+    name: Unity ${{ matrix.displayName }}
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - testMode: editmode
+            displayName: EditMode
+          - testMode: playmode
+            displayName: PlayMode
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          lfs: true
+          persist-credentials: false
+
+      - name: Restore Unity Library cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: Library
+          key: unity-library-${{ runner.os }}-6000.5.1f1-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            unity-library-${{ runner.os }}-6000.5.1f1-
+
+      - name: Validate Unity license configuration
+        shell: bash
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        run: |
+          if [[ -z "$UNITY_EMAIL" || -z "$UNITY_PASSWORD" ]]; then
+            echo "UNITY_EMAIL and UNITY_PASSWORD must be configured as repository secrets."
+            exit 1
+          fi
+
+          if [[ -z "$UNITY_LICENSE" && -z "$UNITY_SERIAL" ]]; then
+            echo "Configure either UNITY_LICENSE for a Personal license or UNITY_SERIAL for a Professional license."
+            exit 1
+          fi
+
+      - name: Build focused test parameters
+        id: test-parameters
+        shell: bash
+        env:
+          TEST_CATEGORY: ${{ github.event_name == 'workflow_dispatch' && inputs.category || '' }}
+        run: |
+          if [[ -z "$TEST_CATEGORY" ]]; then
+            exit 0
+          fi
+
+          if [[ ! "$TEST_CATEGORY" =~ ^[A-Za-z0-9_.-]+$ ]]; then
+            echo "Test category may only contain letters, numbers, dots, underscores, and hyphens."
+            exit 1
+          fi
+
+          echo "custom_parameters=-testCategory $TEST_CATEGORY" >> "$GITHUB_OUTPUT"
+
+      - name: Run Unity tests
+        id: unity-tests
+        uses: game-ci/unity-test-runner@fa6ced25861c16ef56187828c43f76d00df43a23 # v4.3.2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          projectPath: .
+          unityVersion: 6000.5.1f1
+          testMode: ${{ matrix.testMode }}
+          artifactsPath: Logs/TestResults/${{ matrix.testMode }}
+          customParameters: ${{ steps.test-parameters.outputs.custom_parameters }}
+
+      - name: Upload Unity test evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: unity-${{ matrix.testMode }}-results
+          path: Logs/TestResults
+          if-no-files-found: ignore
+          retention-days: 14
