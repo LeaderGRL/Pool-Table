@@ -59,6 +59,69 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator PoolTableScene_StartsWithPlayerOneBeforeAnyShotIsResolved()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var gameManager = FindActiveMonoBehaviourByTypeName(activeScene, "GameManager");
+            Assert.That(gameManager, Is.Not.Null);
+
+            var currentTurn = gameManager.GetType().GetMethod("getCurrentPlayerTurn").Invoke(gameManager, null);
+            var playerOneTurn = GetPublicGameObjectField(gameManager, "UI_Player1Turn");
+            var playerTwoTurn = GetPublicGameObjectField(gameManager, "UI_Player2Turn");
+
+            Assert.That(
+                currentTurn.ToString(),
+                Is.EqualTo("PlayerOneTurn"),
+                "Loading the scene must initialize the first turn instead of adjudicating a shot that never happened.");
+            Assert.That(playerOneTurn.activeInHierarchy, Is.True);
+            Assert.That(playerTwoTurn.activeInHierarchy, Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_SpectateStateWaitsForEveryMovingBallToStop()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var playerController = FindActiveMonoBehaviourByTypeName(activeScene, "PlayersStateManagement");
+            var ballsRoot = GameObject.Find("Balls");
+            Assert.That(playerController, Is.Not.Null);
+            Assert.That(ballsRoot, Is.Not.Null);
+
+            var ballStateManagers = ballsRoot
+                .GetComponentsInChildren<Component>()
+                .Where(component => component.GetType().Name == "BallStateManager")
+                .ToArray();
+            Assert.That(ballStateManagers.Length, Is.GreaterThan(1));
+
+            foreach (var ballStateManager in ballStateManagers)
+            {
+                var body = ballStateManager.GetComponent<Rigidbody>();
+                body.useGravity = false;
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+            }
+
+            ballStateManagers[1].GetComponent<Rigidbody>().linearVelocity = Vector3.right;
+
+            var controllerType = playerController.GetType();
+            var currentStateField = controllerType.GetField(
+                "currentPlayerState",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            var spectateState = controllerType.GetField("spectateState").GetValue(playerController);
+            controllerType.GetMethod("SwitchState").Invoke(playerController, new[] { spectateState });
+
+            spectateState.GetType().GetMethod("UpdateState").Invoke(spectateState, new object[] { playerController });
+
+            Assert.That(
+                currentStateField.GetValue(playerController).GetType().Name,
+                Is.EqualTo("PlayersSpectateState"),
+                "Spectating must continue while any billiard ball is still moving.");
+        }
+
+        [UnityTest]
         public IEnumerator PoolTableScene_UsesInputSystemUiModule()
         {
             yield return LoadPoolTableScene();

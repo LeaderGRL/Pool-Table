@@ -12,13 +12,15 @@ public class PlayersPlayState : PlayersBaseState
         player.SetShotPowerEnabled(false);
         player.SetAimingEnabled(true);
         player.SetSpinControlEnabled(true);
-        GameManager.instance.turnNumber++;
 
         if (GameManager.instance.getTurnNumber() == 0)
         {
-            GameManager.instance.updateGameState(GameState.PlayerTwoTurn);
+            GameManager.instance.updateGameState(GameState.PlayerOneTurn);
+            GameManager.instance.turnNumber++;
             return;
         }
+
+        GameManager.instance.turnNumber++;
 
         //if (BallStateManager.instance.GetPlayAgain())
         //{
