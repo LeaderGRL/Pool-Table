@@ -8,9 +8,11 @@ The repository uses two complementary GitHub Actions workflows.
 
 ## Unity tests
 
-`.github/workflows/unity-tests.yml` runs EditMode and PlayMode as independent jobs on every pull request. Both jobs use Unity `6000.5.1f1`, matching `ProjectSettings/ProjectVersion.txt`, and keep running independently when one mode fails.
+`.github/workflows/unity-tests.yml` runs EditMode and PlayMode as independent jobs on pull requests whose source branch belongs to this repository. Both jobs use Unity `6000.5.1f1`, matching `ProjectSettings/ProjectVersion.txt`, and keep running independently when one mode fails.
 
 The hosted workflow mirrors the local test contract established by `scripts/tests/Run-UnityTests.ps1`. GameCI provides the Unity Editor inside the hosted runner, while the local script resolves an installed editor directly.
+
+Pull requests from forks still receive the credential-free repository validation, but the licensed Unity jobs are skipped because GitHub does not expose repository secrets to fork-origin pull request workflows. A maintainer can reproduce a fork contribution on a trusted repository branch and use `workflow_dispatch` when hosted Unity validation is required. This avoids exposing Unity credentials to untrusted pull request code.
 
 ### Required GitHub secrets
 
@@ -44,4 +46,4 @@ pwsh ./scripts/tests/Run-UnityTests.ps1 -TestPlatform PlayMode
 pwsh ./scripts/tests/Run-UnityTests.ps1 -TestPlatform PlayMode -Category Functional
 ```
 
-Pull requests always run the full EditMode and PlayMode suites. The category input is only for focused manual diagnostics.
+Trusted pull requests always run the full EditMode and PlayMode suites. The category input is only for focused manual diagnostics.

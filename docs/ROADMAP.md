@@ -184,7 +184,7 @@ Rendering work is paused while the current playable build is made easier to vali
     Validate the built player rather than only the Editor, including startup, scene loading, real local Input System input, shot flow, ball-in-hand, and clean shutdown with machine-readable evidence. The Windows x64 development-player smoke now requires all 16 balls to be active, observes aiming/spin input over a stable time window, holds shot-power input over a deterministic real-time window before committing through the real play/shoot controller path and verifying cue-ball movement, verifies spectate remains active for a frame while the cue ball is still moving before returning to play once every ball stops, captures a scratch through `BallPocketCapture`, verifies the scratch transfers the active turn, moves and confirms the ball-in-hand candidate through real controller input, verifies a fresh shot can start after the placement-release guard clears, and journals runtime errors through player shutdown. Local validation passes with the Windows smoke, EditMode 300/300, PlayMode 26/26, repository validation, and `git diff --check`. Reference: GitHub issue #92 / PR #93.
 
 40D. `PR` **CI: Run Unity EditMode and PlayMode validation on pull requests**
-    Execute the established Unity test contract in hosted CI with explicit license handling, preserved XML/log/scenario artifacts, and category-based targeting for focused manual jobs. Reference: GitHub issue #94 / PR #95.
+    Execute the established Unity test contract in hosted CI with explicit license handling, preserved XML/log/scenario artifacts, category-based targeting for focused manual jobs, and fork-safe handling that keeps Unity credentials away from untrusted pull request code. Reference: GitHub issue #94 / PR #95.
 
 Phase 6 should resume only after this stabilization gate provides a trustworthy baseline. PR #87 remains open but paused while this work is completed.
 
@@ -239,7 +239,7 @@ Relay is intended for a listen-server model: the host creates the session and pl
     Physics models and shot instrumentation already have EditMode and PlayMode coverage, including trajectory and collision observations. Additional reproducible calibration scenarios and acceptance tolerances remain to be defined.
 70. `TODO` **Testing: Add two-player Multiplayer Play Mode tests**
 71. `PR` **CI: Add Unity pull-request validation**
-    Structural repository validation already exists. Hosted EditMode/PlayMode execution, explicit Unity license handling, preserved test evidence, and focused category diagnostics are being added in stabilization step 40D. Reference: GitHub issue #94 / PR #95.
+    Structural repository validation already exists. Hosted EditMode/PlayMode execution, explicit Unity license handling, preserved test evidence, focused category diagnostics, and safe skipping of licensed jobs for fork-origin pull requests are being added in stabilization step 40D. Reference: GitHub issue #94 / PR #95.
 72. `TODO` **CI: Add Windows build validation**
 73. `TODO` **CI: Add WebGL build validation**
 74. `TODO` **CI: Add automated artifact builds from main**
