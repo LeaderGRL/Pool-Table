@@ -15,6 +15,7 @@ namespace PoolTable.Gameplay.BallInHand
 
         [SerializeField] private Transform cueBall;
         [SerializeField] private Transform ballsRoot;
+        [SerializeField] private Camera placementCamera;
         [SerializeField, Min(0f)] private float pointerMetersPerPixel = 0.0015f;
         [SerializeField, Min(0f)] private float controllerMetersPerSecond = 0.75f;
 
@@ -137,18 +138,57 @@ namespace PoolTable.Gameplay.BallInHand
                 return;
             }
 
-            var tableLengthDelta = (input.PointerDelta.y * pointerMetersPerPixel)
-                + (input.ActionAxis.y * controllerMetersPerSecond * Mathf.Max(0f, deltaTime));
-            var tableWidthDelta = (input.PointerDelta.x * pointerMetersPerPixel)
-                + (input.ActionAxis.x * controllerMetersPerSecond * Mathf.Max(0f, deltaTime));
-            var next = BallInHandPlacementGeometry.ClampToPlacementArea(
-                CurrentPlanarPosition + new Vector2(tableLengthDelta, tableWidthDelta),
+            var next = CurrentPlanarPosition;
+            var pointerMoved = input.PointerDelta.sqrMagnitude > 0.000001f;
+
+            if (pointerMoved && input.HasPointerPosition && TryProjectPointerToTable(input.PointerPosition, out var pointerTarget))
+            {
+                next = pointerTarget;
+            }
+            else if (pointerMoved && !input.HasPointerPosition)
+            {
+                next += new Vector2(
+                    input.PointerDelta.y * pointerMetersPerPixel,
+                    input.PointerDelta.x * pointerMetersPerPixel);
+            }
+
+            next += new Vector2(
+                input.ActionAxis.y * controllerMetersPerSecond * Mathf.Max(0f, deltaTime),
+                input.ActionAxis.x * controllerMetersPerSecond * Mathf.Max(0f, deltaTime));
+
+            var clampedNext = BallInHandPlacementGeometry.ClampToPlacementArea(
+                next,
                 placementArea);
 
             cueBall.position = new Vector3(
-                next.x,
+                clampedNext.x,
                 BilliardsPhysicalSpecification.BallCenterHeightMeters,
-                next.y);
+                clampedNext.y);
+        }
+
+        internal bool TryProjectPointerToTable(Vector2 pointerPosition, out Vector2 planarPosition)
+        {
+            planarPosition = default;
+            var camera = placementCamera != null ? placementCamera : Camera.main;
+
+            if (camera == null || !camera.pixelRect.Contains(pointerPosition))
+            {
+                return false;
+            }
+
+            var ray = camera.ScreenPointToRay(pointerPosition);
+            var tablePlane = new Plane(
+                Vector3.up,
+                new Vector3(0f, BilliardsPhysicalSpecification.BallCenterHeightMeters, 0f));
+
+            if (!tablePlane.Raycast(ray, out var distance) || distance < 0f)
+            {
+                return false;
+            }
+
+            var point = ray.GetPoint(distance);
+            planarPosition = new Vector2(point.x, point.z);
+            return true;
         }
 
         private void BeginPlacement(CueBallPlacementArea area)

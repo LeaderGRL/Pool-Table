@@ -20,8 +20,13 @@ namespace PoolTable.Tests.PlayMode
             var mouse = InputSystem.AddDevice<Mouse>();
             var reader = new LocalPlayerInputReader();
             var expectedDelta = new Vector2(18.5f, -6.25f);
+            var expectedPosition = new Vector2(640f, 360f);
 
-            var state = new MouseState { delta = expectedDelta }
+            var state = new MouseState
+                {
+                    delta = expectedDelta,
+                    position = expectedPosition,
+                }
                 .WithButton(MouseButton.Left)
                 .WithButton(MouseButton.Right);
             InputSystem.QueueStateEvent(mouse, state);
@@ -30,6 +35,8 @@ namespace PoolTable.Tests.PlayMode
             var snapshot = reader.Read();
 
             Assert.That(snapshot.PointerDelta, Is.EqualTo(expectedDelta));
+            Assert.That(snapshot.PointerPosition, Is.EqualTo(expectedPosition));
+            Assert.That(snapshot.HasPointerPosition, Is.True);
             Assert.That(snapshot.PrimaryActionIsPressed, Is.True);
             Assert.That(snapshot.SecondaryActionIsPressed, Is.True);
         }

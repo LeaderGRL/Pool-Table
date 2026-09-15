@@ -14,7 +14,22 @@ namespace PoolTable.Tests.EditMode
 
             Assert.That(state.Direction.X, Is.EqualTo(0.6f).Within(0.000001f));
             Assert.That(state.Direction.Y, Is.EqualTo(0.8f).Within(0.000001f));
+            Assert.That(state.ElevationDegrees, Is.Zero);
+            Assert.That(state.MinimumElevationDegrees, Is.Zero);
+            Assert.That(state.MaximumElevationDegrees, Is.EqualTo(20f));
             AssertDirectionIsNormalized(state.Direction);
+        }
+
+        [Test]
+        public void Constructor_ClampsInitialElevationToConfiguredRange()
+        {
+            var state = new AimingState(
+                new ShotDirection(0f, 1f),
+                initialElevationDegrees: 35f,
+                minimumElevationDegrees: 0f,
+                maximumElevationDegrees: 20f);
+
+            Assert.That(state.ElevationDegrees, Is.EqualTo(20f));
         }
 
         [TestCase(90f, 1f, 0f)]
@@ -68,6 +83,33 @@ namespace PoolTable.Tests.EditMode
 
             Assert.That(
                 () => state.RotateDegrees(yawDegrees),
+                Throws.TypeOf<ArgumentOutOfRangeException>());
+        }
+
+        [Test]
+        public void AdjustElevationDegrees_ClampsAtZeroAndTwentyDegrees()
+        {
+            var state = new AimingState(new ShotDirection(0f, 1f));
+
+            state.AdjustElevationDegrees(7.5f);
+            Assert.That(state.ElevationDegrees, Is.EqualTo(7.5f).Within(0.000001f));
+
+            state.AdjustElevationDegrees(100f);
+            Assert.That(state.ElevationDegrees, Is.EqualTo(20f).Within(0.000001f));
+
+            state.AdjustElevationDegrees(-100f);
+            Assert.That(state.ElevationDegrees, Is.Zero.Within(0.000001f));
+        }
+
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        [TestCase(float.NegativeInfinity)]
+        public void AdjustElevationDegrees_RejectsNonFiniteDelta(float elevationDelta)
+        {
+            var state = new AimingState(new ShotDirection(0f, 1f));
+
+            Assert.That(
+                () => state.AdjustElevationDegrees(elevationDelta),
                 Throws.TypeOf<ArgumentOutOfRangeException>());
         }
 
