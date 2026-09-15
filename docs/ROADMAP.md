@@ -167,8 +167,26 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
     Add a Gameplay-owned placement flow that constrains the cue ball to the playable surface, respects restricted head-string placement, rejects overlap with active balls, and completes Core ball-in-hand only after legal confirmation. Captured cue balls are restored through the modern pocket adapter while the remaining legacy turn loop uses a narrow compatibility bridge. Reference: GitHub issue #78 / PR #81.
 39. `DONE` **Camera: Rebuild aiming camera**
     Rebuild aiming presentation around the modern canonical aim direction: the camera follows the cue ball and consumes `CueAimingController.Direction` without reading player input or owning gameplay state. Shot and spectate camera modernization remains step 40. Reference: GitHub issue #82 / PR #83.
-40. `PR` **Camera: Implement shot and spectate cameras**
+40. `DONE` **Camera: Implement shot and spectate cameras**
     Move shot-power and post-strike spectate presentation into the Presentation layer while preserving the existing gameplay state transitions. The shot camera follows the cue ball using the canonical aim direction, while the spectate camera frames active ball motion without owning rules or turn state. Advanced impact impulse and cinematic shot framing remain step 51. Local validation: EditMode 300/300, PlayMode 20/20, repository validation passed. Reference: GitHub issue #84 / PR #85.
+
+## Phase 5.5 — gameplay stabilization gate
+
+Rendering work is paused while the current playable build is made easier to validate automatically. These steps intentionally keep the existing 41–76 numbering stable.
+
+40A. `PR` **Testing: Establish functional gameplay test foundation**
+    Exercise the real Unity Input System path with virtual devices, introduce deterministic scenario checkpoints with machine-readable reports, add test categories, and provide one repeatable Unity test command. This foundation must not change gameplay behavior. Reference: GitHub issue #88 / PR #89.
+
+40B. `TODO` **Gameplay: Stabilize regressions found in the current playable build**
+    Convert the failures observed during hands-on playtesting into focused reproduction tests and small fixes. Each gameplay fix should be isolated so regressions remain attributable and reviewable.
+
+40C. `TODO` **Testing: Add Windows player smoke and functional validation**
+    Validate the built player rather than only the Editor, including startup, scene loading, core local controls, shot flow, ball-in-hand, and clean shutdown with machine-readable evidence where practical.
+
+40D. `TODO` **CI: Run Unity EditMode and PlayMode validation on pull requests**
+    Execute the established Unity test command in hosted CI with explicit license handling, preserved XML/log artifacts, and category-based targeting for focused jobs. This is the near-term implementation path for step 71.
+
+Phase 6 should resume only after this stabilization gate provides a trustworthy baseline. PR #87 remains open but paused while this work is completed.
 
 ## Phase 6 — URP conversion
 
@@ -213,9 +231,12 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Phase 9 — quality and delivery
 
-67. `TODO` **Testing: Add Core EditMode test suite**
-68. `TODO` **Testing: Add gameplay PlayMode tests**
-69. `TODO` **Testing: Add physics calibration tests**
+67. `PARTIAL` **Testing: Add Core EditMode test suite**
+    A substantial EditMode suite already covers Core rules, state, architecture boundaries, gameplay models, and physics models. Remaining work is to close coverage gaps discovered during stabilization and future features.
+68. `PARTIAL` **Testing: Add gameplay PlayMode tests**
+    Scene and gameplay PlayMode coverage already exists. Step 40A expands it through the real Input System path and deterministic functional scenarios before additional gameplay regressions are fixed.
+69. `PARTIAL` **Testing: Add physics calibration tests**
+    Physics models and shot instrumentation already have EditMode and PlayMode coverage, including trajectory and collision observations. Additional reproducible calibration scenarios and acceptance tolerances remain to be defined.
 70. `TODO` **Testing: Add two-player Multiplayer Play Mode tests**
 71. `PARTIAL` **CI: Add Unity pull-request validation**
     Structural repository validation already exists. Hosted Unity execution and license handling still need to be added.
@@ -227,4 +248,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 5 work is **Camera: Implement shot and spectate cameras** (issue #84 / PR #85). Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current work is stabilization step **40A — Testing: Establish functional gameplay test foundation** (issue #88 / PR #89). Rendering PR #87 is intentionally paused until the stabilization gate has a trustworthy gameplay baseline. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
