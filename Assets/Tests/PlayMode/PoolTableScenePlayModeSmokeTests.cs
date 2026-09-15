@@ -415,6 +415,15 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cueBody.isKinematic, Is.True);
             Assert.That(cueBody.detectCollisions, Is.False);
 
+            var alternateOpenTable = OpenTableRule.EnterAfterBreak(
+                MatchState.CreateInitial(MatchPlayerId.PlayerTwo));
+            var alternateGranted = BallInHandRule.GrantAfterStandardFoul(
+                alternateOpenTable,
+                new FoulResolution(ShotFoul.CueBallScratch));
+
+            Assert.Throws<System.InvalidOperationException>(() => controller.BeginPlacement(alternateGranted));
+            Assert.Throws<System.InvalidOperationException>(() => controller.BeginLegacyScratchPlacement());
+
             cueBall.transform.position = new Vector3(
                 objectBallIdentity.transform.position.x,
                 BilliardsPhysicalSpecification.BallCenterHeightMeters,

@@ -81,12 +81,14 @@ namespace PoolTable.Gameplay.BallInHand
 
         public void BeginPlacement(MatchState state)
         {
+            EnsurePlacementIsInactive();
             session = new BallInHandPlacementSession(state);
             BeginPlacement(session.PlacementArea);
         }
 
         public void BeginLegacyScratchPlacement()
         {
+            EnsurePlacementIsInactive();
             session = null;
             BeginPlacement(CueBallPlacementArea.Anywhere);
         }
@@ -151,10 +153,7 @@ namespace PoolTable.Gameplay.BallInHand
 
         private void BeginPlacement(CueBallPlacementArea area)
         {
-            if (IsPlacing)
-            {
-                throw new InvalidOperationException("Cue-ball placement is already active.");
-            }
+            EnsurePlacementIsInactive();
 
             placementArea = area;
             originalIsKinematic = cueBallRigidbody.isKinematic;
@@ -178,6 +177,14 @@ namespace PoolTable.Gameplay.BallInHand
             primaryActionWasPressed = true;
             IsPlacing = true;
             enabled = true;
+        }
+
+        private void EnsurePlacementIsInactive()
+        {
+            if (IsPlacing)
+            {
+                throw new InvalidOperationException("Cue-ball placement is already active.");
+            }
         }
 
         private bool IsCandidateLegal(Vector2 candidate)

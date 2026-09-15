@@ -95,9 +95,15 @@ public class PlayersPlayState : PlayersBaseState
                 return;
             }
 
-            waitingForBallInHandPlacement = false;
             player.SetAimingEnabled(true);
             player.SetSpinControlEnabled(true);
+
+            if (LegacyMouseInput.PrimaryButtonIsPressed)
+            {
+                return;
+            }
+
+            waitingForBallInHandPlacement = false;
             return;
         }
 
