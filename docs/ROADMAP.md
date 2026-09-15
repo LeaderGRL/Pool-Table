@@ -172,8 +172,8 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
 
 ## Phase 6 — URP conversion
 
-41. `ACTIVE` **Rendering: Install and configure URP**
-    Install the Unity 6.5-compatible Universal Render Pipeline package and establish the project-wide baseline render-pipeline asset without performing the later material, lighting, post-processing, or per-platform quality-profile conversions. Local validation: EditMode 302/302, PlayMode 20/20, repository validation passed. Reference: GitHub issue #86.
+41. `PR` **Rendering: Install and configure URP**
+    Install the Unity 6.5-compatible Universal Render Pipeline package and establish the project-wide baseline render-pipeline asset without performing the later material, lighting, post-processing, or per-platform quality-profile conversions. Local validation: EditMode 302/302, PlayMode 20/20, repository validation passed. Reference: GitHub issue #86 / PR #87.
 42. `TODO` **Rendering: Convert legacy materials to URP**
 43. `TODO` **Rendering: Rebuild pool-table PBR materials**
 44. `TODO` **Rendering: Rebuild lighting and reflection setup**
@@ -228,4 +228,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 6 work is **Rendering: Install and configure URP** (issue #86). Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 6 work is **Rendering: Install and configure URP** (issue #86 / PR #87). Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
