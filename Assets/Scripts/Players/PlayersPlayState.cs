@@ -1,9 +1,7 @@
 using UnityEngine;
-using PoolTable.Input;
 
 public class PlayersPlayState : PlayersBaseState
 {
-    private readonly LocalPlayerInputReader localPlayerInputReader = new LocalPlayerInputReader();
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {
@@ -82,7 +80,7 @@ public class PlayersPlayState : PlayersBaseState
 
     public override void UpdateState(PlayersStateManagement player)
     {
-        if (localPlayerInputReader.Read().PrimaryActionIsPressed)
+        if (LegacyMouseInput.PrimaryButtonIsPressed)
         {
             player.SwitchState(player.shootState);
         }

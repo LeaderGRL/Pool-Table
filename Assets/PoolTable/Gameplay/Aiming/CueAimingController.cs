@@ -61,8 +61,8 @@ namespace PoolTable.Gameplay.Aiming
                 return;
             }
 
-            var suppressYaw = input.SecondaryButtonIsPressed || secondaryButtonWasPressedLastFrame;
-            secondaryButtonWasPressedLastFrame = input.SecondaryButtonIsPressed;
+            var suppressYaw = input.SecondaryActionIsPressed || secondaryButtonWasPressedLastFrame;
+            secondaryButtonWasPressedLastFrame = input.SecondaryActionIsPressed;
 
             if (!suppressYaw)
             {

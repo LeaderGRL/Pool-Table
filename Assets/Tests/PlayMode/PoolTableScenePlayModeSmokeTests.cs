@@ -746,7 +746,7 @@ namespace PoolTable.Tests.PlayMode
                 for (var stroke = 0; stroke < 18; stroke++)
                 {
                     shotPowerController.ProcessInput(
-                        new PointerInputSnapshot(new Vector2(0f, 10f), true));
+                        new LocalPlayerInputSnapshot(new Vector2(0f, 10f), true));
                 }
 
                 Assert.That(shotPowerController.NormalizedPower, Is.EqualTo(1f).Within(0.000001f));
@@ -754,7 +754,7 @@ namespace PoolTable.Tests.PlayMode
                     shotPowerController.PullbackMeters,
                     Is.EqualTo(shotPowerController.MaximumCuePullbackMeters).Within(0.000001f));
 
-                shotPowerController.ProcessInput(new PointerInputSnapshot(Vector2.zero, false));
+                shotPowerController.ProcessInput(new LocalPlayerInputSnapshot(Vector2.zero, false));
 
                 Assert.That(
                     shotPowerController.ShotCommitted,
@@ -831,7 +831,7 @@ namespace PoolTable.Tests.PlayMode
             var magnitudeSquared = (direction.X * direction.X) + (direction.Y * direction.Y);
             Assert.That(magnitudeSquared, Is.EqualTo(1f).Within(0.00001f));
 
-            var spinInput = new PointerInputSnapshot(new Vector2(20f, -10f), false, true);
+            var spinInput = new LocalPlayerInputSnapshot(new Vector2(20f, -10f), false, true);
             aimingController.ProcessInput(spinInput);
             spinController.ProcessInput(spinInput);
 
@@ -850,21 +850,21 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(planarForward.x, Is.EqualTo(direction.X).Within(0.0001f));
             Assert.That(planarForward.z, Is.EqualTo(direction.Y).Within(0.0001f));
 
-            aimingController.ProcessInput(new PointerInputSnapshot(new Vector2(15f, 0f), false));
+            aimingController.ProcessInput(new LocalPlayerInputSnapshot(new Vector2(15f, 0f), false));
             Assert.That(
                 aimingController.Direction.X,
                 Is.EqualTo(direction.X).Within(0.00001f),
                 "The secondary-button release frame must not leak the final spin-drag delta into cue yaw.");
             Assert.That(aimingController.Direction.Y, Is.EqualTo(direction.Y).Within(0.00001f));
 
-            aimingController.ProcessInput(new PointerInputSnapshot(new Vector2(15f, 0f), false));
+            aimingController.ProcessInput(new LocalPlayerInputSnapshot(new Vector2(15f, 0f), false));
             Assert.That(
                 Mathf.Abs(aimingController.Direction.X - direction.X)
                     + Mathf.Abs(aimingController.Direction.Y - direction.Y),
                 Is.GreaterThan(0.00001f),
                 "Cue yaw must resume on the frame after the secondary-button release transition.");
 
-            aimingController.ProcessInput(new PointerInputSnapshot(new Vector2(-15f, 0f), false));
+            aimingController.ProcessInput(new LocalPlayerInputSnapshot(new Vector2(-15f, 0f), false));
             Assert.That(aimingController.Direction.X, Is.EqualTo(direction.X).Within(0.00001f));
             Assert.That(aimingController.Direction.Y, Is.EqualTo(direction.Y).Within(0.00001f));
 
@@ -927,7 +927,7 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(spinController, Is.Not.Null);
             Assert.That(shotPowerController, Is.Not.Null);
 
-            spinController.ProcessInput(new PointerInputSnapshot(new Vector2(50f, 0f), false, true));
+            spinController.ProcessInput(new LocalPlayerInputSnapshot(new Vector2(50f, 0f), false, true));
             Assert.That(spinController.Spin.Side, Is.EqualTo(0.5f).Within(0.00001f));
             Assert.That(spinController.Spin.Vertical, Is.Zero.Within(0.00001f));
 
@@ -947,10 +947,10 @@ namespace PoolTable.Tests.PlayMode
             for (var stroke = 0; stroke < 18; stroke++)
             {
                 shotPowerController.ProcessInput(
-                    new PointerInputSnapshot(new Vector2(0f, 10f), true));
+                    new LocalPlayerInputSnapshot(new Vector2(0f, 10f), true));
             }
 
-            shotPowerController.ProcessInput(new PointerInputSnapshot(Vector2.zero, false));
+            shotPowerController.ProcessInput(new LocalPlayerInputSnapshot(Vector2.zero, false));
 
             Assert.That(shotPowerController.ShotCommitted, Is.False);
             Assert.That(
