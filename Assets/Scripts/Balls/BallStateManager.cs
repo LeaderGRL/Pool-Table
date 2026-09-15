@@ -98,6 +98,16 @@ public class BallStateManager : MonoBehaviour
     {
         SwitchState(pocketedState);
     }
+
+    public void OnModernBallInHandPlacementCompleted()
+    {
+        SwitchState(idleState);
+
+        if (instance != null && instance.pocketedBalls != null)
+        {
+            instance.pocketedBalls.Remove(gameObject);
+        }
+    }
     
     public float GetVelocity()
     {

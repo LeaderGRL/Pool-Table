@@ -2273,6 +2273,7 @@ MonoBehaviour:
   aimingController: {fileID: 534474671}
   spinController: {fileID: 534474673}
   shotPowerController: {fileID: 534474672}
+  ballInHandPlacementController: {fileID: 1008307705}
 --- !u!114 &534474671
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4258,6 +4259,7 @@ GameObject:
   - component: {fileID: 1008307703}
   - component: {fileID: 1008307702}
   - component: {fileID: 1008307704}
+  - component: {fileID: 1008307705}
   m_Layer: 0
   m_Name: SoundManager
   m_TagString: Untagged
@@ -4293,6 +4295,22 @@ MonoBehaviour:
   soundManager: {fileID: 1008307702}
   ballsRoot: {fileID: 1362464029}
   shotSimulationInstrumentation: {fileID: 1362464031}
+--- !u!114 &1008307705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1008307701}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ee8c9f1a46c84348a18483893d571a1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  cueBall: {fileID: 86719733}
+  ballsRoot: {fileID: 1362464029}
+  pointerMetersPerPixel: 0.0015
+  controllerMetersPerSecond: 0.75
 --- !u!4 &1008307703
 Transform:
   m_ObjectHideFlags: 0

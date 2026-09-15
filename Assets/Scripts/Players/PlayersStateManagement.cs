@@ -18,6 +18,7 @@ public class PlayersStateManagement : MonoBehaviour
     public Behaviour aimingController;
     public Behaviour spinController;
     public Behaviour shotPowerController;
+    public Behaviour ballInHandPlacementController;
 
     private void Awake()
     {
@@ -99,6 +100,28 @@ public class PlayersStateManagement : MonoBehaviour
     public bool IsShotPowerEnabled()
     {
         return shotPowerController != null && shotPowerController.enabled;
+    }
+
+    public bool BeginBallInHandPlacement()
+    {
+        if (ballInHandPlacementController == null)
+        {
+            return false;
+        }
+
+        SetAimingEnabled(false);
+        SetSpinControlEnabled(false);
+        SetShotPowerEnabled(false);
+        ballInHandPlacementController.enabled = true;
+        ballInHandPlacementController.gameObject.SendMessage(
+            "BeginLegacyScratchPlacement",
+            SendMessageOptions.RequireReceiver);
+        return true;
+    }
+
+    public bool IsBallInHandPlacementEnabled()
+    {
+        return ballInHandPlacementController != null && ballInHandPlacementController.enabled;
     }
 
     public void lockCamera(bool lockCamera)

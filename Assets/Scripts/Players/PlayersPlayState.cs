@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class PlayersPlayState : PlayersBaseState
 {
+    private bool waitingForBallInHandPlacement;
+
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {
@@ -29,7 +31,13 @@ public class PlayersPlayState : PlayersBaseState
         if (BallStateManager.instance.isPocketedBallContainWhiteBall())
         {
             Debug.Log("White Ball Pocketed");
-            BallStateManager.instance.resetWhiteBallFromPocket();
+            waitingForBallInHandPlacement = player.BeginBallInHandPlacement();
+
+            if (!waitingForBallInHandPlacement)
+            {
+                BallStateManager.instance.resetWhiteBallFromPocket();
+            }
+
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
             BallStateManager.instance.SetPlayAgain(true);
             return;
@@ -80,6 +88,25 @@ public class PlayersPlayState : PlayersBaseState
 
     public override void UpdateState(PlayersStateManagement player)
     {
+        if (waitingForBallInHandPlacement)
+        {
+            if (player.IsBallInHandPlacementEnabled())
+            {
+                return;
+            }
+
+            player.SetAimingEnabled(true);
+            player.SetSpinControlEnabled(true);
+
+            if (LegacyMouseInput.PrimaryButtonIsPressed)
+            {
+                return;
+            }
+
+            waitingForBallInHandPlacement = false;
+            return;
+        }
+
         if (LegacyMouseInput.PrimaryButtonIsPressed)
         {
             player.SwitchState(player.shootState);
