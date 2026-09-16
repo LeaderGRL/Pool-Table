@@ -7,7 +7,10 @@ internal static class LegacyMouseInput
 
     public static bool PrimaryButtonIsPressed =>
         (Mouse.current?.leftButton.isPressed ?? false)
-        || (Gamepad.current?.rightTrigger.isPressed ?? false);
+        || GamepadPrimaryButtonIsPressed;
+
+    public static bool GamepadPrimaryButtonIsPressed =>
+        Gamepad.current?.rightTrigger.isPressed ?? false;
 
     public static bool MousePrimaryButtonWasPressedThisFrame =>
         Mouse.current?.leftButton.wasPressedThisFrame ?? false;
