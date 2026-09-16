@@ -75,7 +75,7 @@ public class PlayersPlayState : PlayersBaseState
         if (!BallStateManager.instance.isLastPocketedBallMatchPlayerBall())
         {
             Debug.Log("Last Pocketed Ball Not Match");
-            //Debug.Log("OUIIII : " + BallStateManager.instance.getPocketedBalls());
+            //Debug.Log("OUIIII : " + player.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall);
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
             BallStateManager.instance.SetPlayAgain(true);
             return;
@@ -111,7 +111,13 @@ public class PlayersPlayState : PlayersBaseState
             return;
         }
 
-        if (!LegacyMouseInput.PrimaryButtonWasPressedThisFrame)
+        if (LegacyMouseInput.GamepadPrimaryButtonWasPressedThisFrame)
+        {
+            player.SwitchState(player.shootState);
+            return;
+        }
+
+        if (!LegacyMouseInput.MousePrimaryButtonWasPressedThisFrame)
         {
             return;
         }
