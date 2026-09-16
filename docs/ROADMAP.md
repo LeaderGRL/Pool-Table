@@ -192,14 +192,14 @@ Rendering work is paused while the current playable build is made easier to vali
 40F. `DONE` **Gameplay: Add limited cue elevation**
     Modern aiming now supports cue elevation from 0 to 20 degrees, keeps spin input isolated through the secondary-button release frame, and carries elevation into the cue pose and conservative planar strike component. The merged build was manually retested successfully before follow-up control and camera polish. Reference: GitHub issue #96 / PR #97.
 
-40G. `ACTIVE` **Camera: Move aiming and shot views toward a realistic cue grip position**
-    Move the runtime player eye forward along the cue for both aiming and shot-power presentation so the camera no longer reads as if the player is holding the butt end of the cue. Preserve canonical aim ownership and existing camera-state transitions. Reference: GitHub issue #99.
+40G. `PR` **Camera: Move aiming and shot views toward a realistic cue grip position**
+    Move the runtime player eye forward along the cue for both aiming and shot-power presentation so the camera no longer reads as if the player is holding the butt end of the cue. Preserve canonical aim ownership and existing camera-state transitions. Reference: GitHub issue #99 / PR #101.
 
-40H. `ACTIVE` **Gameplay: Stage mouse pitch before yaw and shot power**
-    Mouse aiming starts with elevation-only control, the first left click locks elevation and enables yaw-only control, and the second left click locks yaw and enters the existing shot-power interaction. Controller aiming remains continuous and its established trigger flow is preserved. Spin drag continues to suppress pointer aiming through its release frame. Reference: GitHub issue #99.
+40H. `PR` **Gameplay: Stage mouse pitch before yaw and shot power**
+    Mouse aiming starts with elevation-only control, the first left click locks elevation and enables yaw-only control, and the second left click locks yaw and enters the existing shot-power interaction. Controller aiming remains continuous and its established trigger flow is preserved. Spin drag continues to suppress pointer aiming through its release frame. Reference: GitHub issue #99 / PR #101.
 
-40I. `ACTIVE` **Camera: Add ball-in-hand side overview**
-    During cue-ball placement, temporarily frame the table from its long side, derive distance from the regulation table dimensions and current camera aspect ratio so the table fills the viewport width, keep direct pointer projection aligned with that view, and restore the previous camera pose and field of view when placement ends. Reference: GitHub issue #99.
+40I. `PR` **Camera: Add ball-in-hand side overview**
+    During cue-ball placement, temporarily frame the table from its long side, derive distance from the regulation table dimensions and current camera aspect ratio so the table fills the viewport width, keep direct pointer projection aligned with that view, and restore the previous camera pose and field of view when placement ends. Reference: GitHub issue #99 / PR #101.
 
 Phase 6 should resume only after this stabilization gate provides a trustworthy baseline. PR #87 remains open but paused while this work is completed.
 
@@ -263,4 +263,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current work is stabilization steps **40G–40I — realistic cue camera framing, staged mouse aiming, and ball-in-hand overview** (issue #99), created from the hands-on retest of the merged #96 / #97 gameplay-control build. Rendering PR #87 remains intentionally paused until this playtest-polish pass is merged and manually retested. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current work is stabilization steps **40G–40I — realistic cue camera framing, staged mouse aiming, and ball-in-hand overview** (issue #99 / PR #101), now in review after the hands-on retest of the merged #96 / #97 gameplay-control build. Rendering PR #87 remains intentionally paused until this playtest-polish pass is merged and manually retested. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
