@@ -119,7 +119,7 @@ namespace PoolTable.Tests.PlayMode
             var pointerInput = new LocalPlayerInputSnapshot(new Vector2(12f, 8f), false);
 
             Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Elevation));
-            controller.ProcessInput(pointerInput);
+            controller.ProcessStagedInput(pointerInput);
 
             var directionAfterPitch = new Vector2(controller.Direction.X, controller.Direction.Y);
             var elevationAfterPitch = controller.ElevationDegrees;
@@ -128,7 +128,7 @@ namespace PoolTable.Tests.PlayMode
 
             controller.AdvanceAimStage();
             Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Yaw));
-            controller.ProcessInput(pointerInput);
+            controller.ProcessStagedInput(pointerInput);
 
             var directionAfterYaw = new Vector2(controller.Direction.X, controller.Direction.Y);
             Assert.That(Vector2.Angle(directionAfterPitch, directionAfterYaw), Is.GreaterThan(0.01f));
@@ -138,7 +138,7 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Locked));
             var lockedDirection = new Vector2(controller.Direction.X, controller.Direction.Y);
             var lockedElevation = controller.ElevationDegrees;
-            controller.ProcessInput(pointerInput);
+            controller.ProcessStagedInput(pointerInput);
 
             Assert.That(Vector2.Angle(lockedDirection, new Vector2(controller.Direction.X, controller.Direction.Y)), Is.LessThan(0.001f));
             Assert.That(controller.ElevationDegrees, Is.EqualTo(lockedElevation).Within(0.0001f));
