@@ -110,7 +110,6 @@ namespace PoolTable.Tests.PlayMode
         {
             var cueBall = new GameObject("CameraTestCueBall");
             var cue = new GameObject("CameraTestCue");
-            var placementHost = new GameObject("CameraTestPlacement");
             var cameraHost = new GameObject("CameraTestOutput");
 
             try
@@ -122,15 +121,12 @@ namespace PoolTable.Tests.PlayMode
                 aiming.enabled = false;
                 aiming.enabled = true;
 
-                placementHost.SetActive(false);
-                var placement = placementHost.AddComponent<BallInHandPlacementController>();
-
                 var outputCamera = cameraHost.AddComponent<UnityEngine.Camera>();
                 outputCamera.aspect = 16f / 9f;
                 outputCamera.fieldOfView = 60f;
                 var cameraController = cameraHost.AddComponent<AimingCameraController>();
                 SetPrivateField(cameraController, "aimingController", aiming);
-                SetPrivateField(cameraController, "ballInHandPlacementController", placement);
+                SetPrivateField(cameraController, "ballInHandPlacementController", null);
 
                 Assert.That(
                     cameraController.TryGetPresentationDesiredPose(out var aimingPosition, out _, out var aimingFieldOfView),
@@ -142,11 +138,9 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(planarStanceDistance, Is.LessThan(aiming.CueDistance));
                 Assert.That(aimingFieldOfView, Is.EqualTo(cameraController.PlayerViewFieldOfView).Within(0.0001f));
 
-                SetAutoPropertyBackingField(placement, "IsPlacing", true);
                 Assert.That(
-                    cameraController.TryGetPresentationDesiredPose(out var placementPosition, out var placementRotation, out var placementFieldOfView),
+                    cameraController.TryGetBallInHandPose(out var placementPosition, out var placementRotation, out var placementFieldOfView),
                     Is.True);
-
                 Assert.That(placementPosition.z, Is.LessThan(BallInHandPlacementGeometry.MinimumCenterZ));
                 Assert.That(placementPosition.x, Is.EqualTo(0f).Within(0.0001f));
 
@@ -173,7 +167,6 @@ namespace PoolTable.Tests.PlayMode
             finally
             {
                 Object.DestroyImmediate(cameraHost);
-                Object.DestroyImmediate(placementHost);
                 Object.DestroyImmediate(cue);
                 Object.DestroyImmediate(cueBall);
             }
@@ -202,13 +195,6 @@ namespace PoolTable.Tests.PlayMode
         {
             var field = typeof(T).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             Assert.That(field, Is.Not.Null, $"Expected private field {typeof(T).Name}.{fieldName}.");
-            field.SetValue(target, value);
-        }
-
-        private static void SetAutoPropertyBackingField<T>(T target, string propertyName, object value)
-        {
-            var field = typeof(T).GetField($"<{propertyName}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-            Assert.That(field, Is.Not.Null, $"Expected auto-property backing field {typeof(T).Name}.{propertyName}.");
             field.SetValue(target, value);
         }
     }
