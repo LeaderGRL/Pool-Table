@@ -35,17 +35,47 @@ namespace PoolTable.Presentation.Camera
 
         private void OnEnable()
         {
-            ApplyCameraPose(0f, true);
+            ApplyRuntimeCameraPose(0f, true);
         }
 
         private void LateUpdate()
         {
-            ApplyCameraPose(Time.deltaTime, false);
+            ApplyRuntimeCameraPose(Time.deltaTime, false);
         }
 
         internal bool ApplyCameraPose(float deltaTime, bool snap)
         {
-            if (!TryGetDesiredPose(out var desiredPosition, out var desiredRotation))
+            var powerDistance = shotPowerController == null
+                ? 0f
+                : shotPowerController.NormalizedPower * additionalDistanceAtFullPower;
+            return ApplyCameraPose(deltaTime, snap, distanceBehindCueBall + powerDistance);
+        }
+
+        internal bool TryGetDesiredPose(out Vector3 desiredPosition, out Quaternion desiredRotation)
+        {
+            var powerDistance = shotPowerController == null
+                ? 0f
+                : shotPowerController.NormalizedPower * additionalDistanceAtFullPower;
+            return TryGetDesiredPose(
+                distanceBehindCueBall + powerDistance,
+                out desiredPosition,
+                out desiredRotation);
+        }
+
+        private bool ApplyRuntimeCameraPose(float deltaTime, bool snap)
+        {
+            var powerDistance = shotPowerController == null
+                ? 0f
+                : shotPowerController.NormalizedPower * additionalDistanceAtFullPower;
+            return ApplyCameraPose(
+                deltaTime,
+                snap,
+                EffectiveDistanceBehindCueBall + powerDistance);
+        }
+
+        private bool ApplyCameraPose(float deltaTime, bool snap, float cameraDistance)
+        {
+            if (!TryGetDesiredPose(cameraDistance, out var desiredPosition, out var desiredRotation))
             {
                 return false;
             }
@@ -58,7 +88,10 @@ namespace PoolTable.Presentation.Camera
             return true;
         }
 
-        internal bool TryGetDesiredPose(out Vector3 desiredPosition, out Quaternion desiredRotation)
+        private bool TryGetDesiredPose(
+            float cameraDistance,
+            out Vector3 desiredPosition,
+            out Quaternion desiredRotation)
         {
             desiredPosition = default;
             desiredRotation = default;
@@ -79,9 +112,8 @@ namespace PoolTable.Presentation.Camera
             }
 
             var cueBallPosition = shotPowerController.CueBall.position;
-            var powerDistance = shotPowerController.NormalizedPower * additionalDistanceAtFullPower;
             desiredPosition = cueBallPosition
-                - (planarDirection * (EffectiveDistanceBehindCueBall + powerDistance))
+                - (planarDirection * cameraDistance)
                 + (Vector3.up * heightAboveCueBall);
 
             var focusPoint = cueBallPosition
