@@ -75,7 +75,7 @@ public class PlayersPlayState : PlayersBaseState
         if (!BallStateManager.instance.isLastPocketedBallMatchPlayerBall())
         {
             Debug.Log("Last Pocketed Ball Not Match");
-            //Debug.Log("OUIIII : " + player.WhiteBall.GetComponent<BallStateManager>().hitTheGoodBall);
+            //Debug.Log("OUIIII : " + BallStateManager.instance.getPocketedBalls());
             GameManager.instance.updateGameState(GameManager.instance.switchPlayerTurn());
             BallStateManager.instance.SetPlayAgain(true);
             return;
