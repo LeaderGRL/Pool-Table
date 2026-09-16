@@ -67,7 +67,7 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator CueAimingController_UpdateConsumesVirtualGamepadInput()
+        public IEnumerator CueAimingController_UpdateConsumesStagedVirtualGamepadInput()
         {
             var gamepad = InputSystem.AddDevice<Gamepad>();
             var cueBall = new GameObject("FunctionalTestCueBall");
@@ -81,15 +81,40 @@ namespace PoolTable.Tests.PlayMode
             controller.enabled = true;
 
             var initialDirection = new Vector2(controller.Direction.X, controller.Direction.Y);
-            Set(gamepad.leftStick, Vector2.right);
+            var initialElevation = controller.ElevationDegrees;
+            Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Elevation));
 
+            Set(gamepad.leftStick, Vector2.up);
             yield return null;
 
-            var updatedDirection = new Vector2(controller.Direction.X, controller.Direction.Y);
+            var elevationDirection = new Vector2(controller.Direction.X, controller.Direction.Y);
+            Assert.That(Vector2.Angle(initialDirection, elevationDirection), Is.LessThan(0.001f));
+            Assert.That(controller.ElevationDegrees, Is.GreaterThan(initialElevation));
+
+            Set(gamepad.leftStick, Vector2.zero);
+            yield return null;
+            var lockedElevation = controller.ElevationDegrees;
+
+            controller.AdvanceAimStage();
+            Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Yaw));
+            Set(gamepad.leftStick, Vector2.right);
+            yield return null;
+
+            var yawDirection = new Vector2(controller.Direction.X, controller.Direction.Y);
             Assert.That(
-                Vector2.Angle(initialDirection, updatedDirection),
+                Vector2.Angle(elevationDirection, yawDirection),
                 Is.GreaterThan(0.01f),
-                "The controller Update loop must consume the current Unity Input System gamepad state.");
+                "Yaw input must become active only after elevation is confirmed.");
+            Assert.That(controller.ElevationDegrees, Is.EqualTo(lockedElevation).Within(0.0001f));
+
+            controller.AdvanceAimStage();
+            Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Locked));
+            var lockedDirection = new Vector2(controller.Direction.X, controller.Direction.Y);
+            Set(gamepad.leftStick, new Vector2(-1f, -1f));
+            yield return null;
+
+            Assert.That(Vector2.Angle(lockedDirection, new Vector2(controller.Direction.X, controller.Direction.Y)), Is.LessThan(0.001f));
+            Assert.That(controller.ElevationDegrees, Is.EqualTo(lockedElevation).Within(0.0001f));
 
             Object.Destroy(cue);
             Object.Destroy(cueBall);
