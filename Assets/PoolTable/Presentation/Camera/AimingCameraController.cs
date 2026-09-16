@@ -9,9 +9,14 @@ namespace PoolTable.Presentation.Camera
     {
         [SerializeField] private CueAimingController aimingController;
         [SerializeField, Min(0.01f)] private float distanceBehindCueBall = 2.4f;
-        [SerializeField, Min(0f)] private float heightAboveCueBall = 1.05f;
+        [SerializeField, Min(0f)] private float forwardEyeOffsetMeters = 0.4f;
+        [SerializeField, Min(0.05f)] private float preferredRuntimeDistanceBehindCueBall = 1.05f;
+        [SerializeField, Min(0f)] private float heightAboveCueBall = 0.5f;
+        [SerializeField, Min(0f)] private float preferredRuntimeHeightAboveCueBall = 0.18f;
         [SerializeField, Min(0f)] private float lookAheadDistance = 1.2f;
+        [SerializeField, Min(0f)] private float preferredRuntimeLookAheadDistance = 0.1f;
         [SerializeField, Min(0f)] private float targetHeightOffset = 0.08f;
+        [SerializeField, Min(0f)] private float preferredRuntimeTargetHeightOffset = 0f;
         [SerializeField, Min(0f)] private float positionSharpness = 12f;
         [SerializeField, Min(0f)] private float rotationSharpness = 16f;
 
@@ -19,25 +24,54 @@ namespace PoolTable.Presentation.Camera
 
         public float DistanceBehindCueBall => distanceBehindCueBall;
 
+        public float ForwardEyeOffsetMeters => forwardEyeOffsetMeters;
+
+        public float EffectiveDistanceBehindCueBall => Mathf.Min(
+            preferredRuntimeDistanceBehindCueBall,
+            Mathf.Max(0.05f, distanceBehindCueBall - forwardEyeOffsetMeters));
+
+        public float PreferredRuntimeDistanceBehindCueBall => preferredRuntimeDistanceBehindCueBall;
+
         public float HeightAboveCueBall => heightAboveCueBall;
+
+        public float EffectiveHeightAboveCueBall => Mathf.Min(heightAboveCueBall, preferredRuntimeHeightAboveCueBall);
 
         public float LookAheadDistance => lookAheadDistance;
 
+        public float EffectiveLookAheadDistance => Mathf.Min(lookAheadDistance, preferredRuntimeLookAheadDistance);
+
         public float TargetHeightOffset => targetHeightOffset;
+
+        public float EffectiveTargetHeightOffset => Mathf.Min(targetHeightOffset, preferredRuntimeTargetHeightOffset);
 
         private void Start()
         {
-            ApplyCameraPose(0f, true);
+            ApplyRuntimeCameraPose(0f, true);
         }
 
         private void LateUpdate()
         {
-            ApplyCameraPose(Time.deltaTime, false);
+            ApplyRuntimeCameraPose(Time.deltaTime, false);
         }
 
         internal bool ApplyCameraPose(float deltaTime, bool snap)
         {
-            if (!TryGetDesiredPose(out var desiredPosition, out var desiredRotation))
+            return ApplyCameraPose(deltaTime, snap, distanceBehindCueBall);
+        }
+
+        internal bool TryGetDesiredPose(out Vector3 desiredPosition, out Quaternion desiredRotation)
+        {
+            return TryGetDesiredPose(distanceBehindCueBall, out desiredPosition, out desiredRotation);
+        }
+
+        internal bool ApplyRuntimeCameraPose(float deltaTime, bool snap)
+        {
+            return ApplyCameraPose(deltaTime, snap, EffectiveDistanceBehindCueBall);
+        }
+
+        private bool ApplyCameraPose(float deltaTime, bool snap, float cameraDistance)
+        {
+            if (!TryGetDesiredPose(cameraDistance, out var desiredPosition, out var desiredRotation))
             {
                 return false;
             }
@@ -50,7 +84,10 @@ namespace PoolTable.Presentation.Camera
             return true;
         }
 
-        internal bool TryGetDesiredPose(out Vector3 desiredPosition, out Quaternion desiredRotation)
+        private bool TryGetDesiredPose(
+            float cameraDistance,
+            out Vector3 desiredPosition,
+            out Quaternion desiredRotation)
         {
             desiredPosition = default;
             desiredRotation = default;
@@ -60,16 +97,28 @@ namespace PoolTable.Presentation.Camera
                 return false;
             }
 
-            var direction = aimingController.Direction;
-            var planarDirection = new Vector3(direction.X, 0f, direction.Y).normalized;
-            var cueBallPosition = aimingController.CueBall.transform.position;
-            desiredPosition = cueBallPosition
-                - (planarDirection * distanceBehindCueBall)
-                + (Vector3.up * heightAboveCueBall);
+            if (!CueCameraRig.TryGetBasis(
+                    aimingController.StrikeDirection,
+                    out var cueForward,
+                    out var cueUp))
+            {
+                return false;
+            }
 
-            var focusPoint = cueBallPosition
-                + (planarDirection * lookAheadDistance)
-                + (Vector3.up * targetHeightOffset);
+            var cueBallPosition = aimingController.CueBall.transform.position;
+            desiredPosition = CueCameraRig.GetCameraPosition(
+                cueBallPosition,
+                cueForward,
+                cueUp,
+                cameraDistance,
+                EffectiveHeightAboveCueBall);
+
+            var focusPoint = CueCameraRig.GetFocusPoint(
+                cueBallPosition,
+                cueForward,
+                cueUp,
+                EffectiveLookAheadDistance,
+                EffectiveTargetHeightOffset);
             var forward = focusPoint - desiredPosition;
 
             if (forward.sqrMagnitude <= 0.000001f)

@@ -24,6 +24,7 @@ namespace PoolTable.Gameplay.Shots
         private Quaternion restRotation;
         private bool hasRestPose;
         private bool previousPrimaryButtonPressed;
+        private int pointerDeltaSuppressionFrame = -1;
         private bool strikeQueued;
         private CueBallStrikeMotion queuedStrike;
 
@@ -68,6 +69,7 @@ namespace PoolTable.Gameplay.Shots
             restRotation = transform.rotation;
             hasRestPose = true;
             previousPrimaryButtonPressed = true;
+            pointerDeltaSuppressionFrame = Time.frameCount;
             ApplyCuePullbackPose();
         }
 
@@ -110,7 +112,9 @@ namespace PoolTable.Gameplay.Shots
 
             if (input.PrimaryActionIsPressed)
             {
-                var pointerInput = Mathf.Clamp(input.PointerDelta.y * pointerDeltaSensitivity, -1f, 1f);
+                var pointerInput = pointerDeltaSuppressionFrame == Time.frameCount
+                    ? 0f
+                    : Mathf.Clamp(input.PointerDelta.y * pointerDeltaSensitivity, -1f, 1f);
                 var pointerPullback = pointerInput * cueStrokeMetersPerPointerUnit;
                 var controllerPullback = input.ActionAxis.y * controllerPullbackMetersPerSecond * Time.deltaTime;
                 shotPowerState.AdjustPullback(pointerPullback + controllerPullback);
@@ -131,10 +135,9 @@ namespace PoolTable.Gameplay.Shots
                 return false;
             }
 
-            var direction = aimingController.Direction;
             var shotSpeed = shotPowerState.NormalizedPower * maximumShotSpeedMetersPerSecond;
             queuedStrike = CueBallStrikeModel.CalculateVelocityChange(
-                new Vector3(direction.X, 0f, direction.Y),
+                aimingController.StrikeDirection,
                 shotSpeed,
                 spinController?.Spin ?? default,
                 BilliardsPhysicalSpecification.BallRadiusMeters);

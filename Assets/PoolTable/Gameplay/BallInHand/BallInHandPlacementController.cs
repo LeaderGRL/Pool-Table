@@ -9,17 +9,45 @@ using UnityEngine;
 
 namespace PoolTable.Gameplay.BallInHand
 {
+    internal interface ICursorStateAccessor
+    {
+        CursorLockMode LockState { get; set; }
+
+        bool Visible { get; set; }
+    }
+
+    internal sealed class UnityCursorStateAccessor : ICursorStateAccessor
+    {
+        public CursorLockMode LockState
+        {
+            get => Cursor.lockState;
+            set => Cursor.lockState = value;
+        }
+
+        public bool Visible
+        {
+            get => Cursor.visible;
+            set => Cursor.visible = value;
+        }
+    }
+
+    [DefaultExecutionOrder(1100)]
     public sealed class BallInHandPlacementController : MonoBehaviour
     {
         private const string LegacyPlacementCompletedMessage = "OnModernBallInHandPlacementCompleted";
 
         [SerializeField] private Transform cueBall;
         [SerializeField] private Transform ballsRoot;
+        [SerializeField] private Camera placementCamera;
         [SerializeField, Min(0f)] private float pointerMetersPerPixel = 0.0015f;
         [SerializeField, Min(0f)] private float controllerMetersPerSecond = 0.75f;
+        [SerializeField, Range(25f, 75f)] private float placementCameraVerticalFov = 50f;
+        [SerializeField, Range(15f, 75f)] private float placementCameraDownAngleDegrees = 42f;
+        [SerializeField, Min(1f)] private float placementCameraHorizontalMargin = 1.18f;
 
         private readonly LocalPlayerInputReader inputReader = new LocalPlayerInputReader();
         private readonly List<Vector2> occupiedBallCenters = new List<Vector2>(15);
+        private ICursorStateAccessor cursorStateAccessor = new UnityCursorStateAccessor();
 
         private Rigidbody cueBallRigidbody;
         private BallPocketCapture cueBallPocketCapture;
@@ -28,6 +56,14 @@ namespace PoolTable.Gameplay.BallInHand
         private bool primaryActionWasPressed;
         private bool originalIsKinematic;
         private bool originalDetectCollisions;
+        private CursorLockMode originalCursorLockState;
+        private bool originalCursorVisible;
+        private bool cursorStateCaptured;
+        private Camera activePlacementCamera;
+        private Vector3 originalCameraPosition;
+        private Quaternion originalCameraRotation;
+        private float originalCameraFieldOfView;
+        private bool cameraStateCaptured;
 
         public event Action<MatchState> PlacementCompleted;
 
@@ -37,7 +73,19 @@ namespace PoolTable.Gameplay.BallInHand
 
         public MatchState LastCompletedMatchState { get; private set; }
 
+        public float PlacementCameraVerticalFov => placementCameraVerticalFov;
+
+        public float PlacementCameraDownAngleDegrees => placementCameraDownAngleDegrees;
+
+        public float PlacementCameraHorizontalMargin => placementCameraHorizontalMargin;
+
         internal Vector2 CurrentPlanarPosition => new Vector2(cueBall.position.x, cueBall.position.z);
+
+        internal ICursorStateAccessor CursorStateAccessor
+        {
+            get => cursorStateAccessor;
+            set => cursorStateAccessor = value ?? throw new ArgumentNullException(nameof(value));
+        }
 
         private void Awake()
         {
@@ -77,6 +125,14 @@ namespace PoolTable.Gameplay.BallInHand
             }
 
             primaryActionWasPressed = input.PrimaryActionIsPressed;
+        }
+
+        private void LateUpdate()
+        {
+            if (IsPlacing && cameraStateCaptured && activePlacementCamera != null)
+            {
+                ApplyPlacementCameraPose(activePlacementCamera);
+            }
         }
 
         public void BeginPlacement(MatchState state)
@@ -119,6 +175,8 @@ namespace PoolTable.Gameplay.BallInHand
                 LegacyPlacementCompletedMessage,
                 SendMessageOptions.DontRequireReceiver);
             IsPlacing = false;
+            RestoreCursorState();
+            RestorePlacementCameraState();
             enabled = false;
 
             if (completedState != null)
@@ -137,18 +195,57 @@ namespace PoolTable.Gameplay.BallInHand
                 return;
             }
 
-            var tableLengthDelta = (input.PointerDelta.y * pointerMetersPerPixel)
-                + (input.ActionAxis.y * controllerMetersPerSecond * Mathf.Max(0f, deltaTime));
-            var tableWidthDelta = (input.PointerDelta.x * pointerMetersPerPixel)
-                + (input.ActionAxis.x * controllerMetersPerSecond * Mathf.Max(0f, deltaTime));
-            var next = BallInHandPlacementGeometry.ClampToPlacementArea(
-                CurrentPlanarPosition + new Vector2(tableLengthDelta, tableWidthDelta),
+            var next = CurrentPlanarPosition;
+            var pointerMoved = input.PointerDelta.sqrMagnitude > 0.000001f;
+
+            if (pointerMoved && input.HasPointerPosition && TryProjectPointerToTable(input.PointerPosition, out var pointerTarget))
+            {
+                next = pointerTarget;
+            }
+            else if (pointerMoved && !input.HasPointerPosition)
+            {
+                next += new Vector2(
+                    input.PointerDelta.y * pointerMetersPerPixel,
+                    input.PointerDelta.x * pointerMetersPerPixel);
+            }
+
+            next += new Vector2(
+                input.ActionAxis.y * controllerMetersPerSecond * Mathf.Max(0f, deltaTime),
+                input.ActionAxis.x * controllerMetersPerSecond * Mathf.Max(0f, deltaTime));
+
+            var clampedNext = BallInHandPlacementGeometry.ClampToPlacementArea(
+                next,
                 placementArea);
 
             cueBall.position = new Vector3(
-                next.x,
+                clampedNext.x,
                 BilliardsPhysicalSpecification.BallCenterHeightMeters,
-                next.y);
+                clampedNext.y);
+        }
+
+        internal bool TryProjectPointerToTable(Vector2 pointerPosition, out Vector2 planarPosition)
+        {
+            planarPosition = default;
+            var camera = placementCamera != null ? placementCamera : Camera.main;
+
+            if (camera == null || !camera.pixelRect.Contains(pointerPosition))
+            {
+                return false;
+            }
+
+            var ray = camera.ScreenPointToRay(pointerPosition);
+            var tablePlane = new Plane(
+                Vector3.up,
+                new Vector3(0f, BilliardsPhysicalSpecification.BallCenterHeightMeters, 0f));
+
+            if (!tablePlane.Raycast(ray, out var distance) || distance < 0f)
+            {
+                return false;
+            }
+
+            var point = ray.GetPoint(distance);
+            planarPosition = new Vector2(point.x, point.z);
+            return true;
         }
 
         private void BeginPlacement(CueBallPlacementArea area)
@@ -174,9 +271,17 @@ namespace PoolTable.Gameplay.BallInHand
                 BilliardsPhysicalSpecification.BallCenterHeightMeters,
                 start.y);
 
+            CaptureCursorStateForPlacement();
+            CaptureAndApplyPlacementCameraState();
             primaryActionWasPressed = true;
             IsPlacing = true;
             enabled = true;
+        }
+
+        private void OnDisable()
+        {
+            RestoreCursorState();
+            RestorePlacementCameraState();
         }
 
         private void EnsurePlacementIsInactive()
@@ -229,6 +334,95 @@ namespace PoolTable.Gameplay.BallInHand
             {
                 cueBallRigidbody.WakeUp();
             }
+        }
+
+        private void CaptureCursorStateForPlacement()
+        {
+            originalCursorLockState = cursorStateAccessor.LockState;
+            originalCursorVisible = cursorStateAccessor.Visible;
+            cursorStateCaptured = true;
+
+            cursorStateAccessor.LockState = CursorLockMode.Confined;
+            cursorStateAccessor.Visible = true;
+        }
+
+        private void RestoreCursorState()
+        {
+            if (!cursorStateCaptured)
+            {
+                return;
+            }
+
+            cursorStateAccessor.LockState = originalCursorLockState;
+            cursorStateAccessor.Visible = originalCursorVisible;
+            cursorStateCaptured = false;
+        }
+
+        private void CaptureAndApplyPlacementCameraState()
+        {
+            var camera = placementCamera != null ? placementCamera : Camera.main;
+            if (camera == null)
+            {
+                return;
+            }
+
+            activePlacementCamera = camera;
+            originalCameraPosition = camera.transform.position;
+            originalCameraRotation = camera.transform.rotation;
+            originalCameraFieldOfView = camera.fieldOfView;
+            cameraStateCaptured = true;
+
+            ApplyPlacementCameraPose(camera);
+        }
+
+        private void ApplyPlacementCameraPose(Camera camera)
+        {
+            if (camera == null)
+            {
+                return;
+            }
+
+            camera.fieldOfView = placementCameraVerticalFov;
+
+            // Use the fitted projection because the scene camera uses physical lens gate fitting.
+            var projection = camera.projectionMatrix;
+            var horizontalHalfFovTangent = 1f / Mathf.Max(0.01f, Mathf.Abs(projection.m00));
+            var verticalHalfFovTangent = 1f / Mathf.Max(0.01f, Mathf.Abs(projection.m11));
+            var halfTableLength = BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters * 0.5f;
+            var halfTableWidth = BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters * 0.5f;
+
+            var downAngleRadians = placementCameraDownAngleDegrees * Mathf.Deg2Rad;
+            var projectedHalfDepth = halfTableWidth * Mathf.Cos(downAngleRadians);
+            var projectedVerticalHalfExtent = halfTableWidth * Mathf.Sin(downAngleRadians);
+            var horizontalFitDistance = projectedHalfDepth
+                + ((halfTableLength * placementCameraHorizontalMargin) / horizontalHalfFovTangent);
+            var verticalFitDistance = projectedHalfDepth
+                + ((projectedVerticalHalfExtent * placementCameraHorizontalMargin) / verticalHalfFovTangent);
+            var distanceToCenter = Mathf.Max(horizontalFitDistance, verticalFitDistance);
+
+            var forward = new Vector3(
+                0f,
+                -Mathf.Sin(downAngleRadians),
+                Mathf.Cos(downAngleRadians)).normalized;
+            var tableCenter = new Vector3(0f, BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters, 0f);
+            var cameraPosition = tableCenter - (forward * distanceToCenter);
+
+            camera.transform.SetPositionAndRotation(
+                cameraPosition,
+                Quaternion.LookRotation(forward, Vector3.up));
+        }
+
+        private void RestorePlacementCameraState()
+        {
+            if (!cameraStateCaptured || activePlacementCamera == null)
+            {
+                return;
+            }
+
+            activePlacementCamera.transform.SetPositionAndRotation(originalCameraPosition, originalCameraRotation);
+            activePlacementCamera.fieldOfView = originalCameraFieldOfView;
+            activePlacementCamera = null;
+            cameraStateCaptured = false;
         }
     }
 }

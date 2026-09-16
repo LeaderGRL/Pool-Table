@@ -7,7 +7,9 @@
         "PoolTable.Input",
         "PoolTable.Gameplay",
         "PoolTable.Networking",
-        "PoolTable.Presentation"
+        "PoolTable.Presentation",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

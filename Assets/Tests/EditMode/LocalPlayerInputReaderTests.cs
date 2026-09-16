@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace PoolTable.Tests.EditMode
 {
+    [Category("Input")]
     public sealed class LocalPlayerInputReaderTests
     {
         [Test]

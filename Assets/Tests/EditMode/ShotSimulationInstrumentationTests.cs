@@ -9,6 +9,7 @@ using UnityEngine;
 
 namespace PoolTable.Tests.EditMode
 {
+    [Category("Physics")]
     public sealed class ShotSimulationInstrumentationTests
     {
         [Test]

@@ -170,10 +170,43 @@ The goal is not to make PhysX deterministic across machines. In multiplayer, onl
 40. `DONE` **Camera: Implement shot and spectate cameras**
     Move shot-power and post-strike spectate presentation into the Presentation layer while preserving the existing gameplay state transitions. The shot camera follows the cue ball using the canonical aim direction, while the spectate camera frames active ball motion without owning rules or turn state. Advanced impact impulse and cinematic shot framing remain step 51. Local validation: EditMode 300/300, PlayMode 20/20, repository validation passed. Reference: GitHub issue #84 / PR #85.
 
+## Phase 5.5 — gameplay stabilization gate
+
+Rendering work is paused while the current playable build is made easier to validate automatically. These steps intentionally keep the existing 41–76 numbering stable.
+
+40A. `DONE` **Testing: Establish functional gameplay test foundation**
+    Exercise the real Unity Input System path with virtual devices, introduce deterministic scenario checkpoints with machine-readable reports, add test categories, and provide one repeatable Unity test command. This foundation must not change gameplay behavior. Reference: GitHub issue #88 / PR #89.
+
+40B. `DONE` **Gameplay: Stabilize regressions found in the current playable build**
+    Convert the failures observed during hands-on playtesting into focused reproduction tests and small fixes. Current stabilization covers correct first-turn initialization and waiting for every moving ball before leaving spectate. Each gameplay fix should be isolated so regressions remain attributable and reviewable. Reference: GitHub issue #90 / PR #91.
+
+40C. `DONE` **Testing: Add Windows player smoke and functional validation**
+    Validate the built player rather than only the Editor, including startup, scene loading, real local Input System input, shot flow, ball-in-hand, and clean shutdown with machine-readable evidence. The Windows x64 development-player smoke now requires all 16 balls to be active, observes aiming/spin input over a stable time window, holds shot-power input over a deterministic real-time window before committing through the real play/shoot controller path and verifying cue-ball movement, verifies spectate remains active for a frame while the cue ball is still moving before returning to play once every ball stops, captures a scratch through `BallPocketCapture`, verifies the scratch transfers the active turn, moves and confirms the ball-in-hand candidate through real controller input, verifies a fresh shot can start after the placement-release guard clears, and journals runtime errors through player shutdown. Local validation passes with the Windows smoke, EditMode 300/300, PlayMode 26/26, repository validation, and `git diff --check`. Reference: GitHub issue #92 / PR #93.
+
+40D. `DONE` **CI: Run Unity EditMode and PlayMode validation on pull requests**
+    Execute the established Unity test contract in hosted CI with explicit license handling, preserved XML/log/scenario artifacts, category-based targeting for focused manual jobs, and fork-safe handling that keeps Unity credentials away from untrusted pull request code. Reference: GitHub issue #94 / PR #95.
+
+40E. `DONE` **Gameplay: Improve ball-in-hand placement precision**
+    Mouse ball-in-hand placement now projects the pointer directly onto the table while controller-relative movement, playable-surface clamping, restricted head-string placement, pocket clearance, overlap rejection, and legal confirmation remain authoritative. Placement temporarily confines and shows the cursor, then restores the previous cursor state. The merged build was manually retested successfully before the next playtest-polish pass. Reference: GitHub issue #96 / PR #97.
+
+40F. `DONE` **Gameplay: Add limited cue elevation**
+    Modern aiming now supports cue elevation from 0 to 20 degrees, keeps spin input isolated through the secondary-button release frame, and carries elevation into the cue pose and conservative planar strike component. The merged build was manually retested successfully before follow-up control and camera polish. Reference: GitHub issue #96 / PR #97.
+
+40G. `DONE` **Camera: Move aiming and shot views toward a realistic cue grip position**
+    Place the runtime player eye around 60-65% of the cue length behind the cue ball and roughly 18-20 cm above cue-ball height for aiming and shot-power presentation, matching the low close sight-line used by billiards simulations and the user-provided scene reference. A shared cue-local camera rig now derives both camera position and orientation from the full 3D strike direction, so pitch, yaw, and maximum shot pullback keep the camera on the same side of the cue instead of crossing its axis. The cue butt stays behind the camera so the full cue cannot appear on screen, while the front third remains readable. Cue elevation keeps a 3-degree baseline and raises its effective minimum dynamically near cushions so the physical cue clears the rail instead of clipping through it. Unity Pipeline is installed for live Editor control and was used to reproduce the reported camera defects, drive maximum-elevation/pullback states, and capture Game View evidence. Reference: GitHub issue #99 / PR #101.
+
+40H. `DONE` **Gameplay: Stage mouse yaw before pitch and shot power**
+    Mouse aiming starts with yaw-only control, the first left click locks yaw and enables elevation-only control, and the second left click locks elevation and enters the existing shot-power interaction. Confirmation-frame pointer movement cannot leak across either aim-stage boundary or into shot-power pullback regardless of Unity Update ordering. The aiming and shot cameras follow cue elevation through camera height and pitch while preserving a planar table look target so the cue remains readable in frame. Controller aiming remains continuous and its established trigger flow is preserved. Spin drag continues to suppress pointer aiming through its release frame. Explicit PlayMode coverage locks the requested yaw -> click -> pitch -> click -> shot contract, camera elevation tracking, cue visibility, and second-click pullback guard. Reference: GitHub issue #99 / PR #101.
+
+40I. `DONE` **Camera: Add ball-in-hand side overview**
+    During cue-ball placement, temporarily frame the table from its long side, derive distance from the regulation table dimensions, projected table depth, and Unity's fitted camera projection so physical-camera gate fitting and ultrawide aspects keep all four corners visible while the table stays large in frame, keep placement ownership over competing camera controllers, keep direct pointer projection aligned with that view, and restore the previous camera pose and field of view when placement ends. Reference: GitHub issue #99 / PR #101.
+
+The stabilization gate is complete and Phase 6 can resume from this validated playable baseline.
+
 ## Phase 6 — URP conversion
 
 41. `PR` **Rendering: Install and configure URP**
-    Install the Unity 6.5-compatible Universal Render Pipeline package and establish the project-wide baseline render-pipeline asset without performing the later material, lighting, post-processing, or per-platform quality-profile conversions. Local validation: EditMode 302/302, PlayMode 20/20, repository validation passed. Reference: GitHub issue #86 / PR #87.
+    Install the Unity 6.5-compatible Universal Render Pipeline package and establish the project-wide baseline render-pipeline asset without performing the later material, lighting, post-processing, or per-platform quality-profile conversions. Validation after integration with current `main`: repository validation passed, EditMode 307/307, PlayMode 34/34, Windows player smoke passed. Reference: GitHub issue #86 / PR #87.
 42. `TODO` **Rendering: Convert legacy materials to URP**
 43. `TODO` **Rendering: Rebuild pool-table PBR materials**
 44. `TODO` **Rendering: Rebuild lighting and reflection setup**
@@ -214,12 +247,15 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Phase 9 — quality and delivery
 
-67. `TODO` **Testing: Add Core EditMode test suite**
-68. `TODO` **Testing: Add gameplay PlayMode tests**
-69. `TODO` **Testing: Add physics calibration tests**
+67. `PARTIAL` **Testing: Add Core EditMode test suite**
+    A substantial EditMode suite already covers Core rules, state, architecture boundaries, gameplay models, and physics models. Remaining work is to close coverage gaps discovered during stabilization and future features.
+68. `PARTIAL` **Testing: Add gameplay PlayMode tests**
+    Scene and gameplay PlayMode coverage already exists. Step 40A expands it through the real Input System path and deterministic functional scenarios before additional gameplay regressions are fixed.
+69. `PARTIAL` **Testing: Add physics calibration tests**
+    Physics models and shot instrumentation already have EditMode and PlayMode coverage, including trajectory and collision observations. Additional reproducible calibration scenarios and acceptance tolerances remain to be defined.
 70. `TODO` **Testing: Add two-player Multiplayer Play Mode tests**
-71. `PARTIAL` **CI: Add Unity pull-request validation**
-    Structural repository validation already exists. Hosted Unity execution and license handling still need to be added.
+71. `DONE` **CI: Add Unity pull-request validation**
+    Structural repository validation and hosted EditMode/PlayMode execution are both established, including explicit Unity license handling, preserved test evidence, focused category diagnostics, and fork-safe handling that keeps Unity credentials away from untrusted pull request code. Reference: GitHub issue #94 / PR #95.
 72. `TODO` **CI: Add Windows build validation**
 73. `TODO` **CI: Add WebGL build validation**
 74. `TODO` **CI: Add automated artifact builds from main**
@@ -228,4 +264,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 6 work is **Rendering: Install and configure URP** (issue #86 / PR #87). Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 6 work is **Rendering: Install and configure URP** (issue #86 / PR #87). Stabilization steps 40G–40I are merged through PR #101 and manually validated. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.

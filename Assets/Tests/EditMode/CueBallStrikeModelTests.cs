@@ -87,15 +87,27 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
-        public void CalculateVelocityChange_IgnoresVerticalComponentOfShotDirection()
+        public void CalculateVelocityChange_CueElevationReducesPlanarImpulseWithoutAddingVerticalVelocity()
         {
+            const float elevationDegrees = 20f;
+            const float speedChange = 2f;
+            var elevationRadians = elevationDegrees * Mathf.Deg2Rad;
+            var direction = new Vector3(
+                Mathf.Cos(elevationRadians),
+                -Mathf.Sin(elevationRadians),
+                0f);
+
             var result = CueBallStrikeModel.CalculateVelocityChange(
-                new Vector3(2f, 5f, 0f),
-                1f,
+                direction,
+                speedChange,
                 default,
                 BilliardsPhysicalSpecification.BallRadiusMeters);
 
-            Assert.That(result.LinearVelocityChange, Is.EqualTo(Vector3.right));
+            Assert.That(result.LinearVelocityChange.y, Is.Zero.Within(0.000001f));
+            Assert.That(result.LinearVelocityChange.z, Is.Zero.Within(0.000001f));
+            Assert.That(
+                result.LinearVelocityChange.x,
+                Is.EqualTo(speedChange * Mathf.Cos(elevationRadians)).Within(0.000001f));
         }
 
         [Test]
