@@ -9,9 +9,14 @@ internal static class LegacyMouseInput
         (Mouse.current?.leftButton.isPressed ?? false)
         || (Gamepad.current?.rightTrigger.isPressed ?? false);
 
+    public static bool MousePrimaryButtonWasPressedThisFrame =>
+        Mouse.current?.leftButton.wasPressedThisFrame ?? false;
+
+    public static bool GamepadPrimaryButtonWasPressedThisFrame =>
+        Gamepad.current?.rightTrigger.wasPressedThisFrame ?? false;
+
     public static bool PrimaryButtonWasPressedThisFrame =>
-        (Mouse.current?.leftButton.wasPressedThisFrame ?? false)
-        || (Gamepad.current?.rightTrigger.wasPressedThisFrame ?? false);
+        MousePrimaryButtonWasPressedThisFrame || GamepadPrimaryButtonWasPressedThisFrame;
 
     public static Vector2 Delta
     {
