@@ -26,6 +26,7 @@ namespace PoolTable.Gameplay.Aiming
         private LocalPlayerInputReader localPlayerInputReader;
         private bool secondaryButtonWasPressedLastFrame;
         private PointerAimPhase pointerAimPhase = PointerAimPhase.Elevation;
+        private bool suppressPointerInputOnce;
 
         public GameObject CueBall => cueBall;
 
@@ -92,11 +93,13 @@ namespace PoolTable.Gameplay.Aiming
         public void BeginPointerYawAdjustment()
         {
             pointerAimPhase = PointerAimPhase.Yaw;
+            suppressPointerInputOnce = true;
         }
 
         public void ResetPointerAdjustmentSequence()
         {
             pointerAimPhase = PointerAimPhase.Elevation;
+            suppressPointerInputOnce = false;
         }
 
         internal void ProcessRuntimeInput(LocalPlayerInputSnapshot input)
@@ -107,18 +110,24 @@ namespace PoolTable.Gameplay.Aiming
             }
 
             var suppressAim = ShouldSuppressAim(input);
+            var suppressPointerInput = suppressPointerInputOnce;
+            suppressPointerInputOnce = false;
+
             if (!suppressAim)
             {
                 var yawDegrees = input.AimAxis.x * Time.deltaTime * 120f;
                 var pitchDegrees = input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond;
 
-                if (pointerAimPhase == PointerAimPhase.Elevation)
+                if (!suppressPointerInput)
                 {
-                    pitchDegrees += input.PointerDelta.y * pitchDegreesPerPointerUnit;
-                }
-                else
-                {
-                    yawDegrees += input.PointerDelta.x * yawDegreesPerPointerUnit;
+                    if (pointerAimPhase == PointerAimPhase.Elevation)
+                    {
+                        pitchDegrees += input.PointerDelta.y * pitchDegreesPerPointerUnit;
+                    }
+                    else
+                    {
+                        yawDegrees += input.PointerDelta.x * yawDegreesPerPointerUnit;
+                    }
                 }
 
                 aimingState.RotateDegrees(yawDegrees);
