@@ -8462,7 +8462,7 @@ ReflectionProbe:
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
   m_Importance: 2
-  m_CustomBakedTexture: {fileID: 8900000, guid: 94cd1a19da6d0b640afe63943ebff187, type: 2}
+  m_CustomBakedTexture: {fileID: 8900000, guid: fedec9b2cea59db4abeed563d58c45f5, type: 3}
 --- !u!4 &719169824
 Transform:
   m_ObjectHideFlags: 0

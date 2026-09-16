@@ -16,7 +16,7 @@ namespace PoolTable.Tests.EditMode
         private const string UrpAssetPath =
             "Assets/Settings/Rendering/PoolTableUniversalRenderPipeline.asset";
         private const string ReflectionCubemapPath =
-            "Assets/Settings/Rendering/PoolTableStudioReflection.asset";
+            "Assets/Settings/Rendering/PoolTableStudioReflection.exr";
 
         [Test]
         public void PoolTableScene_UsesIntentionalLightingAndReflectionRig()
@@ -91,12 +91,24 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
-        public void PoolTableStudioReflection_IsHdrCubemapWithDirectionalContrast()
+        public void PoolTableStudioReflection_UsesGlossySpecularConvolutionWithDirectionalContrast()
         {
             var cubemap = AssetDatabase.LoadAssetAtPath<Cubemap>(ReflectionCubemapPath);
             Assert.That(cubemap, Is.Not.Null);
             Assert.That(cubemap.width, Is.EqualTo(128));
             Assert.That(cubemap.mipmapCount, Is.GreaterThan(1));
+
+            var importer = AssetImporter.GetAtPath(ReflectionCubemapPath) as TextureImporter;
+            Assert.That(importer, Is.Not.Null);
+            Assert.That(importer.textureShape, Is.EqualTo(TextureImporterShape.TextureCube));
+            Assert.That(importer.generateCubemap, Is.EqualTo(TextureImporterGenerateCubemap.Cylindrical));
+            Assert.That(importer.mipmapEnabled, Is.True);
+
+            var importerSettings = new TextureImporterSettings();
+            importer.ReadTextureSettings(importerSettings);
+            Assert.That(
+                importerSettings.cubemapConvolution,
+                Is.EqualTo(TextureImporterCubemapConvolution.Specular));
 
             var top = cubemap.GetPixel(CubemapFace.PositiveY, cubemap.width / 2, cubemap.height / 2);
             var bottom = cubemap.GetPixel(CubemapFace.NegativeY, cubemap.width / 2, cubemap.height / 2);
