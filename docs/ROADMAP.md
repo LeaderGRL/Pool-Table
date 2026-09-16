@@ -186,11 +186,14 @@ Rendering work is paused while the current playable build is made easier to vali
 40D. `DONE` **CI: Run Unity EditMode and PlayMode validation on pull requests**
     Execute the established Unity test contract in hosted CI with explicit license handling, preserved XML/log/scenario artifacts, category-based targeting for focused manual jobs, and fork-safe handling that keeps Unity credentials away from untrusted pull request code. Reference: GitHub issue #94 / PR #95.
 
-40E. `PR` **Gameplay: Improve ball-in-hand placement precision**
-    Replace mouse-delta-to-meters placement with direct pointer projection onto the table while preserving controller-relative movement, playable-surface clamping, restricted head-string placement, pocket clearance, overlap rejection, and legal confirmation. During mouse placement the cursor is temporarily confined and shown so absolute screen-space placement remains usable even though normal gameplay locks the cursor, then the previous cursor state is restored after placement. The PR review follow-up is validated with EditMode 305/305, PlayMode 26/26, and repository validation passing. Reference: GitHub issue #96 / PR #97.
+40E. `DONE` **Gameplay: Improve ball-in-hand placement precision**
+    Replace mouse-delta-to-meters placement with direct pointer projection onto the table while preserving controller-relative movement, playable-surface clamping, restricted head-string placement, pocket clearance, overlap rejection, and legal confirmation. During mouse placement the cursor is temporarily confined and shown so absolute screen-space placement remains usable even though normal gameplay locks the cursor, then the previous cursor state is restored after placement. The merged implementation is validated with EditMode 305/305, PlayMode 26/26, repository validation, and a Windows x64 smoke build. Reference: GitHub issue #96 / PR #97.
 
-40F. `PR` **Gameplay: Add limited cue elevation**
+40F. `DONE` **Gameplay: Add limited cue elevation**
     Extend modern aiming with vertical cue elevation from 0 to 20 degrees. Horizontal input keeps planar yaw, vertical input controls elevation, spin drag suppresses both axes through its release frame, and the strike model preserves stable planar PhysX motion while accounting for cue elevation. Reference: GitHub issue #96 / PR #97.
+
+40G. `PR` **Gameplay: Refine aiming sequence and camera framing**
+    Apply the next hands-on playtest pass: mouse aiming now selects cue elevation first, confirms it before planar yaw, then confirms yaw before entering shot power; controller behavior stays on the existing direct path. The live aiming and shot-power cameras move closer to the cue for a more credible player stance, while ball-in-hand uses a dedicated side-of-table framing that keeps the whole playable surface visible and maximizes its horizontal footprint. Reference: GitHub issue #98 / PR #100.
 
 Phase 6 should resume only after this stabilization gate provides a trustworthy baseline. PR #87 remains open but paused while this work is completed.
 
@@ -244,7 +247,7 @@ Relay is intended for a listen-server model: the host creates the session and pl
 69. `PARTIAL` **Testing: Add physics calibration tests**
     Physics models and shot instrumentation already have EditMode and PlayMode coverage, including trajectory and collision observations. Additional reproducible calibration scenarios and acceptance tolerances remain to be defined.
 70. `TODO` **Testing: Add two-player Multiplayer Play Mode tests**
-71. `PR` **CI: Add Unity pull-request validation**
+71. `DONE` **CI: Add Unity pull-request validation**
     Structural repository validation and hosted EditMode/PlayMode execution are both established, including explicit Unity license handling, preserved test evidence, focused category diagnostics, and fork-safe handling that keeps Unity credentials away from untrusted pull request code. Reference: GitHub issue #94 / PR #95.
 72. `TODO` **CI: Add Windows build validation**
 73. `TODO` **CI: Add WebGL build validation**
@@ -254,4 +257,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current work is stabilization steps **40E–40F — ball-in-hand usability and limited cue elevation** (issue #96 / PR #97), now in review after hands-on testing of the post-40D playable build and automated revalidation. Rendering PR #87 remains intentionally paused until this gameplay-control pass is merged and manually retested. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current work is stabilization step **40G — staged mouse aiming and camera framing** (issue #98 / PR #100), created from the hands-on retest of merged PR #97. Rendering PR #87 remains intentionally paused until this control/camera pass is merged and manually retested. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
