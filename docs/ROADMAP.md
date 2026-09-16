@@ -222,8 +222,8 @@ URP will also introduce Unity 6 Render Graph considerations, which must be taken
 
 ## Phase 7 — presentation and juice
 
-47. `TODO` **Audio: Rebuild impact audio from collision energy**
-    Replace the legacy tag-filtered, relative-speed-divided ball collision SFX with a typed ball-to-ball impact path whose loudness and clip band are derived from reduced-mass collision energy. Keep the existing composition-root `SoundManager` injection and Presentation assembly boundary, emit each mirrored ball pair only once, and leave rail, pocket, and cue layers to step 48. Local validation: repository validation passed, EditMode 335/335, PlayMode 37/37, and the Windows player build/smoke passed in `Build-Latest`. Reference: GitHub issue #112.
+47. `PR` **Audio: Rebuild impact audio from collision energy**
+    Replace the legacy tag-filtered, relative-speed-divided ball collision SFX with a typed ball-to-ball impact path whose loudness and clip band are derived from reduced-mass collision energy. Keep the existing composition-root `SoundManager` injection and Presentation assembly boundary, emit each mirrored ball pair only once, and leave rail, pocket, and cue layers to step 48. Local validation: repository validation passed, EditMode 335/335, PlayMode 37/37, and the Windows player build/smoke passed in `Build-Latest`. Reference: GitHub issue #112 / PR #113.
 48. `TODO` **Audio: Add rail, pocket and cue impact layers**
 49. `TODO` **VFX: Add chalk and cue impact feedback**
 50. `TODO` **VFX: Add pocket feedback**
