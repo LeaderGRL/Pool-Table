@@ -1052,7 +1052,7 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(shotPowerController.enabled, Is.False, "Shot power must be disabled while the player is aiming.");
             Assert.That(aimingController.CueBall, Is.Not.Null);
             Assert.That(aimingController.CueDistance, Is.EqualTo(1.6666667f).Within(0.0001f));
-            Assert.That(aimingController.MinimumElevationDegrees, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(aimingController.MinimumElevationDegrees, Is.EqualTo(3f).Within(0.0001f));
             Assert.That(aimingController.MaximumElevationDegrees, Is.EqualTo(20f).Within(0.0001f));
             Assert.That(
                 aimingController.YawDegreesPerPointerUnit,
@@ -1146,7 +1146,7 @@ namespace PoolTable.Tests.PlayMode
                 "The cue transform must stay aligned with the elevated strike direction.");
 
             aimingController.ProcessInput(new LocalPlayerInputSnapshot(new Vector2(0f, -10000f), false));
-            Assert.That(aimingController.ElevationDegrees, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(aimingController.ElevationDegrees, Is.EqualTo(3f).Within(0.0001f));
 
             var controllerType = playerController.GetType();
             Assert.That(controllerType.GetMethod("setRotation"), Is.Null, "Legacy player code must no longer own cue rotation.");
@@ -1815,17 +1815,14 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cameraController.ApplyCameraPose(0f, true), Is.True);
 
             var strikeDirection = aimingController.StrikeDirection.normalized;
-            var planarDirection = Vector3.ProjectOnPlane(strikeDirection, Vector3.up).normalized;
+            var cueUp = Quaternion.LookRotation(strikeDirection, Vector3.up) * Vector3.up;
             var cueBallPosition = aimingController.CueBall.transform.position;
-            var elevationFollowHeight = Mathf.Max(0f, -strikeDirection.y)
-                * aimingController.CueDistance
-                * cameraController.ElevationFollowFactor;
             var expectedPosition = cueBallPosition
-                - (planarDirection * cameraController.DistanceBehindCueBall)
-                + (Vector3.up * (cameraController.EffectiveHeightAboveCueBall + elevationFollowHeight));
+                - (strikeDirection * cameraController.DistanceBehindCueBall)
+                + (cueUp * cameraController.EffectiveHeightAboveCueBall);
             var expectedFocusPoint = cueBallPosition
-                + (planarDirection * cameraController.EffectiveLookAheadDistance)
-                + (Vector3.up * cameraController.EffectiveTargetHeightOffset);
+                + (strikeDirection * cameraController.EffectiveLookAheadDistance)
+                + (cueUp * cameraController.EffectiveTargetHeightOffset);
 
             Assert.That(
                 Vector3.Distance(cameraController.transform.position, expectedPosition),
@@ -1846,19 +1843,16 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cameraController.ApplyCameraPose(0f, true), Is.True);
 
             var strikeDirection = shotPowerController.AimingController.StrikeDirection.normalized;
-            var planarDirection = Vector3.ProjectOnPlane(strikeDirection, Vector3.up).normalized;
+            var cueUp = Quaternion.LookRotation(strikeDirection, Vector3.up) * Vector3.up;
             var cueBallPosition = shotPowerController.CueBall.position;
             var expectedDistance = cameraController.DistanceBehindCueBall
                 + (shotPowerController.NormalizedPower * cameraController.AdditionalDistanceAtFullPower);
-            var elevationFollowHeight = Mathf.Max(0f, -strikeDirection.y)
-                * shotPowerController.AimingController.CueDistance
-                * cameraController.ElevationFollowFactor;
             var expectedPosition = cueBallPosition
-                - (planarDirection * expectedDistance)
-                + (Vector3.up * (cameraController.EffectiveHeightAboveCueBall + elevationFollowHeight));
+                - (strikeDirection * expectedDistance)
+                + (cueUp * cameraController.EffectiveHeightAboveCueBall);
             var expectedFocusPoint = cueBallPosition
-                + (planarDirection * cameraController.EffectiveLookAheadDistance)
-                + (Vector3.up * cameraController.EffectiveTargetHeightOffset);
+                + (strikeDirection * cameraController.EffectiveLookAheadDistance)
+                + (cueUp * cameraController.EffectiveTargetHeightOffset);
 
             Assert.That(
                 Vector3.Distance(cameraController.transform.position, expectedPosition),

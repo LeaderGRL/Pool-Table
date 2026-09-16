@@ -3,6 +3,7 @@ using System.Reflection;
 using NUnit.Framework;
 using PoolTable.Gameplay.Aiming;
 using PoolTable.Input;
+using PoolTable.Physics.Configuration;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
@@ -72,8 +73,9 @@ namespace PoolTable.Tests.PlayMode
             var gamepad = InputSystem.AddDevice<Gamepad>();
             var cueBall = new GameObject("FunctionalTestCueBall");
             var cue = new GameObject("FunctionalTestCue");
-            cueBall.transform.position = Vector3.zero;
-            cue.transform.SetPositionAndRotation(new Vector3(0f, 0f, -1f), Quaternion.identity);
+            var ballHeight = BilliardsPhysicalSpecification.BallCenterHeightMeters;
+            cueBall.transform.position = new Vector3(0f, ballHeight, 0f);
+            cue.transform.SetPositionAndRotation(new Vector3(0f, ballHeight, -1f), Quaternion.identity);
 
             var controller = cue.AddComponent<CueAimingController>();
             SetPrivateField(controller, "cueBall", cueBall);
@@ -106,8 +108,9 @@ namespace PoolTable.Tests.PlayMode
         {
             var cueBall = new GameObject("StagedPointerTestCueBall");
             var cue = new GameObject("StagedPointerTestCue");
-            cueBall.transform.position = Vector3.zero;
-            cue.transform.SetPositionAndRotation(new Vector3(0f, 0f, -1f), Quaternion.identity);
+            var ballHeight = BilliardsPhysicalSpecification.BallCenterHeightMeters;
+            cueBall.transform.position = new Vector3(0f, ballHeight, 0f);
+            cue.transform.SetPositionAndRotation(new Vector3(0f, ballHeight, -1f), Quaternion.identity);
 
             var controller = cue.AddComponent<CueAimingController>();
             SetPrivateField(controller, "cueBall", cueBall);
@@ -162,8 +165,9 @@ namespace PoolTable.Tests.PlayMode
         {
             var cueBall = new GameObject("ClickBoundaryTestCueBall");
             var cue = new GameObject("ClickBoundaryTestCue");
-            cueBall.transform.position = Vector3.zero;
-            cue.transform.SetPositionAndRotation(new Vector3(0f, 0f, -1f), Quaternion.identity);
+            var ballHeight = BilliardsPhysicalSpecification.BallCenterHeightMeters;
+            cueBall.transform.position = new Vector3(0f, ballHeight, 0f);
+            cue.transform.SetPositionAndRotation(new Vector3(0f, ballHeight, -1f), Quaternion.identity);
 
             var controller = cue.AddComponent<CueAimingController>();
             SetPrivateField(controller, "cueBall", cueBall);

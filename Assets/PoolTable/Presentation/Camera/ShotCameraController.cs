@@ -17,7 +17,6 @@ namespace PoolTable.Presentation.Camera
         [SerializeField, Min(0f)] private float preferredRuntimeLookAheadDistance = 0.15f;
         [SerializeField, Min(0f)] private float targetHeightOffset = 0.08f;
         [SerializeField, Min(0f)] private float preferredRuntimeTargetHeightOffset = 0f;
-        [SerializeField, Range(0f, 1f)] private float elevationFollowFactor = 0.35f;
         [SerializeField, Min(0f)] private float additionalDistanceAtFullPower = 0.35f;
         [SerializeField, Min(0f)] private float positionSharpness = 14f;
         [SerializeField, Min(0f)] private float rotationSharpness = 18f;
@@ -45,8 +44,6 @@ namespace PoolTable.Presentation.Camera
         public float TargetHeightOffset => targetHeightOffset;
 
         public float EffectiveTargetHeightOffset => Mathf.Min(targetHeightOffset, preferredRuntimeTargetHeightOffset);
-
-        public float ElevationFollowFactor => elevationFollowFactor;
 
         public float AdditionalDistanceAtFullPower => additionalDistanceAtFullPower;
 
@@ -79,7 +76,7 @@ namespace PoolTable.Presentation.Camera
                 out desiredRotation);
         }
 
-        private bool ApplyRuntimeCameraPose(float deltaTime, bool snap)
+        internal bool ApplyRuntimeCameraPose(float deltaTime, bool snap)
         {
             var powerDistance = shotPowerController == null
                 ? 0f
@@ -121,24 +118,28 @@ namespace PoolTable.Presentation.Camera
                 return false;
             }
 
-            var strikeDirection = shotPowerController.AimingController.StrikeDirection.normalized;
-            var planarDirection = Vector3.ProjectOnPlane(strikeDirection, Vector3.up).normalized;
-            if (strikeDirection.sqrMagnitude <= 0.000001f || planarDirection.sqrMagnitude <= 0.000001f)
+            if (!CueCameraRig.TryGetBasis(
+                    shotPowerController.AimingController.StrikeDirection,
+                    out var cueForward,
+                    out var cueUp))
             {
                 return false;
             }
 
             var cueBallPosition = shotPowerController.CueBall.position;
-            var elevationFollowHeight = Mathf.Max(0f, -strikeDirection.y)
-                * shotPowerController.AimingController.CueDistance
-                * elevationFollowFactor;
-            desiredPosition = cueBallPosition
-                - (planarDirection * cameraDistance)
-                + (Vector3.up * (EffectiveHeightAboveCueBall + elevationFollowHeight));
+            desiredPosition = CueCameraRig.GetCameraPosition(
+                cueBallPosition,
+                cueForward,
+                cueUp,
+                cameraDistance,
+                EffectiveHeightAboveCueBall);
 
-            var focusPoint = cueBallPosition
-                + (planarDirection * EffectiveLookAheadDistance)
-                + (Vector3.up * EffectiveTargetHeightOffset);
+            var focusPoint = CueCameraRig.GetFocusPoint(
+                cueBallPosition,
+                cueForward,
+                cueUp,
+                EffectiveLookAheadDistance,
+                EffectiveTargetHeightOffset);
             var forward = focusPoint - desiredPosition;
             if (forward.sqrMagnitude <= 0.000001f)
             {

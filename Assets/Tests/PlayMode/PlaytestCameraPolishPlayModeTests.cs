@@ -75,11 +75,17 @@ namespace PoolTable.Tests.PlayMode
                 "Shot-power presentation should keep the same close player-eye framing before pullback adds distance.");
 
             var cueBallPosition = aimingController.CueBall.transform.position;
-            var planarOffset = Vector3.ProjectOnPlane(outputCamera.transform.position - cueBallPosition, Vector3.up);
+            var cueForward = aimingController.StrikeDirection.normalized;
+            var cueUp = Quaternion.LookRotation(cueForward, Vector3.up) * Vector3.up;
+            var cameraOffset = outputCamera.transform.position - cueBallPosition;
             Assert.That(
-                planarOffset.magnitude,
+                Vector3.Dot(cameraOffset, -cueForward),
                 Is.EqualTo(cameraController.EffectiveDistanceBehindCueBall).Within(0.01f),
-                "Runtime aiming camera must move forward from the old cue-butt position.");
+                "Runtime aiming camera must keep its close eye distance along the actual 3D cue axis.");
+            Assert.That(
+                Vector3.Dot(cameraOffset, cueUp),
+                Is.EqualTo(cameraController.EffectiveHeightAboveCueBall).Within(0.01f),
+                "Runtime aiming camera height must be measured in cue-local space so it follows elevation.");
         }
 
         [UnityTest]
@@ -135,6 +141,122 @@ namespace PoolTable.Tests.PlayMode
 
             outputCamera.aspect = originalAspect;
             outputCamera.ResetProjectionMatrix();
+        }
+
+        [UnityTest]
+        public IEnumerator CueElevation_RaisesMinimumNearRailToKeepCueClear()
+        {
+            yield return LoadPoolTableScene();
+
+            var aimingController = Object.FindFirstObjectByType<CueAimingController>();
+            var cueBall = aimingController.CueBall.GetComponent<Rigidbody>();
+            var direction = aimingController.Direction;
+            var backward = new Vector2(-direction.X, -direction.Y).normalized;
+            const float distanceToRail = 0.12f;
+
+            var position = new Vector3(
+                0f,
+                BilliardsPhysicalSpecification.BallCenterHeightMeters,
+                0f);
+
+            if (Mathf.Abs(backward.x) >= Mathf.Abs(backward.y))
+            {
+                var boundary = Mathf.Sign(backward.x)
+                    * BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters
+                    * 0.5f;
+                position.x = boundary - (backward.x * distanceToRail);
+            }
+            else
+            {
+                var boundary = Mathf.Sign(backward.y)
+                    * BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters
+                    * 0.5f;
+                position.z = boundary - (backward.y * distanceToRail);
+            }
+
+            cueBall.position = position;
+            cueBall.transform.position = position;
+            cueBall.linearVelocity = Vector3.zero;
+            cueBall.angularVelocity = Vector3.zero;
+            UnityEngine.Physics.SyncTransforms();
+
+            aimingController.ProcessInput(
+                new PoolTable.Input.LocalPlayerInputSnapshot(new Vector2(0f, -10000f), false));
+
+            Assert.That(
+                aimingController.EffectiveMinimumElevationDegrees,
+                Is.GreaterThan(aimingController.MinimumElevationDegrees + 1f),
+                "A cue approaching a nearby rail must receive extra elevation clearance.");
+            Assert.That(
+                aimingController.ElevationDegrees,
+                Is.EqualTo(aimingController.EffectiveMinimumElevationDegrees).Within(0.001f),
+                "Lowering the cue near a rail must stop at the clearance-aware minimum.");
+
+            var requiredAxisHeight = BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters
+                + BilliardsPhysicalSpecification.CushionNoseHeightMeters
+                + 0.01f
+                + 0.003f;
+            var cueAxisHeightAtRail = position.y
+                + (Mathf.Tan(aimingController.ElevationDegrees * Mathf.Deg2Rad) * distanceToRail);
+            Assert.That(
+                cueAxisHeightAtRail,
+                Is.GreaterThanOrEqualTo(requiredAxisHeight - 0.0001f),
+                "The clearance-aware minimum must lift the cue axis above the cushion and shaft radius.");
+        }
+
+        [UnityTest]
+        public IEnumerator GameplayCameras_StayOnCueRigAtMaximumElevationAndPullback()
+        {
+            yield return LoadPoolTableScene();
+
+            var aimingController = Object.FindFirstObjectByType<CueAimingController>();
+            var shotPowerController = Object.FindFirstObjectByType<PoolTable.Gameplay.Shots.ShotPowerController>();
+            var outputCamera = Camera.main;
+            var aimingCameraController = outputCamera.GetComponent<AimingCameraController>();
+            var shotCameraController = outputCamera.GetComponent<ShotCameraController>();
+
+            aimingController.AdvanceAimStage();
+            yield return null;
+            aimingController.ProcessStagedInput(
+                new PoolTable.Input.LocalPlayerInputSnapshot(new Vector2(0f, 10000f), false));
+            Assert.That(aimingController.ElevationDegrees, Is.EqualTo(aimingController.MaximumElevationDegrees).Within(0.001f));
+
+            Assert.That(aimingCameraController.ApplyRuntimeCameraPose(0f, true), Is.True);
+            AssertCameraUsesCueLocalBasis(
+                outputCamera.transform,
+                aimingController.CueBall.transform.position,
+                aimingController.StrikeDirection,
+                aimingCameraController.EffectiveDistanceBehindCueBall,
+                aimingCameraController.EffectiveHeightAboveCueBall);
+            AssertCueReadableInFrame(outputCamera, aimingController);
+
+            var playerController = Object.FindObjectsByType<MonoBehaviour>(
+                    FindObjectsInactive.Exclude,
+                    FindObjectsSortMode.None)
+                .Single(component => component.GetType().Name == "PlayersStateManagement");
+            var controllerType = playerController.GetType();
+            var switchState = controllerType.GetMethod("SwitchState");
+            var shootState = controllerType.GetField("shootState").GetValue(playerController);
+            switchState.Invoke(playerController, new[] { shootState });
+            yield return null;
+
+            for (var stroke = 0; stroke < 24; stroke++)
+            {
+                shotPowerController.ProcessInput(
+                    new PoolTable.Input.LocalPlayerInputSnapshot(new Vector2(0f, 10f), true));
+            }
+
+            Assert.That(shotPowerController.NormalizedPower, Is.EqualTo(1f).Within(0.001f));
+            Assert.That(shotCameraController.ApplyRuntimeCameraPose(0f, true), Is.True);
+
+            var expectedShotDistance = shotCameraController.EffectiveDistanceBehindCueBall
+                + shotCameraController.AdditionalDistanceAtFullPower;
+            AssertCameraUsesCueLocalBasis(
+                outputCamera.transform,
+                shotPowerController.CueBall.position,
+                aimingController.StrikeDirection,
+                expectedShotDistance,
+                shotCameraController.EffectiveHeightAboveCueBall);
         }
 
         [UnityTest]
@@ -271,6 +393,31 @@ namespace PoolTable.Tests.PlayMode
                 cueButtCameraSpace.z,
                 Is.LessThanOrEqualTo(camera.nearClipPlane),
                 "The cue butt must stay behind the player camera so the entire cue cannot be visible.");
+        }
+
+        private static void AssertCameraUsesCueLocalBasis(
+            Transform cameraTransform,
+            Vector3 cueBallPosition,
+            Vector3 strikeDirection,
+            float expectedDistance,
+            float expectedHeight)
+        {
+            var cueForward = strikeDirection.normalized;
+            var cueUp = Quaternion.LookRotation(cueForward, Vector3.up) * Vector3.up;
+            var cameraOffset = cameraTransform.position - cueBallPosition;
+
+            Assert.That(
+                Vector3.Dot(cameraOffset, -cueForward),
+                Is.EqualTo(expectedDistance).Within(0.001f),
+                "Camera distance must stay locked to the 3D cue axis as elevation changes.");
+            Assert.That(
+                Vector3.Dot(cameraOffset, cueUp),
+                Is.EqualTo(expectedHeight).Within(0.001f),
+                "Camera height must stay locked to cue-local up instead of world up.");
+            Assert.That(
+                Mathf.Abs(Vector3.Dot(cameraOffset, Vector3.Cross(cueForward, cueUp).normalized)),
+                Is.LessThan(0.001f),
+                "Camera must not drift sideways away from the cue plane.");
         }
 
         private static IEnumerator LoadPoolTableScene()

@@ -17,7 +17,6 @@ namespace PoolTable.Presentation.Camera
         [SerializeField, Min(0f)] private float preferredRuntimeLookAheadDistance = 0.1f;
         [SerializeField, Min(0f)] private float targetHeightOffset = 0.08f;
         [SerializeField, Min(0f)] private float preferredRuntimeTargetHeightOffset = 0f;
-        [SerializeField, Range(0f, 1f)] private float elevationFollowFactor = 0.35f;
         [SerializeField, Min(0f)] private float positionSharpness = 12f;
         [SerializeField, Min(0f)] private float rotationSharpness = 16f;
 
@@ -44,8 +43,6 @@ namespace PoolTable.Presentation.Camera
         public float TargetHeightOffset => targetHeightOffset;
 
         public float EffectiveTargetHeightOffset => Mathf.Min(targetHeightOffset, preferredRuntimeTargetHeightOffset);
-
-        public float ElevationFollowFactor => elevationFollowFactor;
 
         private void Start()
         {
@@ -100,24 +97,28 @@ namespace PoolTable.Presentation.Camera
                 return false;
             }
 
-            var strikeDirection = aimingController.StrikeDirection.normalized;
-            var planarDirection = Vector3.ProjectOnPlane(strikeDirection, Vector3.up).normalized;
-            if (strikeDirection.sqrMagnitude <= 0.000001f || planarDirection.sqrMagnitude <= 0.000001f)
+            if (!CueCameraRig.TryGetBasis(
+                    aimingController.StrikeDirection,
+                    out var cueForward,
+                    out var cueUp))
             {
                 return false;
             }
 
             var cueBallPosition = aimingController.CueBall.transform.position;
-            var elevationFollowHeight = Mathf.Max(0f, -strikeDirection.y)
-                * aimingController.CueDistance
-                * elevationFollowFactor;
-            desiredPosition = cueBallPosition
-                - (planarDirection * cameraDistance)
-                + (Vector3.up * (EffectiveHeightAboveCueBall + elevationFollowHeight));
+            desiredPosition = CueCameraRig.GetCameraPosition(
+                cueBallPosition,
+                cueForward,
+                cueUp,
+                cameraDistance,
+                EffectiveHeightAboveCueBall);
 
-            var focusPoint = cueBallPosition
-                + (planarDirection * EffectiveLookAheadDistance)
-                + (Vector3.up * EffectiveTargetHeightOffset);
+            var focusPoint = CueCameraRig.GetFocusPoint(
+                cueBallPosition,
+                cueForward,
+                cueUp,
+                EffectiveLookAheadDistance,
+                EffectiveTargetHeightOffset);
             var forward = focusPoint - desiredPosition;
 
             if (forward.sqrMagnitude <= 0.000001f)
