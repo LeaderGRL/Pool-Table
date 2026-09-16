@@ -5,6 +5,13 @@ using UnityEngine;
 
 namespace PoolTable.Gameplay.Aiming
 {
+    public enum CueAimStage
+    {
+        Elevation = 0,
+        Yaw = 1,
+        Locked = 2,
+    }
+
     [DisallowMultipleComponent]
     public sealed class CueAimingController : MonoBehaviour
     {
@@ -31,6 +38,8 @@ namespace PoolTable.Gameplay.Aiming
         public float MinimumElevationDegrees => minimumElevationDegrees;
 
         public float MaximumElevationDegrees => maximumElevationDegrees;
+
+        public CueAimStage AimStage { get; private set; } = CueAimStage.Elevation;
 
         public float ElevationDegrees => aimingState?.ElevationDegrees
             ?? throw new InvalidOperationException("Aiming state is not initialized.");
@@ -60,6 +69,7 @@ namespace PoolTable.Gameplay.Aiming
         private void OnEnable()
         {
             secondaryButtonWasPressedLastFrame = false;
+            AimStage = CueAimStage.Elevation;
 
             if (localPlayerInputReader == null)
             {
@@ -79,6 +89,19 @@ namespace PoolTable.Gameplay.Aiming
             ProcessInput(localPlayerInputReader.Read());
         }
 
+        public void AdvanceAimStage()
+        {
+            switch (AimStage)
+            {
+                case CueAimStage.Elevation:
+                    AimStage = CueAimStage.Yaw;
+                    break;
+                case CueAimStage.Yaw:
+                    AimStage = CueAimStage.Locked;
+                    break;
+            }
+        }
+
         internal void ProcessInput(LocalPlayerInputSnapshot input)
         {
             if (aimingState == null || cueBall == null)
@@ -91,10 +114,19 @@ namespace PoolTable.Gameplay.Aiming
 
             if (!suppressAim)
             {
-                aimingState.RotateDegrees((input.PointerDelta.x * yawDegreesPerPointerUnit) + (input.AimAxis.x * Time.deltaTime * 120f));
-                aimingState.AdjustElevationDegrees(
-                    (input.PointerDelta.y * pitchDegreesPerPointerUnit)
-                    + (input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond));
+                switch (AimStage)
+                {
+                    case CueAimStage.Elevation:
+                        aimingState.AdjustElevationDegrees(
+                            (input.PointerDelta.y * pitchDegreesPerPointerUnit)
+                            + (input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond));
+                        break;
+                    case CueAimStage.Yaw:
+                        aimingState.RotateDegrees(
+                            (input.PointerDelta.x * yawDegreesPerPointerUnit)
+                            + (input.AimAxis.x * Time.deltaTime * 120f));
+                        break;
+                }
             }
 
             ApplyCuePose();
