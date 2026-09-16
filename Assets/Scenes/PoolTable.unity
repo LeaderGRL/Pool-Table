@@ -4241,7 +4241,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   aimingController: {fileID: 534474671}
   distanceBehindCueBall: 2.4
-  heightAboveCueBall: 1.05
+  heightAboveCueBall: 0.5
   lookAheadDistance: 1.2
   targetHeightOffset: 0.08
   positionSharpness: 12
@@ -4260,7 +4260,7 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   shotPowerController: {fileID: 534474672}
   distanceBehindCueBall: 2.6
-  heightAboveCueBall: 1.1
+  heightAboveCueBall: 0.55
   lookAheadDistance: 1.4
   targetHeightOffset: 0.08
   additionalDistanceAtFullPower: 0.35

@@ -9,10 +9,11 @@ namespace PoolTable.Presentation.Camera
     {
         [SerializeField] private ShotPowerController shotPowerController;
         [SerializeField, Min(0.01f)] private float distanceBehindCueBall = 2.6f;
-        [SerializeField, Min(0f)] private float forwardEyeOffsetMeters = 1.6f;
-        [SerializeField, Min(0f)] private float heightAboveCueBall = 1.1f;
+        [SerializeField, Min(0f)] private float forwardEyeOffsetMeters = 1.1f;
+        [SerializeField, Min(0f)] private float heightAboveCueBall = 0.55f;
         [SerializeField, Min(0f)] private float lookAheadDistance = 1.4f;
         [SerializeField, Min(0f)] private float targetHeightOffset = 0.08f;
+        [SerializeField, Range(0f, 1f)] private float elevationFollowFactor = 0.35f;
         [SerializeField, Min(0f)] private float additionalDistanceAtFullPower = 0.35f;
         [SerializeField, Min(0f)] private float positionSharpness = 14f;
         [SerializeField, Min(0f)] private float rotationSharpness = 18f;
@@ -30,6 +31,8 @@ namespace PoolTable.Presentation.Camera
         public float LookAheadDistance => lookAheadDistance;
 
         public float TargetHeightOffset => targetHeightOffset;
+
+        public float ElevationFollowFactor => elevationFollowFactor;
 
         public float AdditionalDistanceAtFullPower => additionalDistanceAtFullPower;
 
@@ -105,18 +108,22 @@ namespace PoolTable.Presentation.Camera
             }
 
             var strikeDirection = shotPowerController.AimingController.StrikeDirection.normalized;
-            if (strikeDirection.sqrMagnitude <= 0.000001f)
+            var planarDirection = Vector3.ProjectOnPlane(strikeDirection, Vector3.up).normalized;
+            if (strikeDirection.sqrMagnitude <= 0.000001f || planarDirection.sqrMagnitude <= 0.000001f)
             {
                 return false;
             }
 
             var cueBallPosition = shotPowerController.CueBall.position;
+            var elevationFollowHeight = Mathf.Max(0f, -strikeDirection.y)
+                * shotPowerController.AimingController.CueDistance
+                * elevationFollowFactor;
             desiredPosition = cueBallPosition
-                - (strikeDirection * cameraDistance)
-                + (Vector3.up * heightAboveCueBall);
+                - (planarDirection * cameraDistance)
+                + (Vector3.up * (heightAboveCueBall + elevationFollowHeight));
 
             var focusPoint = cueBallPosition
-                + (strikeDirection * lookAheadDistance)
+                + (planarDirection * lookAheadDistance)
                 + (Vector3.up * targetHeightOffset);
             var forward = focusPoint - desiredPosition;
             if (forward.sqrMagnitude <= 0.000001f)

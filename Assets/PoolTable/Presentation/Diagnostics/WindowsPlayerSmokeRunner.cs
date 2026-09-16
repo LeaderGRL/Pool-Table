@@ -186,6 +186,19 @@ namespace PoolTable.Presentation.Diagnostics
             Require(HasInitializedInputReader(spin), "The spin controller must initialize its local input reader.");
             Require(HasInitializedInputReader(shotPower), "The shot-power controller must initialize its local input reader.");
 
+            var outputCamera = UnityEngine.Camera.main;
+            Require(outputCamera != null, "The player camera must exist during local-control validation.");
+            if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null)
+            {
+                outputCamera.aspect = 16f / 10f;
+                outputCamera.ResetProjectionMatrix();
+            }
+
+            var aimingCamera = outputCamera.GetComponent<AimingCameraController>();
+            Require(aimingCamera != null, "The output camera must provide AimingCameraController during local-control smoke validation.");
+            Require(aimingCamera.ApplyRuntimeCameraPose(0f, true), "The aiming camera must resolve a valid runtime pose before visibility validation.");
+            RequireCueFrontVisible(outputCamera, aiming);
+
             Require(aiming.AimStage == CueAimStage.Yaw, "Mouse aiming must start with yaw.");
             aiming.AdvanceAimStage();
             Require(aiming.AimStage == CueAimStage.Elevation, "The first mouse confirmation must advance from yaw to elevation.");
@@ -205,9 +218,7 @@ namespace PoolTable.Presentation.Diagnostics
                 (directionAfter - directionBefore).sqrMagnitude > 0.000001f,
                 "The aiming controller must consume the injected Input System aim axis during Update.");
 
-            var aimingCamera = UnityEngine.Camera.main?.GetComponent<AimingCameraController>();
-            Require(aimingCamera != null, "The output camera must provide AimingCameraController during local-control smoke validation.");
-            Require(aimingCamera.ApplyCameraPose(0f, true), "The aiming camera must resolve a valid pose before elevation validation.");
+            Require(aimingCamera.ApplyRuntimeCameraPose(0f, true), "The aiming camera must resolve a valid runtime pose before elevation validation.");
             var elevationBefore = aiming.ElevationDegrees;
             var cameraPositionBeforeElevation = aimingCamera.transform.position;
             var cameraForwardBeforeElevation = aimingCamera.transform.forward;
@@ -216,13 +227,14 @@ namespace PoolTable.Presentation.Diagnostics
             yield return new WaitForSecondsRealtime(InputObservationSeconds);
             ThrowIfRuntimeErrors();
             Require(aiming.ElevationDegrees > elevationBefore, "The aiming controller must consume vertical aim input as cue elevation.");
-            Require(aimingCamera.ApplyCameraPose(0f, true), "The aiming camera must resolve a valid elevated pose.");
+            Require(aimingCamera.ApplyRuntimeCameraPose(0f, true), "The aiming camera must resolve a valid elevated runtime pose.");
             Require(
                 aimingCamera.transform.position.y > cameraPositionBeforeElevation.y + 0.001f,
                 "The aiming camera must rise with cue elevation instead of remaining on a planar yaw orbit.");
             Require(
                 Vector3.Angle(cameraForwardBeforeElevation, aimingCamera.transform.forward) > 0.05f,
                 "The aiming camera orientation must follow cue elevation.");
+            RequireCueFrontVisible(outputCamera, aiming);
 
             Require(spin.Spin.IsCentered, "Cue-ball spin must start centered.");
             SetSmokeGamepadState(0f, 0f, 0.5f, 0.5f, 1f, 0f);
@@ -238,6 +250,25 @@ namespace PoolTable.Presentation.Diagnostics
             report.InputSystem = true;
             report.LocalControls = true;
             report.Checkpoints.Add("local-controls");
+        }
+
+        private static void RequireCueFrontVisible(UnityEngine.Camera camera, CueAimingController aiming)
+        {
+            var cueFrontSample = Vector3.Lerp(
+                aiming.CueBall.transform.position,
+                aiming.transform.position,
+                0.3f);
+            var cameraSpacePoint = camera.transform.InverseTransformPoint(cueFrontSample);
+            Require(cameraSpacePoint.z > 0f, "The cue front must remain in front of the player camera.");
+
+            var projection = camera.projectionMatrix;
+            var horizontalSlopeLimit = 1f / Mathf.Max(0.0001f, Mathf.Abs(projection.m00));
+            var verticalSlopeLimit = 1f / Mathf.Max(0.0001f, Mathf.Abs(projection.m11));
+            var horizontalSlope = Mathf.Abs(cameraSpacePoint.x / cameraSpacePoint.z);
+            var verticalSlope = Mathf.Abs(cameraSpacePoint.y / cameraSpacePoint.z);
+
+            Require(horizontalSlope <= horizontalSlopeLimit, "The cue front must remain horizontally inside the player-camera frustum.");
+            Require(verticalSlope <= verticalSlopeLimit, "The cue front must remain vertically inside the player-camera frustum.");
         }
 
         private static IEnumerator ValidateShotFlow(WindowsPlayerSmokeReport report)
