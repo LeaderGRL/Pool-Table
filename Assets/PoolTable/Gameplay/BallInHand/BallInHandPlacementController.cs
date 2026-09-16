@@ -40,6 +40,9 @@ namespace PoolTable.Gameplay.BallInHand
         [SerializeField] private Camera placementCamera;
         [SerializeField, Min(0f)] private float pointerMetersPerPixel = 0.0015f;
         [SerializeField, Min(0f)] private float controllerMetersPerSecond = 0.75f;
+        [SerializeField, Range(25f, 75f)] private float placementCameraVerticalFov = 50f;
+        [SerializeField, Range(15f, 75f)] private float placementCameraDownAngleDegrees = 42f;
+        [SerializeField, Min(1f)] private float placementCameraHorizontalMargin = 1.18f;
 
         private readonly LocalPlayerInputReader inputReader = new LocalPlayerInputReader();
         private readonly List<Vector2> occupiedBallCenters = new List<Vector2>(15);
@@ -55,6 +58,11 @@ namespace PoolTable.Gameplay.BallInHand
         private CursorLockMode originalCursorLockState;
         private bool originalCursorVisible;
         private bool cursorStateCaptured;
+        private Camera activePlacementCamera;
+        private Vector3 originalCameraPosition;
+        private Quaternion originalCameraRotation;
+        private float originalCameraFieldOfView;
+        private bool cameraStateCaptured;
 
         public event Action<MatchState> PlacementCompleted;
 
@@ -63,6 +71,12 @@ namespace PoolTable.Gameplay.BallInHand
         public bool IsCurrentPositionLegal => IsPlacing && IsCandidateLegal(CurrentPlanarPosition);
 
         public MatchState LastCompletedMatchState { get; private set; }
+
+        public float PlacementCameraVerticalFov => placementCameraVerticalFov;
+
+        public float PlacementCameraDownAngleDegrees => placementCameraDownAngleDegrees;
+
+        public float PlacementCameraHorizontalMargin => placementCameraHorizontalMargin;
 
         internal Vector2 CurrentPlanarPosition => new Vector2(cueBall.position.x, cueBall.position.z);
 
@@ -153,6 +167,7 @@ namespace PoolTable.Gameplay.BallInHand
                 SendMessageOptions.DontRequireReceiver);
             IsPlacing = false;
             RestoreCursorState();
+            RestorePlacementCameraState();
             enabled = false;
 
             if (completedState != null)
@@ -248,6 +263,7 @@ namespace PoolTable.Gameplay.BallInHand
                 start.y);
 
             CaptureCursorStateForPlacement();
+            CaptureAndApplyPlacementCameraState();
             primaryActionWasPressed = true;
             IsPlacing = true;
             enabled = true;
@@ -256,6 +272,7 @@ namespace PoolTable.Gameplay.BallInHand
         private void OnDisable()
         {
             RestoreCursorState();
+            RestorePlacementCameraState();
         }
 
         private void EnsurePlacementIsInactive()
@@ -330,6 +347,55 @@ namespace PoolTable.Gameplay.BallInHand
             cursorStateAccessor.LockState = originalCursorLockState;
             cursorStateAccessor.Visible = originalCursorVisible;
             cursorStateCaptured = false;
+        }
+
+        private void CaptureAndApplyPlacementCameraState()
+        {
+            var camera = placementCamera != null ? placementCamera : Camera.main;
+            if (camera == null)
+            {
+                return;
+            }
+
+            activePlacementCamera = camera;
+            originalCameraPosition = camera.transform.position;
+            originalCameraRotation = camera.transform.rotation;
+            originalCameraFieldOfView = camera.fieldOfView;
+            cameraStateCaptured = true;
+
+            camera.fieldOfView = placementCameraVerticalFov;
+
+            var verticalFovRadians = placementCameraVerticalFov * Mathf.Deg2Rad;
+            var aspect = Mathf.Max(0.1f, camera.aspect);
+            var horizontalFovRadians = 2f * Mathf.Atan(Mathf.Tan(verticalFovRadians * 0.5f) * aspect);
+            var halfTableLength = BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters * 0.5f;
+            var distanceToCenter = (halfTableLength * placementCameraHorizontalMargin)
+                / Mathf.Max(0.01f, Mathf.Tan(horizontalFovRadians * 0.5f));
+
+            var downAngleRadians = placementCameraDownAngleDegrees * Mathf.Deg2Rad;
+            var forward = new Vector3(
+                0f,
+                -Mathf.Sin(downAngleRadians),
+                Mathf.Cos(downAngleRadians)).normalized;
+            var tableCenter = new Vector3(0f, BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters, 0f);
+            var cameraPosition = tableCenter - (forward * distanceToCenter);
+
+            camera.transform.SetPositionAndRotation(
+                cameraPosition,
+                Quaternion.LookRotation(forward, Vector3.up));
+        }
+
+        private void RestorePlacementCameraState()
+        {
+            if (!cameraStateCaptured || activePlacementCamera == null)
+            {
+                return;
+            }
+
+            activePlacementCamera.transform.SetPositionAndRotation(originalCameraPosition, originalCameraRotation);
+            activePlacementCamera.fieldOfView = originalCameraFieldOfView;
+            activePlacementCamera = null;
+            cameraStateCaptured = false;
         }
     }
 }
