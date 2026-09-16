@@ -51,6 +51,10 @@ namespace PoolTable.Tests.PlayMode
 
                 Assert.That(controller.PointerAdjustmentPhase, Is.EqualTo(PointerAimPhase.Yaw));
                 Assert.That(controller.ElevationDegrees, Is.EqualTo(confirmedElevation).Within(0.0001f));
+                Assert.That(new Vector2(controller.Direction.X, controller.Direction.Y), Is.EqualTo(initialDirection));
+
+                controller.ProcessRuntimeInput(new LocalPlayerInputSnapshot(new Vector2(20f, 5f), false));
+                Assert.That(controller.ElevationDegrees, Is.EqualTo(confirmedElevation).Within(0.0001f));
                 Assert.That(
                     Vector2.Angle(initialDirection, new Vector2(controller.Direction.X, controller.Direction.Y)),
                     Is.GreaterThan(0.01f));
