@@ -209,9 +209,10 @@ The stabilization gate is complete and Phase 6 can resume from this validated pl
     Install the Unity 6.5-compatible Universal Render Pipeline package and establish the project-wide baseline render-pipeline asset without performing the later material, lighting, post-processing, or per-platform quality-profile conversions. Validation after integration with current `main`: repository validation passed, EditMode 307/307, PlayMode 34/34, Windows player smoke passed. Reference: GitHub issue #86 / PR #87.
 42. `DONE` **Rendering: Convert legacy materials to URP**
     Convert all tracked project materials from Built-in/legacy shaders to URP equivalents while preserving material asset GUIDs and mapped textures/properties. Keep the later PBR rebuild, lighting/reflections, post-processing, and platform quality work in their dedicated roadmap steps. Reference: GitHub issue #102 / PR #103.
-43. `PR` **Rendering: Rebuild pool-table PBR materials**
+43. `DONE` **Rendering: Rebuild pool-table PBR materials**
     Rebuild the pool-table-specific materials as intentional URP PBR materials, reusing the existing source textures where appropriate and wiring base color, normal, roughness/smoothness, and surface properties coherently. Keep lighting/reflections, post-processing, and per-platform quality work in their dedicated roadmap steps. Local validation: EditMode 315/315, PlayMode 34/34, Windows player smoke passed, and D3D11 visual capture checked. Reference: GitHub issue #104 / PR #105.
-44. `TODO` **Rendering: Rebuild lighting and reflection setup**
+44. `PR` **Rendering: Rebuild lighting and reflection setup**
+    Replace the legacy one-light/default-environment setup with an intentional URP lighting and reflection rig for the pool table. The scene now uses a tuned warm key, two complementary overhead spots, Trilight ambient lighting, and a table-sized custom reflection probe backed by an HDR cubemap, with URP probe blending and box projection enabled. Local validation: repository validation passed, EditMode 318/318, PlayMode 34/34, Windows player smoke passed, and a D3D11 player capture was visually checked. Keep post-processing and per-platform quality profiles in their dedicated roadmap steps. Reference: GitHub issue #106.
 45. `TODO` **Rendering: Add post-processing quality profile**
 46. `TODO` **Rendering: Add Windows and Web quality profiles**
 
@@ -266,4 +267,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 6 work is **Rendering: Rebuild pool-table PBR materials** (issue #104 / PR #105). URP installation/configuration is merged through PR #87, legacy material conversion is merged through PR #103, and stabilization steps 40G–40I are merged through PR #101 and manually validated. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 6 work is **Rendering: Rebuild lighting and reflection setup** (issue #106). URP installation/configuration is merged through PR #87, legacy material conversion is merged through PR #103, pool-table PBR materials are merged through PR #105, and stabilization steps 40G–40I are merged through PR #101 and manually validated. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
