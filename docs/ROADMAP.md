@@ -207,8 +207,8 @@ The stabilization gate is complete and Phase 6 can resume from this validated pl
 
 41. `DONE` **Rendering: Install and configure URP**
     Install the Unity 6.5-compatible Universal Render Pipeline package and establish the project-wide baseline render-pipeline asset without performing the later material, lighting, post-processing, or per-platform quality-profile conversions. Validation after integration with current `main`: repository validation passed, EditMode 307/307, PlayMode 34/34, Windows player smoke passed. Reference: GitHub issue #86 / PR #87.
-42. `ACTIVE` **Rendering: Convert legacy materials to URP**
-    Convert all tracked project materials from Built-in/legacy shaders to URP equivalents while preserving material asset GUIDs and mapped textures/properties. Keep the later PBR rebuild, lighting/reflections, post-processing, and platform quality work in their dedicated roadmap steps. Reference: GitHub issue #102.
+42. `PR` **Rendering: Convert legacy materials to URP**
+    Convert all tracked project materials from Built-in/legacy shaders to URP equivalents while preserving material asset GUIDs and mapped textures/properties. Keep the later PBR rebuild, lighting/reflections, post-processing, and platform quality work in their dedicated roadmap steps. Reference: GitHub issue #102 / PR #103.
 43. `TODO` **Rendering: Rebuild pool-table PBR materials**
 44. `TODO` **Rendering: Rebuild lighting and reflection setup**
 45. `TODO` **Rendering: Add post-processing quality profile**
@@ -265,4 +265,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 6 work is **Rendering: Convert legacy materials to URP** (issue #102). URP installation/configuration is merged through PR #87, and stabilization steps 40G–40I are merged through PR #101 and manually validated. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 6 work is **Rendering: Convert legacy materials to URP** (issue #102 / PR #103). URP installation/configuration is merged through PR #87, and stabilization steps 40G–40I are merged through PR #101 and manually validated. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
