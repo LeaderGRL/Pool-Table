@@ -3,10 +3,12 @@ using UnityEngine;
 public class PlayersPlayState : PlayersBaseState
 {
     private bool waitingForBallInHandPlacement;
+    private int aimConfirmationCount;
 
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
     {
+        aimConfirmationCount = 0;
         player.SetShotCameraEnabled(false);
         player.SetSpectateCameraEnabled(false);
         player.SetShotPowerEnabled(false);
@@ -105,13 +107,38 @@ public class PlayersPlayState : PlayersBaseState
             }
 
             waitingForBallInHandPlacement = false;
+            aimConfirmationCount = 0;
             return;
         }
 
-        if (LegacyMouseInput.PrimaryButtonIsPressed)
+        if (LegacyMouseInput.GamepadPrimaryButtonIsPressed)
         {
             player.SwitchState(player.shootState);
+            return;
         }
+
+        if (!LegacyMouseInput.MousePrimaryButtonWasPressedThisFrame)
+        {
+            return;
+        }
+
+        if (player.aimingController == null)
+        {
+            player.SwitchState(player.shootState);
+            return;
+        }
+
+        player.aimingController.gameObject.SendMessage(
+            "AdvanceAimStage",
+            SendMessageOptions.DontRequireReceiver);
+
+        if (aimConfirmationCount == 0)
+        {
+            aimConfirmationCount = 1;
+            return;
+        }
+
+        player.SwitchState(player.shootState);
     }
 
     public override void FixedUpdateState(PlayersStateManagement player)

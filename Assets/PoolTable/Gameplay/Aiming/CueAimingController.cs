@@ -1,13 +1,25 @@
 using System;
 using PoolTable.Core.Shots;
 using PoolTable.Input;
+using PoolTable.Physics.Configuration;
 using UnityEngine;
 
 namespace PoolTable.Gameplay.Aiming
 {
+    public enum CueAimStage
+    {
+        Yaw = 0,
+        Elevation = 1,
+        Locked = 2,
+    }
+
     [DisallowMultipleComponent]
     public sealed class CueAimingController : MonoBehaviour
     {
+        private const float RuntimeMinimumElevationDegrees = 3f;
+        private const float CueShaftRadiusMeters = 0.01f;
+        private const float RailClearanceMeters = 0.003f;
+
         [SerializeField] private GameObject cueBall;
         [SerializeField] private float cueDistance = 1.6666667f;
         [SerializeField] private float yawDegreesPerPointerUnit = 0.1f;
@@ -18,7 +30,9 @@ namespace PoolTable.Gameplay.Aiming
 
         private AimingState aimingState;
         private LocalPlayerInputReader localPlayerInputReader;
+        private bool primaryButtonWasPressedLastFrame;
         private bool secondaryButtonWasPressedLastFrame;
+        private int stagedPointerSuppressionFrame = -1;
 
         public GameObject CueBall => cueBall;
 
@@ -28,9 +42,13 @@ namespace PoolTable.Gameplay.Aiming
 
         public float PitchDegreesPerPointerUnit => pitchDegreesPerPointerUnit;
 
-        public float MinimumElevationDegrees => minimumElevationDegrees;
+        public float MinimumElevationDegrees => Mathf.Max(minimumElevationDegrees, RuntimeMinimumElevationDegrees);
 
         public float MaximumElevationDegrees => maximumElevationDegrees;
+
+        public float EffectiveMinimumElevationDegrees => CalculateEffectiveMinimumElevationDegrees();
+
+        public CueAimStage AimStage { get; private set; } = CueAimStage.Yaw;
 
         public float ElevationDegrees => aimingState?.ElevationDegrees
             ?? throw new InvalidOperationException("Aiming state is not initialized.");
@@ -59,7 +77,10 @@ namespace PoolTable.Gameplay.Aiming
 
         private void OnEnable()
         {
+            primaryButtonWasPressedLastFrame = false;
             secondaryButtonWasPressedLastFrame = false;
+            stagedPointerSuppressionFrame = -1;
+            AimStage = CueAimStage.Yaw;
 
             if (localPlayerInputReader == null)
             {
@@ -76,27 +97,78 @@ namespace PoolTable.Gameplay.Aiming
 
         private void Update()
         {
-            ProcessInput(localPlayerInputReader.Read());
+            ProcessInputInternal(localPlayerInputReader.Read(), true);
+        }
+
+        public void AdvanceAimStage()
+        {
+            stagedPointerSuppressionFrame = Time.frameCount;
+
+            switch (AimStage)
+            {
+                case CueAimStage.Yaw:
+                    AimStage = CueAimStage.Elevation;
+                    break;
+                case CueAimStage.Elevation:
+                    AimStage = CueAimStage.Locked;
+                    break;
+            }
         }
 
         internal void ProcessInput(LocalPlayerInputSnapshot input)
+        {
+            ProcessInputInternal(input, false);
+        }
+
+        internal void ProcessStagedInput(LocalPlayerInputSnapshot input)
+        {
+            ProcessInputInternal(input, true);
+        }
+
+        private void ProcessInputInternal(LocalPlayerInputSnapshot input, bool stagePointerInput)
         {
             if (aimingState == null || cueBall == null)
             {
                 return;
             }
 
+            var primaryButtonWasPressedThisFrame = input.PrimaryActionIsPressed && !primaryButtonWasPressedLastFrame;
+            primaryButtonWasPressedLastFrame = input.PrimaryActionIsPressed;
             var suppressAim = input.SecondaryActionIsPressed || secondaryButtonWasPressedLastFrame;
             secondaryButtonWasPressedLastFrame = input.SecondaryActionIsPressed;
 
             if (!suppressAim)
             {
-                aimingState.RotateDegrees((input.PointerDelta.x * yawDegreesPerPointerUnit) + (input.AimAxis.x * Time.deltaTime * 120f));
-                aimingState.AdjustElevationDegrees(
-                    (input.PointerDelta.y * pitchDegreesPerPointerUnit)
-                    + (input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond));
+                aimingState.RotateDegrees(input.AimAxis.x * Time.deltaTime * 120f);
+                aimingState.AdjustElevationDegrees(input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond);
+
+                if (stagePointerInput)
+                {
+                    if (primaryButtonWasPressedThisFrame || stagedPointerSuppressionFrame == Time.frameCount)
+                    {
+                        EnforceTableClearance();
+                        ApplyCuePose();
+                        return;
+                    }
+
+                    switch (AimStage)
+                    {
+                        case CueAimStage.Yaw:
+                            aimingState.RotateDegrees(input.PointerDelta.x * yawDegreesPerPointerUnit);
+                            break;
+                        case CueAimStage.Elevation:
+                            aimingState.AdjustElevationDegrees(input.PointerDelta.y * pitchDegreesPerPointerUnit);
+                            break;
+                    }
+                }
+                else
+                {
+                    aimingState.RotateDegrees(input.PointerDelta.x * yawDegreesPerPointerUnit);
+                    aimingState.AdjustElevationDegrees(input.PointerDelta.y * pitchDegreesPerPointerUnit);
+                }
             }
 
+            EnforceTableClearance();
             ApplyCuePose();
         }
 
@@ -120,8 +192,94 @@ namespace PoolTable.Gameplay.Aiming
             aimingState = new AimingState(
                 new ShotDirection(planarDirection.x, planarDirection.y),
                 initialElevationDegrees,
-                minimumElevationDegrees,
+                MinimumElevationDegrees,
                 maximumElevationDegrees);
+
+            EnforceTableClearance();
+        }
+
+        private void EnforceTableClearance()
+        {
+            if (aimingState == null || cueBall == null)
+            {
+                return;
+            }
+
+            var minimumElevation = EffectiveMinimumElevationDegrees;
+            if (aimingState.ElevationDegrees < minimumElevation)
+            {
+                aimingState.AdjustElevationDegrees(minimumElevation - aimingState.ElevationDegrees);
+            }
+        }
+
+        private float CalculateEffectiveMinimumElevationDegrees()
+        {
+            if (aimingState == null || cueBall == null)
+            {
+                return MinimumElevationDegrees;
+            }
+
+            var planarBackward = new Vector2(-Direction.X, -Direction.Y);
+            if (planarBackward.sqrMagnitude <= 0.000001f)
+            {
+                return MinimumElevationDegrees;
+            }
+
+            planarBackward.Normalize();
+            var cueBallPosition = cueBall.transform.position;
+            var distanceToRail = DistanceToPlayingSurfaceBoundary(
+                new Vector2(cueBallPosition.x, cueBallPosition.z),
+                planarBackward);
+
+            if (!float.IsFinite(distanceToRail) || distanceToRail <= 0.0001f)
+            {
+                return maximumElevationDegrees;
+            }
+
+            var requiredCueAxisHeight = BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters
+                + BilliardsPhysicalSpecification.CushionNoseHeightMeters
+                + CueShaftRadiusMeters
+                + RailClearanceMeters;
+            var requiredRise = Mathf.Max(0f, requiredCueAxisHeight - cueBallPosition.y);
+            if (requiredRise <= 0f)
+            {
+                return MinimumElevationDegrees;
+            }
+
+            var clearanceElevation = Mathf.Atan2(requiredRise, distanceToRail) * Mathf.Rad2Deg;
+            return Mathf.Clamp(
+                Mathf.Max(MinimumElevationDegrees, clearanceElevation),
+                MinimumElevationDegrees,
+                maximumElevationDegrees);
+        }
+
+        private static float DistanceToPlayingSurfaceBoundary(Vector2 position, Vector2 direction)
+        {
+            var halfLength = BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters * 0.5f;
+            var halfWidth = BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters * 0.5f;
+            var distance = float.PositiveInfinity;
+
+            if (Mathf.Abs(direction.x) > 0.000001f)
+            {
+                var boundaryX = direction.x > 0f ? halfLength : -halfLength;
+                var candidate = (boundaryX - position.x) / direction.x;
+                if (candidate >= 0f)
+                {
+                    distance = Mathf.Min(distance, candidate);
+                }
+            }
+
+            if (Mathf.Abs(direction.y) > 0.000001f)
+            {
+                var boundaryY = direction.y > 0f ? halfWidth : -halfWidth;
+                var candidate = (boundaryY - position.y) / direction.y;
+                if (candidate >= 0f)
+                {
+                    distance = Mathf.Min(distance, candidate);
+                }
+            }
+
+            return distance;
         }
 
         private void ApplyCuePose()

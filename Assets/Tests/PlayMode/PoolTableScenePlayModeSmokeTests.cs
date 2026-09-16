@@ -488,6 +488,18 @@ namespace PoolTable.Tests.PlayMode
 
             var placementCamera = Camera.main;
             Assert.That(placementCamera, Is.Not.Null);
+
+            var tableCenter = new Vector3(
+                0f,
+                BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters,
+                0f);
+            var directionToTableCenter = (tableCenter - placementCamera.transform.position).normalized;
+            Assert.That(Vector3.Dot(placementCamera.transform.forward, directionToTableCenter), Is.GreaterThan(0.999f));
+            Assert.That(
+                placementCamera.transform.position.z,
+                Is.LessThan(-BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters * 0.5f),
+                "Direct ball-in-hand placement must immediately use the side-overview camera.");
+
             var pointerPosition = placementCamera.pixelRect.center;
             Assert.That(controller.TryProjectPointerToTable(pointerPosition, out var projectedPosition), Is.True);
             var expectedPointerPosition = BallInHandPlacementGeometry.ClampToPlacementArea(
@@ -957,6 +969,15 @@ namespace PoolTable.Tests.PlayMode
                 shotPowerController.enabled = true;
                 Assert.That(shotPowerController.NormalizedPower, Is.Zero);
 
+                shotPowerController.ProcessInput(
+                    new LocalPlayerInputSnapshot(new Vector2(0f, 10f), true));
+                Assert.That(
+                    shotPowerController.PullbackMeters,
+                    Is.Zero,
+                    "The pointer delta from the frame that enables shot power must not become accidental pullback.");
+
+                yield return null;
+
                 for (var stroke = 0; stroke < 18; stroke++)
                 {
                     shotPowerController.ProcessInput(
@@ -1031,7 +1052,7 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(shotPowerController.enabled, Is.False, "Shot power must be disabled while the player is aiming.");
             Assert.That(aimingController.CueBall, Is.Not.Null);
             Assert.That(aimingController.CueDistance, Is.EqualTo(1.6666667f).Within(0.0001f));
-            Assert.That(aimingController.MinimumElevationDegrees, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(aimingController.MinimumElevationDegrees, Is.EqualTo(3f).Within(0.0001f));
             Assert.That(aimingController.MaximumElevationDegrees, Is.EqualTo(20f).Within(0.0001f));
             Assert.That(
                 aimingController.YawDegreesPerPointerUnit,
@@ -1125,7 +1146,7 @@ namespace PoolTable.Tests.PlayMode
                 "The cue transform must stay aligned with the elevated strike direction.");
 
             aimingController.ProcessInput(new LocalPlayerInputSnapshot(new Vector2(0f, -10000f), false));
-            Assert.That(aimingController.ElevationDegrees, Is.EqualTo(0f).Within(0.0001f));
+            Assert.That(aimingController.ElevationDegrees, Is.EqualTo(3f).Within(0.0001f));
 
             var controllerType = playerController.GetType();
             Assert.That(controllerType.GetMethod("setRotation"), Is.Null, "Legacy player code must no longer own cue rotation.");
@@ -1227,6 +1248,8 @@ namespace PoolTable.Tests.PlayMode
             var cueBall = shotPowerController.CueBall;
             cueBall.linearVelocity = Vector3.zero;
             cueBall.angularVelocity = Vector3.zero;
+
+            yield return null;
 
             for (var stroke = 0; stroke < 18; stroke++)
             {
@@ -1388,7 +1411,7 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(modernAimingController, Is.Not.Null);
             Assert.That(aimingCameraController.AimingController, Is.SameAs(modernAimingController));
             Assert.That(aimingCameraController.DistanceBehindCueBall, Is.EqualTo(2.4f).Within(0.0001f));
-            Assert.That(aimingCameraController.HeightAboveCueBall, Is.EqualTo(1.05f).Within(0.0001f));
+            Assert.That(aimingCameraController.HeightAboveCueBall, Is.EqualTo(0.5f).Within(0.0001f));
             Assert.That(aimingCameraController.LookAheadDistance, Is.EqualTo(1.2f).Within(0.0001f));
             Assert.That(aimingCameraController.TargetHeightOffset, Is.EqualTo(0.08f).Within(0.0001f));
             AssertAimingCameraMatchesDirection(aimingCameraController, modernAimingController);
@@ -1791,15 +1814,15 @@ namespace PoolTable.Tests.PlayMode
         {
             Assert.That(cameraController.ApplyCameraPose(0f, true), Is.True);
 
-            var direction = aimingController.Direction;
-            var planarDirection = new Vector3(direction.X, 0f, direction.Y).normalized;
+            var strikeDirection = aimingController.StrikeDirection.normalized;
+            var cueUp = Quaternion.LookRotation(strikeDirection, Vector3.up) * Vector3.up;
             var cueBallPosition = aimingController.CueBall.transform.position;
             var expectedPosition = cueBallPosition
-                - (planarDirection * cameraController.DistanceBehindCueBall)
-                + (Vector3.up * cameraController.HeightAboveCueBall);
+                - (strikeDirection * cameraController.DistanceBehindCueBall)
+                + (cueUp * cameraController.EffectiveHeightAboveCueBall);
             var expectedFocusPoint = cueBallPosition
-                + (planarDirection * cameraController.LookAheadDistance)
-                + (Vector3.up * cameraController.TargetHeightOffset);
+                + (strikeDirection * cameraController.EffectiveLookAheadDistance)
+                + (cueUp * cameraController.EffectiveTargetHeightOffset);
 
             Assert.That(
                 Vector3.Distance(cameraController.transform.position, expectedPosition),
@@ -1819,17 +1842,17 @@ namespace PoolTable.Tests.PlayMode
         {
             Assert.That(cameraController.ApplyCameraPose(0f, true), Is.True);
 
-            var direction = shotPowerController.AimingController.Direction;
-            var planarDirection = new Vector3(direction.X, 0f, direction.Y).normalized;
+            var strikeDirection = shotPowerController.AimingController.StrikeDirection.normalized;
+            var cueUp = Quaternion.LookRotation(strikeDirection, Vector3.up) * Vector3.up;
             var cueBallPosition = shotPowerController.CueBall.position;
             var expectedDistance = cameraController.DistanceBehindCueBall
                 + (shotPowerController.NormalizedPower * cameraController.AdditionalDistanceAtFullPower);
             var expectedPosition = cueBallPosition
-                - (planarDirection * expectedDistance)
-                + (Vector3.up * cameraController.HeightAboveCueBall);
+                - (strikeDirection * expectedDistance)
+                + (cueUp * cameraController.EffectiveHeightAboveCueBall);
             var expectedFocusPoint = cueBallPosition
-                + (planarDirection * cameraController.LookAheadDistance)
-                + (Vector3.up * cameraController.TargetHeightOffset);
+                + (strikeDirection * cameraController.EffectiveLookAheadDistance)
+                + (cueUp * cameraController.EffectiveTargetHeightOffset);
 
             Assert.That(
                 Vector3.Distance(cameraController.transform.position, expectedPosition),
