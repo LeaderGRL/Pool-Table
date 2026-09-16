@@ -9,6 +9,7 @@ namespace PoolTable.Presentation.Camera
     {
         [SerializeField] private ShotPowerController shotPowerController;
         [SerializeField, Min(0.01f)] private float distanceBehindCueBall = 2.6f;
+        [SerializeField, Min(0f)] private float forwardEyeOffsetMeters = 1.15f;
         [SerializeField, Min(0f)] private float heightAboveCueBall = 1.1f;
         [SerializeField, Min(0f)] private float lookAheadDistance = 1.4f;
         [SerializeField, Min(0f)] private float targetHeightOffset = 0.08f;
@@ -19,6 +20,10 @@ namespace PoolTable.Presentation.Camera
         public ShotPowerController ShotPowerController => shotPowerController;
 
         public float DistanceBehindCueBall => distanceBehindCueBall;
+
+        public float ForwardEyeOffsetMeters => forwardEyeOffsetMeters;
+
+        public float EffectiveDistanceBehindCueBall => Mathf.Max(0.05f, distanceBehindCueBall - forwardEyeOffsetMeters);
 
         public float HeightAboveCueBall => heightAboveCueBall;
 
@@ -76,7 +81,7 @@ namespace PoolTable.Presentation.Camera
             var cueBallPosition = shotPowerController.CueBall.position;
             var powerDistance = shotPowerController.NormalizedPower * additionalDistanceAtFullPower;
             desiredPosition = cueBallPosition
-                - (planarDirection * (distanceBehindCueBall + powerDistance))
+                - (planarDirection * (EffectiveDistanceBehindCueBall + powerDistance))
                 + (Vector3.up * heightAboveCueBall);
 
             var focusPoint = cueBallPosition
