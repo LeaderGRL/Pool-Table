@@ -1,13 +1,24 @@
 using System;
+using PoolTable.Gameplay.Balls;
 using UnityEngine;
 
 namespace PoolTable.Presentation.Audio
 {
+    [RequireComponent(typeof(BallIdentity), typeof(Rigidbody))]
     public sealed class PlaySoundOnBallCollision : MonoBehaviour
     {
         [SerializeField] private AudioClip[] SFX_BallCollision;
 
+        private BallIdentity ballIdentity;
+        private Rigidbody ballRigidbody;
+
         public SoundManager SoundManager { get; private set; }
+
+        private void Awake()
+        {
+            ballIdentity = GetComponent<BallIdentity>();
+            ballRigidbody = GetComponent<Rigidbody>();
+        }
 
         public void Initialize(SoundManager soundManager)
         {
@@ -18,10 +29,9 @@ namespace PoolTable.Presentation.Audio
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (!collision.gameObject.CompareTag("striped")
-                && !collision.gameObject.CompareTag("filled")
-                && !collision.gameObject.CompareTag("white")
-                && !collision.gameObject.CompareTag("black"))
+            var otherBallIdentity = collision.gameObject.GetComponent<BallIdentity>();
+            if (otherBallIdentity == null
+                || !BallImpactAudioModel.IsPrimaryEmitter(ballIdentity.Id, otherBallIdentity.Id))
             {
                 return;
             }
@@ -32,13 +42,30 @@ namespace PoolTable.Presentation.Audio
                     $"{nameof(PlaySoundOnBallCollision)} on {name} was not initialized by the scene composition root.");
             }
 
-            var collisionSpeed = collision.relativeVelocity.magnitude;
-            var soundIndex = Mathf.Clamp(Mathf.RoundToInt(collisionSpeed / 10), 0, SFX_BallCollision.Length - 1);
+            if (SFX_BallCollision == null || SFX_BallCollision.Length == 0 || collision.rigidbody == null)
+            {
+                return;
+            }
+
+            var cue = BallImpactAudioModel.Evaluate(
+                collision.relativeVelocity.magnitude,
+                ballRigidbody.mass,
+                collision.rigidbody.mass,
+                SFX_BallCollision.Length);
+
+            if (!cue.ShouldPlay)
+            {
+                return;
+            }
+
+            var clip = SFX_BallCollision[cue.ClipIndex];
+            if (clip == null)
+            {
+                return;
+            }
 
             SoundManager.SetPitch(UnityEngine.Random.Range(0.9f, 1.1f));
-
-            var volume = Mathf.Clamp(collisionSpeed / 10, 0.01f, 1f);
-            SoundManager.PlaySoundEffect(SFX_BallCollision[soundIndex], volume);
+            SoundManager.PlaySoundEffect(clip, cue.Volume);
         }
     }
 }
