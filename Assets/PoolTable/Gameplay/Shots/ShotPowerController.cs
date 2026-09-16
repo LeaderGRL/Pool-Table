@@ -1,3 +1,4 @@
+using System;
 using PoolTable.Gameplay.Aiming;
 using PoolTable.Input;
 using PoolTable.Physics.Configuration;
@@ -27,6 +28,10 @@ namespace PoolTable.Gameplay.Shots
         private int pointerDeltaSuppressionFrame = -1;
         private bool strikeQueued;
         private CueBallStrikeMotion queuedStrike;
+        private float queuedShotSpeedMetersPerSecond;
+        private float queuedNormalizedPower;
+
+        public event Action<CueStrikeObservation> CueStrikeApplied;
 
         public Rigidbody CueBall => cueBall;
 
@@ -65,6 +70,8 @@ namespace PoolTable.Gameplay.Shots
             ShotCommitted = false;
             strikeQueued = false;
             queuedStrike = default;
+            queuedShotSpeedMetersPerSecond = 0f;
+            queuedNormalizedPower = 0f;
             restPosition = transform.position;
             restRotation = transform.rotation;
             hasRestPose = true;
@@ -100,7 +107,11 @@ namespace PoolTable.Gameplay.Shots
             spinController?.ResetToCenter();
             strikeQueued = false;
             ShotCommitted = true;
+            var observation = new CueStrikeObservation(
+                queuedNormalizedPower,
+                queuedShotSpeedMetersPerSecond);
             enabled = false;
+            CueStrikeApplied?.Invoke(observation);
         }
 
         internal void ProcessInput(LocalPlayerInputSnapshot input)
@@ -141,6 +152,8 @@ namespace PoolTable.Gameplay.Shots
                 shotSpeed,
                 spinController?.Spin ?? default,
                 BilliardsPhysicalSpecification.BallRadiusMeters);
+            queuedShotSpeedMetersPerSecond = shotSpeed;
+            queuedNormalizedPower = shotPowerState.NormalizedPower;
 
             RestoreCuePose();
             strikeQueued = true;
@@ -168,5 +181,18 @@ namespace PoolTable.Gameplay.Shots
 
             transform.SetPositionAndRotation(restPosition, restRotation);
         }
+    }
+
+    public readonly struct CueStrikeObservation
+    {
+        public CueStrikeObservation(float normalizedPower, float shotSpeedMetersPerSecond)
+        {
+            NormalizedPower = Mathf.Clamp01(normalizedPower);
+            ShotSpeedMetersPerSecond = Mathf.Max(0f, shotSpeedMetersPerSecond);
+        }
+
+        public float NormalizedPower { get; }
+
+        public float ShotSpeedMetersPerSecond { get; }
     }
 }
