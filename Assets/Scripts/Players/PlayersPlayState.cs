@@ -111,7 +111,7 @@ public class PlayersPlayState : PlayersBaseState
             return;
         }
 
-        if (LegacyMouseInput.GamepadPrimaryButtonWasPressedThisFrame)
+        if (LegacyMouseInput.GamepadPrimaryButtonIsPressed)
         {
             player.SwitchState(player.shootState);
             return;
