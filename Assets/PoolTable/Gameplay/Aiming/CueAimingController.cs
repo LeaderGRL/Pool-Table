@@ -114,17 +114,16 @@ namespace PoolTable.Gameplay.Aiming
 
             if (!suppressAim)
             {
+                aimingState.RotateDegrees(input.AimAxis.x * Time.deltaTime * 120f);
+                aimingState.AdjustElevationDegrees(input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond);
+
                 switch (AimStage)
                 {
                     case CueAimStage.Elevation:
-                        aimingState.AdjustElevationDegrees(
-                            (input.PointerDelta.y * pitchDegreesPerPointerUnit)
-                            + (input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond));
+                        aimingState.AdjustElevationDegrees(input.PointerDelta.y * pitchDegreesPerPointerUnit);
                         break;
                     case CueAimStage.Yaw:
-                        aimingState.RotateDegrees(
-                            (input.PointerDelta.x * yawDegreesPerPointerUnit)
-                            + (input.AimAxis.x * Time.deltaTime * 120f));
+                        aimingState.RotateDegrees(input.PointerDelta.x * yawDegreesPerPointerUnit);
                         break;
                 }
             }
