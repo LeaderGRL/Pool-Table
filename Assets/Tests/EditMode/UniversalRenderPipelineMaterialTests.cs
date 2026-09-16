@@ -14,6 +14,12 @@ namespace PoolTable.Tests.EditMode
         private const string CueBallMaterialPath = "Assets/Materials/CueBall.mat";
         private const string TableMaterialPath = "Assets/3D/source/Materials/pool table low_POOL TABLE_BaseColor.mat";
         private const string BallMaterialPath = "Assets/Billiard Balls/Models/Materials/Ball_01.mat";
+        private static readonly string[] BallMaterialRoots =
+        {
+            "Assets/3D/textures/Ball_texture/Materials",
+            "Assets/Billiard Balls/Materials",
+            "Assets/Billiard Balls/Models/Materials"
+        };
 
         [Test]
         public void ProjectMaterials_UseUniversalRenderPipelineShaders()
@@ -43,6 +49,48 @@ namespace PoolTable.Tests.EditMode
         {
             AssertConvertedMaterial(TableMaterialPath, "Universal Render Pipeline/Lit");
             AssertConvertedMaterial(BallMaterialPath, "Universal Render Pipeline/Simple Lit");
+        }
+
+        [Test]
+        public void ConvertedSimpleLitBallMaterials_PreserveScalarSmoothness()
+        {
+            var materialPaths = BallMaterialRoots
+                .SelectMany(root => AssetDatabase.FindAssets("t:Material", new[] { root }))
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Distinct()
+                .OrderBy(path => path)
+                .ToArray();
+
+            Assert.That(materialPaths, Is.Not.Empty);
+
+            foreach (var materialPath in materialPaths)
+            {
+                var material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+
+                if (material == null || material.shader == null || material.shader.name != "Universal Render Pipeline/Simple Lit")
+                {
+                    continue;
+                }
+
+                Assert.That(
+                    material.GetFloat("_SmoothnessSource"),
+                    Is.EqualTo(0f),
+                    $"Material '{materialPath}' must use scalar/specular smoothness so the preserved legacy value is not replaced by base-map alpha.");
+                Assert.That(
+                    material.GetColor("_SpecColor").a,
+                    Is.EqualTo(material.GetFloat("_Smoothness")).Within(0.0001f),
+                    $"Material '{materialPath}' must store its scalar smoothness in the Simple Lit specular alpha channel.");
+            }
+        }
+
+        [Test]
+        public void CueBallMaterial_IsNonEmissive()
+        {
+            var material = AssetDatabase.LoadAssetAtPath<Material>(CueBallMaterialPath);
+
+            Assert.That(material, Is.Not.Null);
+            Assert.That(material.IsKeywordEnabled("_EMISSION"), Is.False);
+            Assert.That(material.GetColor("_EmissionColor").maxColorComponent, Is.EqualTo(0f).Within(0.0001f));
         }
 
         [Test]
