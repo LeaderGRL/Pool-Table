@@ -30,6 +30,7 @@ namespace PoolTable.Presentation.Camera
         private UnityEngine.Camera outputCamera;
         private float defaultFieldOfView;
         private bool placementWasActive;
+        private bool controlledFieldOfViewLastFrame;
 
         public CueAimingController AimingController => aimingController;
 
@@ -74,7 +75,7 @@ namespace PoolTable.Presentation.Camera
 
         private void Start()
         {
-            ApplyPresentationCameraPose(0f, true);
+            controlledFieldOfViewLastFrame = ApplyPresentationCameraPose(0f, true);
         }
 
         private void LateUpdate()
@@ -82,18 +83,21 @@ namespace PoolTable.Presentation.Camera
             var placementIsActive = ballInHandPlacementController != null
                 && ballInHandPlacementController.IsPlacing;
             var snap = placementIsActive && !placementWasActive;
+            var applied = ApplyPresentationCameraPose(Time.deltaTime, snap);
 
-            if (!ApplyPresentationCameraPose(Time.deltaTime, snap))
+            if (!applied && controlledFieldOfViewLastFrame)
             {
                 RestoreDefaultFieldOfView();
             }
 
+            controlledFieldOfViewLastFrame = applied;
             placementWasActive = placementIsActive;
         }
 
         private void OnDisable()
         {
             RestoreDefaultFieldOfView();
+            controlledFieldOfViewLastFrame = false;
             placementWasActive = false;
         }
 
@@ -208,7 +212,7 @@ namespace PoolTable.Presentation.Camera
             return true;
         }
 
-        private bool TryGetBallInHandPose(
+        internal bool TryGetBallInHandPose(
             out Vector3 desiredPosition,
             out Quaternion desiredRotation,
             out float desiredFieldOfView)
