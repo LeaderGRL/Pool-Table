@@ -10,9 +10,13 @@ namespace PoolTable.Presentation.Camera
         [SerializeField] private CueAimingController aimingController;
         [SerializeField, Min(0.01f)] private float distanceBehindCueBall = 2.4f;
         [SerializeField, Min(0f)] private float forwardEyeOffsetMeters = 0.4f;
+        [SerializeField, Min(0.05f)] private float preferredRuntimeDistanceBehindCueBall = 1.05f;
         [SerializeField, Min(0f)] private float heightAboveCueBall = 0.5f;
+        [SerializeField, Min(0f)] private float preferredRuntimeHeightAboveCueBall = 0.18f;
         [SerializeField, Min(0f)] private float lookAheadDistance = 1.2f;
+        [SerializeField, Min(0f)] private float preferredRuntimeLookAheadDistance = 0.1f;
         [SerializeField, Min(0f)] private float targetHeightOffset = 0.08f;
+        [SerializeField, Min(0f)] private float preferredRuntimeTargetHeightOffset = 0f;
         [SerializeField, Range(0f, 1f)] private float elevationFollowFactor = 0.35f;
         [SerializeField, Min(0f)] private float positionSharpness = 12f;
         [SerializeField, Min(0f)] private float rotationSharpness = 16f;
@@ -23,13 +27,23 @@ namespace PoolTable.Presentation.Camera
 
         public float ForwardEyeOffsetMeters => forwardEyeOffsetMeters;
 
-        public float EffectiveDistanceBehindCueBall => Mathf.Max(0.05f, distanceBehindCueBall - forwardEyeOffsetMeters);
+        public float EffectiveDistanceBehindCueBall => Mathf.Min(
+            preferredRuntimeDistanceBehindCueBall,
+            Mathf.Max(0.05f, distanceBehindCueBall - forwardEyeOffsetMeters));
+
+        public float PreferredRuntimeDistanceBehindCueBall => preferredRuntimeDistanceBehindCueBall;
 
         public float HeightAboveCueBall => heightAboveCueBall;
 
+        public float EffectiveHeightAboveCueBall => Mathf.Min(heightAboveCueBall, preferredRuntimeHeightAboveCueBall);
+
         public float LookAheadDistance => lookAheadDistance;
 
+        public float EffectiveLookAheadDistance => Mathf.Min(lookAheadDistance, preferredRuntimeLookAheadDistance);
+
         public float TargetHeightOffset => targetHeightOffset;
+
+        public float EffectiveTargetHeightOffset => Mathf.Min(targetHeightOffset, preferredRuntimeTargetHeightOffset);
 
         public float ElevationFollowFactor => elevationFollowFactor;
 
@@ -99,11 +113,11 @@ namespace PoolTable.Presentation.Camera
                 * elevationFollowFactor;
             desiredPosition = cueBallPosition
                 - (planarDirection * cameraDistance)
-                + (Vector3.up * (heightAboveCueBall + elevationFollowHeight));
+                + (Vector3.up * (EffectiveHeightAboveCueBall + elevationFollowHeight));
 
             var focusPoint = cueBallPosition
-                + (planarDirection * lookAheadDistance)
-                + (Vector3.up * targetHeightOffset);
+                + (planarDirection * EffectiveLookAheadDistance)
+                + (Vector3.up * EffectiveTargetHeightOffset);
             var forward = focusPoint - desiredPosition;
 
             if (forward.sqrMagnitude <= 0.000001f)

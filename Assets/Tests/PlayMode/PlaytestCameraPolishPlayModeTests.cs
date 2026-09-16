@@ -43,22 +43,36 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator AimingCamera_RuntimeViewUsesForwardEyeOffset()
+        public IEnumerator GameplayCameras_RuntimeViewMatchesCueReferencePosition()
         {
             yield return LoadPoolTableScene();
 
             var aimingController = Object.FindFirstObjectByType<CueAimingController>();
             var outputCamera = Camera.main;
             var cameraController = outputCamera.GetComponent<AimingCameraController>();
+            var shotCameraController = outputCamera.GetComponent<ShotCameraController>();
 
             Assert.That(aimingController, Is.Not.Null);
             Assert.That(cameraController, Is.Not.Null);
+            Assert.That(shotCameraController, Is.Not.Null);
             Assert.That(cameraController.ForwardEyeOffsetMeters, Is.GreaterThan(0f));
             Assert.That(cameraController.EffectiveDistanceBehindCueBall, Is.LessThan(cameraController.DistanceBehindCueBall));
             Assert.That(
                 cameraController.EffectiveDistanceBehindCueBall,
-                Is.InRange(1.9f, 2.1f),
-                "Runtime aiming view should remain behind the cue grip while staying closer than the old camera.");
+                Is.InRange(1f, 1.1f),
+                "Runtime aiming view should sit near the player's head position along the cue instead of behind the cue butt.");
+            Assert.That(
+                cameraController.EffectiveDistanceBehindCueBall / aimingController.CueDistance,
+                Is.InRange(0.58f, 0.68f),
+                "The aiming eye should sit around the user-marked point slightly past the middle of the cue.");
+            Assert.That(
+                cameraController.EffectiveHeightAboveCueBall,
+                Is.InRange(0.15f, 0.22f),
+                "The close aiming eye should stay low enough to sight along the cue instead of looking over it.");
+            Assert.That(
+                shotCameraController.EffectiveDistanceBehindCueBall,
+                Is.InRange(1.05f, 1.15f),
+                "Shot-power presentation should keep the same close player-eye framing before pullback adds distance.");
 
             var cueBallPosition = aimingController.CueBall.transform.position;
             var planarOffset = Vector3.ProjectOnPlane(outputCamera.transform.position - cueBallPosition, Vector3.up);
@@ -231,7 +245,7 @@ namespace PoolTable.Tests.PlayMode
         {
             var cueBallPosition = aimingController.CueBall.transform.position;
             var cueButtPosition = aimingController.transform.position;
-            var visibleFractions = new[] { 0.2f, 0.35f, 0.5f, 0.55f };
+            var visibleFractions = new[] { 0.15f, 0.25f, 0.35f };
 
             foreach (var fraction in visibleFractions)
             {
@@ -251,6 +265,12 @@ namespace PoolTable.Tests.PlayMode
                     Is.InRange(0.03f, 0.97f),
                     $"Cue sample {fraction:P0} must remain vertically readable in the player view.");
             }
+
+            var cueButtCameraSpace = camera.transform.InverseTransformPoint(cueButtPosition);
+            Assert.That(
+                cueButtCameraSpace.z,
+                Is.LessThanOrEqualTo(camera.nearClipPlane),
+                "The cue butt must stay behind the player camera so the entire cue cannot be visible.");
         }
 
         private static IEnumerator LoadPoolTableScene()

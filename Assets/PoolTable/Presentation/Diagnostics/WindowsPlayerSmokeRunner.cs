@@ -259,7 +259,7 @@ namespace PoolTable.Presentation.Diagnostics
             var verticalSlopeLimit = 1f / Mathf.Max(0.0001f, Mathf.Abs(projection.m11));
             var cueBallPosition = aiming.CueBall.transform.position;
             var cueButtPosition = aiming.transform.position;
-            var visibleFractions = new[] { 0.2f, 0.35f, 0.5f, 0.55f };
+            var visibleFractions = new[] { 0.15f, 0.25f, 0.35f };
 
             foreach (var fraction in visibleFractions)
             {
@@ -279,6 +279,11 @@ namespace PoolTable.Presentation.Diagnostics
                     verticalSlope <= verticalSlopeLimit * 0.94f,
                     $"Cue sample {fraction:P0} must remain vertically inside the player-camera frustum.");
             }
+
+            var cueButtCameraSpace = camera.transform.InverseTransformPoint(cueButtPosition);
+            Require(
+                cueButtCameraSpace.z <= camera.nearClipPlane,
+                "The cue butt must remain behind the player camera so the full cue cannot appear in the aiming view.");
         }
 
         private static IEnumerator ValidateShotFlow(WindowsPlayerSmokeReport report)
