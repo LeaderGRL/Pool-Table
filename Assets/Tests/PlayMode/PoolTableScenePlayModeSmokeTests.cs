@@ -488,6 +488,18 @@ namespace PoolTable.Tests.PlayMode
 
             var placementCamera = Camera.main;
             Assert.That(placementCamera, Is.Not.Null);
+
+            var tableCenter = new Vector3(
+                0f,
+                BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters,
+                0f);
+            var directionToTableCenter = (tableCenter - placementCamera.transform.position).normalized;
+            Assert.That(Vector3.Dot(placementCamera.transform.forward, directionToTableCenter), Is.GreaterThan(0.999f));
+            Assert.That(
+                placementCamera.transform.position.z,
+                Is.LessThan(-BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters * 0.5f),
+                "Direct ball-in-hand placement must immediately use the side-overview camera.");
+
             var pointerPosition = placementCamera.pixelRect.center;
             Assert.That(controller.TryProjectPointerToTable(pointerPosition, out var projectedPosition), Is.True);
             var expectedPointerPosition = BallInHandPlacementGeometry.ClampToPlacementArea(

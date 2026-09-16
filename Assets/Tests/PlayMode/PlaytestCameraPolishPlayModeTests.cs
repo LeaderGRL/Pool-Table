@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using PoolTable.Gameplay.Aiming;
 using PoolTable.Gameplay.BallInHand;
@@ -16,6 +17,31 @@ namespace PoolTable.Tests.PlayMode
     [Category("SceneSmoke")]
     public sealed class PlaytestCameraPolishPlayModeTests
     {
+        [Test]
+        public void PlacementCamera_RunsAfterGameplayCameraControllers()
+        {
+            var placementOrder = typeof(BallInHandPlacementController)
+                .GetCustomAttribute<DefaultExecutionOrder>()
+                ?.order;
+            var aimingOrder = typeof(AimingCameraController)
+                .GetCustomAttribute<DefaultExecutionOrder>()
+                ?.order;
+            var shotOrder = typeof(ShotCameraController)
+                .GetCustomAttribute<DefaultExecutionOrder>()
+                ?.order;
+            var spectateOrder = typeof(SpectateCameraController)
+                .GetCustomAttribute<DefaultExecutionOrder>()
+                ?.order;
+
+            Assert.That(placementOrder, Is.Not.Null);
+            Assert.That(aimingOrder, Is.Not.Null);
+            Assert.That(shotOrder, Is.Not.Null);
+            Assert.That(spectateOrder, Is.Not.Null);
+            Assert.That(placementOrder.Value, Is.GreaterThan(aimingOrder.Value));
+            Assert.That(placementOrder.Value, Is.GreaterThan(shotOrder.Value));
+            Assert.That(placementOrder.Value, Is.GreaterThan(spectateOrder.Value));
+        }
+
         [UnityTest]
         public IEnumerator AimingCamera_RuntimeViewUsesForwardEyeOffset()
         {
@@ -29,6 +55,10 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cameraController, Is.Not.Null);
             Assert.That(cameraController.ForwardEyeOffsetMeters, Is.GreaterThan(0f));
             Assert.That(cameraController.EffectiveDistanceBehindCueBall, Is.LessThan(cameraController.DistanceBehindCueBall));
+            Assert.That(
+                cameraController.EffectiveDistanceBehindCueBall,
+                Is.LessThanOrEqualTo(1.05f),
+                "Runtime aiming view should sit around the player's grip instead of the cue butt.");
 
             var cueBallPosition = aimingController.CueBall.transform.position;
             var planarOffset = Vector3.ProjectOnPlane(outputCamera.transform.position - cueBallPosition, Vector3.up);
@@ -60,7 +90,10 @@ namespace PoolTable.Tests.PlayMode
             var originalPosition = outputCamera.transform.position;
             var originalRotation = outputCamera.transform.rotation;
             var originalFieldOfView = outputCamera.fieldOfView;
+            var originalAspect = outputCamera.aspect;
             controller.CursorStateAccessor = new TestCursorStateAccessor(CursorLockMode.Locked, false);
+
+            outputCamera.aspect = 16f / 9f;
 
             controller.BeginLegacyScratchPlacement();
 
@@ -84,20 +117,7 @@ namespace PoolTable.Tests.PlayMode
                 Is.LessThan(-BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters * 0.5f),
                 "Ball-in-hand camera must sit outside the long side of the playing surface.");
 
-            var halfLength = BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters * 0.5f;
-            var leftEdge = outputCamera.WorldToViewportPoint(new Vector3(
-                -halfLength,
-                BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters,
-                0f));
-            var rightEdge = outputCamera.WorldToViewportPoint(new Vector3(
-                halfLength,
-                BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters,
-                0f));
-
-            Assert.That(leftEdge.z, Is.GreaterThan(0f));
-            Assert.That(rightEdge.z, Is.GreaterThan(0f));
-            Assert.That(leftEdge.x, Is.InRange(0.02f, 0.16f));
-            Assert.That(rightEdge.x, Is.InRange(0.84f, 0.98f));
+            AssertPlayingSurfaceCornersVisible(outputCamera, 0.8f);
 
             cueBall.position = new Vector3(
                 BilliardsPhysicalSpecification.HeadStringX,
@@ -109,6 +129,47 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(Vector3.Distance(outputCamera.transform.position, originalPosition), Is.LessThan(0.0001f));
             Assert.That(Quaternion.Angle(outputCamera.transform.rotation, originalRotation), Is.LessThan(0.001f));
             Assert.That(outputCamera.fieldOfView, Is.EqualTo(originalFieldOfView).Within(0.0001f));
+
+            outputCamera.aspect = 32f / 9f;
+            controller.BeginLegacyScratchPlacement();
+
+            Assert.That(controller.IsPlacing, Is.True);
+            AssertPlayingSurfaceCornersVisible(outputCamera, 0.6f);
+
+            cueBall.position = new Vector3(
+                BilliardsPhysicalSpecification.HeadStringX,
+                BilliardsPhysicalSpecification.BallCenterHeightMeters,
+                0f);
+            Assert.That(controller.TryConfirmPlacement(), Is.True);
+            outputCamera.aspect = originalAspect;
+        }
+
+        private static void AssertPlayingSurfaceCornersVisible(Camera camera, float minimumHorizontalFill)
+        {
+            var halfLength = BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters * 0.5f;
+            var halfWidth = BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters * 0.5f;
+            var bedHeight = BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters;
+            var corners = new[]
+            {
+                new Vector3(-halfLength, bedHeight, -halfWidth),
+                new Vector3(-halfLength, bedHeight, halfWidth),
+                new Vector3(halfLength, bedHeight, -halfWidth),
+                new Vector3(halfLength, bedHeight, halfWidth),
+            };
+
+            var viewportPoints = corners.Select(camera.WorldToViewportPoint).ToArray();
+            foreach (var point in viewportPoints)
+            {
+                Assert.That(point.z, Is.GreaterThan(0f));
+                Assert.That(point.x, Is.InRange(0f, 1f));
+                Assert.That(point.y, Is.InRange(0f, 1f));
+            }
+
+            var horizontalFill = viewportPoints.Max(point => point.x) - viewportPoints.Min(point => point.x);
+            Assert.That(
+                horizontalFill,
+                Is.GreaterThanOrEqualTo(minimumHorizontalFill),
+                "Placement view should keep the table large in frame while preserving every corner.");
         }
 
         private static IEnumerator LoadPoolTableScene()

@@ -31,6 +31,7 @@ namespace PoolTable.Gameplay.BallInHand
         }
     }
 
+    [DefaultExecutionOrder(1100)]
     public sealed class BallInHandPlacementController : MonoBehaviour
     {
         private const string LegacyPlacementCompletedMessage = "OnModernBallInHandPlacementCompleted";
@@ -124,6 +125,14 @@ namespace PoolTable.Gameplay.BallInHand
             }
 
             primaryActionWasPressed = input.PrimaryActionIsPressed;
+        }
+
+        private void LateUpdate()
+        {
+            if (IsPlacing && cameraStateCaptured && activePlacementCamera != null)
+            {
+                ApplyPlacementCameraPose(activePlacementCamera);
+            }
         }
 
         public void BeginPlacement(MatchState state)
@@ -363,16 +372,34 @@ namespace PoolTable.Gameplay.BallInHand
             originalCameraFieldOfView = camera.fieldOfView;
             cameraStateCaptured = true;
 
+            ApplyPlacementCameraPose(camera);
+        }
+
+        private void ApplyPlacementCameraPose(Camera camera)
+        {
+            if (camera == null)
+            {
+                return;
+            }
+
             camera.fieldOfView = placementCameraVerticalFov;
 
-            var verticalFovRadians = placementCameraVerticalFov * Mathf.Deg2Rad;
-            var aspect = Mathf.Max(0.1f, camera.aspect);
-            var horizontalFovRadians = 2f * Mathf.Atan(Mathf.Tan(verticalFovRadians * 0.5f) * aspect);
+            // Use the fitted projection because the scene camera uses physical lens gate fitting.
+            var projection = camera.projectionMatrix;
+            var horizontalHalfFovTangent = 1f / Mathf.Max(0.01f, Mathf.Abs(projection.m00));
+            var verticalHalfFovTangent = 1f / Mathf.Max(0.01f, Mathf.Abs(projection.m11));
             var halfTableLength = BilliardsPhysicalSpecification.NineFootPlayingSurfaceLengthMeters * 0.5f;
-            var distanceToCenter = (halfTableLength * placementCameraHorizontalMargin)
-                / Mathf.Max(0.01f, Mathf.Tan(horizontalFovRadians * 0.5f));
+            var halfTableWidth = BilliardsPhysicalSpecification.NineFootPlayingSurfaceWidthMeters * 0.5f;
 
             var downAngleRadians = placementCameraDownAngleDegrees * Mathf.Deg2Rad;
+            var projectedHalfDepth = halfTableWidth * Mathf.Cos(downAngleRadians);
+            var projectedVerticalHalfExtent = halfTableWidth * Mathf.Sin(downAngleRadians);
+            var horizontalFitDistance = projectedHalfDepth
+                + ((halfTableLength * placementCameraHorizontalMargin) / horizontalHalfFovTangent);
+            var verticalFitDistance = projectedHalfDepth
+                + ((projectedVerticalHalfExtent * placementCameraHorizontalMargin) / verticalHalfFovTangent);
+            var distanceToCenter = Mathf.Max(horizontalFitDistance, verticalFitDistance);
+
             var forward = new Vector3(
                 0f,
                 -Mathf.Sin(downAngleRadians),

@@ -9,7 +9,7 @@ namespace PoolTable.Presentation.Camera
     {
         [SerializeField] private ShotPowerController shotPowerController;
         [SerializeField, Min(0.01f)] private float distanceBehindCueBall = 2.6f;
-        [SerializeField, Min(0f)] private float forwardEyeOffsetMeters = 1.15f;
+        [SerializeField, Min(0f)] private float forwardEyeOffsetMeters = 1.6f;
         [SerializeField, Min(0f)] private float heightAboveCueBall = 1.1f;
         [SerializeField, Min(0f)] private float lookAheadDistance = 1.4f;
         [SerializeField, Min(0f)] private float targetHeightOffset = 0.08f;

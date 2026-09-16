@@ -26,6 +26,7 @@ namespace PoolTable.Gameplay.Aiming
         private AimingState aimingState;
         private LocalPlayerInputReader localPlayerInputReader;
         private bool secondaryButtonWasPressedLastFrame;
+        private int stagedPointerSuppressionFrame = -1;
 
         public GameObject CueBall => cueBall;
 
@@ -69,6 +70,7 @@ namespace PoolTable.Gameplay.Aiming
         private void OnEnable()
         {
             secondaryButtonWasPressedLastFrame = false;
+            stagedPointerSuppressionFrame = -1;
             AimStage = CueAimStage.Elevation;
 
             if (localPlayerInputReader == null)
@@ -91,6 +93,8 @@ namespace PoolTable.Gameplay.Aiming
 
         public void AdvanceAimStage()
         {
+            stagedPointerSuppressionFrame = Time.frameCount;
+
             switch (AimStage)
             {
                 case CueAimStage.Elevation:
@@ -129,6 +133,12 @@ namespace PoolTable.Gameplay.Aiming
 
                 if (stagePointerInput)
                 {
+                    if (stagedPointerSuppressionFrame == Time.frameCount)
+                    {
+                        ApplyCuePose();
+                        return;
+                    }
+
                     switch (AimStage)
                     {
                         case CueAimStage.Elevation:

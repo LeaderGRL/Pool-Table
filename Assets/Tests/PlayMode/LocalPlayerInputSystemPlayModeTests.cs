@@ -128,6 +128,16 @@ namespace PoolTable.Tests.PlayMode
 
             controller.AdvanceAimStage();
             Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Yaw));
+
+            var directionAtPitchConfirmation = new Vector2(controller.Direction.X, controller.Direction.Y);
+            controller.ProcessStagedInput(pointerInput);
+            Assert.That(
+                Vector2.Angle(directionAtPitchConfirmation, new Vector2(controller.Direction.X, controller.Direction.Y)),
+                Is.LessThan(0.001f),
+                "Pointer movement from the pitch-confirmation frame must not leak into yaw.");
+            Assert.That(controller.ElevationDegrees, Is.EqualTo(elevationAfterPitch).Within(0.0001f));
+
+            yield return null;
             controller.ProcessStagedInput(pointerInput);
 
             var directionAfterYaw = new Vector2(controller.Direction.X, controller.Direction.Y);
