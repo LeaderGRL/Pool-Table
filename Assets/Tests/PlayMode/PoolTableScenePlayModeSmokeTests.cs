@@ -969,6 +969,15 @@ namespace PoolTable.Tests.PlayMode
                 shotPowerController.enabled = true;
                 Assert.That(shotPowerController.NormalizedPower, Is.Zero);
 
+                shotPowerController.ProcessInput(
+                    new LocalPlayerInputSnapshot(new Vector2(0f, 10f), true));
+                Assert.That(
+                    shotPowerController.PullbackMeters,
+                    Is.Zero,
+                    "The pointer delta from the frame that enables shot power must not become accidental pullback.");
+
+                yield return null;
+
                 for (var stroke = 0; stroke < 18; stroke++)
                 {
                     shotPowerController.ProcessInput(
@@ -1239,6 +1248,8 @@ namespace PoolTable.Tests.PlayMode
             var cueBall = shotPowerController.CueBall;
             cueBall.linearVelocity = Vector3.zero;
             cueBall.angularVelocity = Vector3.zero;
+
+            yield return null;
 
             for (var stroke = 0; stroke < 18; stroke++)
             {

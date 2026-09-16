@@ -197,7 +197,7 @@ namespace PoolTable.Presentation.Diagnostics
             var aimingCamera = outputCamera.GetComponent<AimingCameraController>();
             Require(aimingCamera != null, "The output camera must provide AimingCameraController during local-control smoke validation.");
             Require(aimingCamera.ApplyRuntimeCameraPose(0f, true), "The aiming camera must resolve a valid runtime pose before visibility validation.");
-            RequireCueFrontVisible(outputCamera, aiming);
+            RequireCueReadable(outputCamera, aiming);
 
             Require(aiming.AimStage == CueAimStage.Yaw, "Mouse aiming must start with yaw.");
             aiming.AdvanceAimStage();
@@ -234,7 +234,7 @@ namespace PoolTable.Presentation.Diagnostics
             Require(
                 Vector3.Angle(cameraForwardBeforeElevation, aimingCamera.transform.forward) > 0.05f,
                 "The aiming camera orientation must follow cue elevation.");
-            RequireCueFrontVisible(outputCamera, aiming);
+            RequireCueReadable(outputCamera, aiming);
 
             Require(spin.Spin.IsCentered, "Cue-ball spin must start centered.");
             SetSmokeGamepadState(0f, 0f, 0.5f, 0.5f, 1f, 0f);
@@ -252,23 +252,33 @@ namespace PoolTable.Presentation.Diagnostics
             report.Checkpoints.Add("local-controls");
         }
 
-        private static void RequireCueFrontVisible(UnityEngine.Camera camera, CueAimingController aiming)
+        private static void RequireCueReadable(UnityEngine.Camera camera, CueAimingController aiming)
         {
-            var cueFrontSample = Vector3.Lerp(
-                aiming.CueBall.transform.position,
-                aiming.transform.position,
-                0.3f);
-            var cameraSpacePoint = camera.transform.InverseTransformPoint(cueFrontSample);
-            Require(cameraSpacePoint.z > 0f, "The cue front must remain in front of the player camera.");
-
             var projection = camera.projectionMatrix;
             var horizontalSlopeLimit = 1f / Mathf.Max(0.0001f, Mathf.Abs(projection.m00));
             var verticalSlopeLimit = 1f / Mathf.Max(0.0001f, Mathf.Abs(projection.m11));
-            var horizontalSlope = Mathf.Abs(cameraSpacePoint.x / cameraSpacePoint.z);
-            var verticalSlope = Mathf.Abs(cameraSpacePoint.y / cameraSpacePoint.z);
+            var cueBallPosition = aiming.CueBall.transform.position;
+            var cueButtPosition = aiming.transform.position;
+            var visibleFractions = new[] { 0.2f, 0.35f, 0.5f, 0.55f };
 
-            Require(horizontalSlope <= horizontalSlopeLimit, "The cue front must remain horizontally inside the player-camera frustum.");
-            Require(verticalSlope <= verticalSlopeLimit, "The cue front must remain vertically inside the player-camera frustum.");
+            foreach (var fraction in visibleFractions)
+            {
+                var cueSample = Vector3.Lerp(cueBallPosition, cueButtPosition, fraction);
+                var cameraSpacePoint = camera.transform.InverseTransformPoint(cueSample);
+                Require(
+                    cameraSpacePoint.z > camera.nearClipPlane,
+                    $"Cue sample {fraction:P0} must remain in front of the player camera near plane.");
+
+                var horizontalSlope = Mathf.Abs(cameraSpacePoint.x / cameraSpacePoint.z);
+                var verticalSlope = Mathf.Abs(cameraSpacePoint.y / cameraSpacePoint.z);
+
+                Require(
+                    horizontalSlope <= horizontalSlopeLimit * 0.94f,
+                    $"Cue sample {fraction:P0} must remain horizontally inside the player-camera frustum.");
+                Require(
+                    verticalSlope <= verticalSlopeLimit * 0.94f,
+                    $"Cue sample {fraction:P0} must remain vertically inside the player-camera frustum.");
+            }
         }
 
         private static IEnumerator ValidateShotFlow(WindowsPlayerSmokeReport report)

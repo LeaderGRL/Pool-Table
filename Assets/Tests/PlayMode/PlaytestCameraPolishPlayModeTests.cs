@@ -57,8 +57,8 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(cameraController.EffectiveDistanceBehindCueBall, Is.LessThan(cameraController.DistanceBehindCueBall));
             Assert.That(
                 cameraController.EffectiveDistanceBehindCueBall,
-                Is.InRange(1.35f, 1.55f),
-                "Runtime aiming view should sit around the player's grip instead of the cue butt.");
+                Is.InRange(1.9f, 2.1f),
+                "Runtime aiming view should remain behind the cue grip while staying closer than the old camera.");
 
             var cueBallPosition = aimingController.CueBall.transform.position;
             var planarOffset = Vector3.ProjectOnPlane(outputCamera.transform.position - cueBallPosition, Vector3.up);
@@ -89,7 +89,7 @@ namespace PoolTable.Tests.PlayMode
             var cameraPositionBeforePitch = outputCamera.transform.position;
             var cameraForwardBeforePitch = outputCamera.transform.forward;
 
-            AssertCueFrontVisible(outputCamera, aimingController);
+            AssertCueReadableInFrame(outputCamera, aimingController);
 
             aimingController.AdvanceAimStage();
             Assert.That(aimingController.AimStage, Is.EqualTo(CueAimStage.Elevation));
@@ -117,7 +117,7 @@ namespace PoolTable.Tests.PlayMode
                 Is.LessThan(cameraForwardBeforePitch.y - 0.001f),
                 "Increasing cue elevation must pitch the camera downward along the cue line.");
 
-            AssertCueFrontVisible(outputCamera, aimingController);
+            AssertCueReadableInFrame(outputCamera, aimingController);
 
             outputCamera.aspect = originalAspect;
             outputCamera.ResetProjectionMatrix();
@@ -227,17 +227,30 @@ namespace PoolTable.Tests.PlayMode
                 "Placement view should keep the table large in frame while preserving every corner.");
         }
 
-        private static void AssertCueFrontVisible(Camera camera, CueAimingController aimingController)
+        private static void AssertCueReadableInFrame(Camera camera, CueAimingController aimingController)
         {
-            var cueFrontSample = Vector3.Lerp(
-                aimingController.CueBall.transform.position,
-                aimingController.transform.position,
-                0.3f);
-            var cueViewportPoint = camera.WorldToViewportPoint(cueFrontSample);
+            var cueBallPosition = aimingController.CueBall.transform.position;
+            var cueButtPosition = aimingController.transform.position;
+            var visibleFractions = new[] { 0.2f, 0.35f, 0.5f, 0.55f };
 
-            Assert.That(cueViewportPoint.z, Is.GreaterThan(0f), "The front section of the cue must stay in front of the camera.");
-            Assert.That(cueViewportPoint.x, Is.InRange(0f, 1f), "The cue must remain horizontally visible in the player view.");
-            Assert.That(cueViewportPoint.y, Is.InRange(0f, 1f), "The cue must remain vertically visible in the player view.");
+            foreach (var fraction in visibleFractions)
+            {
+                var cueSample = Vector3.Lerp(cueBallPosition, cueButtPosition, fraction);
+                var cueViewportPoint = camera.WorldToViewportPoint(cueSample);
+
+                Assert.That(
+                    cueViewportPoint.z,
+                    Is.GreaterThan(camera.nearClipPlane),
+                    $"Cue sample {fraction:P0} must stay in front of the camera near plane.");
+                Assert.That(
+                    cueViewportPoint.x,
+                    Is.InRange(0.03f, 0.97f),
+                    $"Cue sample {fraction:P0} must remain horizontally readable in the player view.");
+                Assert.That(
+                    cueViewportPoint.y,
+                    Is.InRange(0.03f, 0.97f),
+                    $"Cue sample {fraction:P0} must remain vertically readable in the player view.");
+            }
         }
 
         private static IEnumerator LoadPoolTableScene()
