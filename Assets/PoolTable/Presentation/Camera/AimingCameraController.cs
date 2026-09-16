@@ -32,17 +32,32 @@ namespace PoolTable.Presentation.Camera
 
         private void Start()
         {
-            ApplyCameraPose(0f, true);
+            ApplyRuntimeCameraPose(0f, true);
         }
 
         private void LateUpdate()
         {
-            ApplyCameraPose(Time.deltaTime, false);
+            ApplyRuntimeCameraPose(Time.deltaTime, false);
         }
 
         internal bool ApplyCameraPose(float deltaTime, bool snap)
         {
-            if (!TryGetDesiredPose(out var desiredPosition, out var desiredRotation))
+            return ApplyCameraPose(deltaTime, snap, distanceBehindCueBall);
+        }
+
+        internal bool TryGetDesiredPose(out Vector3 desiredPosition, out Quaternion desiredRotation)
+        {
+            return TryGetDesiredPose(distanceBehindCueBall, out desiredPosition, out desiredRotation);
+        }
+
+        private bool ApplyRuntimeCameraPose(float deltaTime, bool snap)
+        {
+            return ApplyCameraPose(deltaTime, snap, EffectiveDistanceBehindCueBall);
+        }
+
+        private bool ApplyCameraPose(float deltaTime, bool snap, float cameraDistance)
+        {
+            if (!TryGetDesiredPose(cameraDistance, out var desiredPosition, out var desiredRotation))
             {
                 return false;
             }
@@ -55,7 +70,10 @@ namespace PoolTable.Presentation.Camera
             return true;
         }
 
-        internal bool TryGetDesiredPose(out Vector3 desiredPosition, out Quaternion desiredRotation)
+        private bool TryGetDesiredPose(
+            float cameraDistance,
+            out Vector3 desiredPosition,
+            out Quaternion desiredRotation)
         {
             desiredPosition = default;
             desiredRotation = default;
@@ -69,7 +87,7 @@ namespace PoolTable.Presentation.Camera
             var planarDirection = new Vector3(direction.X, 0f, direction.Y).normalized;
             var cueBallPosition = aimingController.CueBall.transform.position;
             desiredPosition = cueBallPosition
-                - (planarDirection * EffectiveDistanceBehindCueBall)
+                - (planarDirection * cameraDistance)
                 + (Vector3.up * heightAboveCueBall);
 
             var focusPoint = cueBallPosition
