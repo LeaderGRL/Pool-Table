@@ -102,7 +102,7 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator CueAimingController_PointerInputStagesElevationThenYaw()
+        public IEnumerator CueAimingController_PointerInputStagesYawThenElevation()
         {
             var cueBall = new GameObject("StagedPointerTestCueBall");
             var cue = new GameObject("StagedPointerTestCue");
@@ -118,31 +118,30 @@ namespace PoolTable.Tests.PlayMode
             var initialElevation = controller.ElevationDegrees;
             var pointerInput = new LocalPlayerInputSnapshot(new Vector2(12f, 8f), false);
 
-            Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Elevation));
+            Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Yaw));
             controller.ProcessStagedInput(pointerInput);
 
-            var directionAfterPitch = new Vector2(controller.Direction.X, controller.Direction.Y);
-            var elevationAfterPitch = controller.ElevationDegrees;
-            Assert.That(Vector2.Angle(initialDirection, directionAfterPitch), Is.LessThan(0.001f));
-            Assert.That(elevationAfterPitch, Is.GreaterThan(initialElevation));
+            var directionAfterYaw = new Vector2(controller.Direction.X, controller.Direction.Y);
+            Assert.That(Vector2.Angle(initialDirection, directionAfterYaw), Is.GreaterThan(0.01f));
+            Assert.That(controller.ElevationDegrees, Is.EqualTo(initialElevation).Within(0.0001f));
 
             controller.AdvanceAimStage();
-            Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Yaw));
+            Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Elevation));
 
-            var directionAtPitchConfirmation = new Vector2(controller.Direction.X, controller.Direction.Y);
+            var directionAtYawConfirmation = new Vector2(controller.Direction.X, controller.Direction.Y);
             controller.ProcessStagedInput(pointerInput);
             Assert.That(
-                Vector2.Angle(directionAtPitchConfirmation, new Vector2(controller.Direction.X, controller.Direction.Y)),
+                Vector2.Angle(directionAtYawConfirmation, new Vector2(controller.Direction.X, controller.Direction.Y)),
                 Is.LessThan(0.001f),
-                "Pointer movement from the pitch-confirmation frame must not leak into yaw.");
-            Assert.That(controller.ElevationDegrees, Is.EqualTo(elevationAfterPitch).Within(0.0001f));
+                "Pointer movement from the yaw-confirmation frame must not alter the locked yaw.");
+            Assert.That(controller.ElevationDegrees, Is.EqualTo(initialElevation).Within(0.0001f));
 
             yield return null;
             controller.ProcessStagedInput(pointerInput);
 
-            var directionAfterYaw = new Vector2(controller.Direction.X, controller.Direction.Y);
-            Assert.That(Vector2.Angle(directionAfterPitch, directionAfterYaw), Is.GreaterThan(0.01f));
-            Assert.That(controller.ElevationDegrees, Is.EqualTo(elevationAfterPitch).Within(0.0001f));
+            var elevationAfterPitch = controller.ElevationDegrees;
+            Assert.That(Vector2.Angle(directionAfterYaw, new Vector2(controller.Direction.X, controller.Direction.Y)), Is.LessThan(0.001f));
+            Assert.That(elevationAfterPitch, Is.GreaterThan(initialElevation));
 
             controller.AdvanceAimStage();
             Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Locked));
@@ -152,6 +151,48 @@ namespace PoolTable.Tests.PlayMode
 
             Assert.That(Vector2.Angle(lockedDirection, new Vector2(controller.Direction.X, controller.Direction.Y)), Is.LessThan(0.001f));
             Assert.That(controller.ElevationDegrees, Is.EqualTo(lockedElevation).Within(0.0001f));
+
+            Object.Destroy(cue);
+            Object.Destroy(cueBall);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator CueAimingController_ClickFrameSuppressesPointerWhenInputRunsBeforeStageAdvance()
+        {
+            var cueBall = new GameObject("ClickBoundaryTestCueBall");
+            var cue = new GameObject("ClickBoundaryTestCue");
+            cueBall.transform.position = Vector3.zero;
+            cue.transform.SetPositionAndRotation(new Vector3(0f, 0f, -1f), Quaternion.identity);
+
+            var controller = cue.AddComponent<CueAimingController>();
+            SetPrivateField(controller, "cueBall", cueBall);
+            controller.enabled = false;
+            controller.enabled = true;
+
+            var directionBeforeClick = new Vector2(controller.Direction.X, controller.Direction.Y);
+            var elevationBeforeClick = controller.ElevationDegrees;
+            var clickWithPointerMotion = new LocalPlayerInputSnapshot(new Vector2(40f, 30f), true);
+
+            controller.ProcessStagedInput(clickWithPointerMotion);
+
+            Assert.That(
+                Vector2.Angle(directionBeforeClick, new Vector2(controller.Direction.X, controller.Direction.Y)),
+                Is.LessThan(0.001f),
+                "The click frame must not move yaw even when aiming input updates before the player state.");
+            Assert.That(controller.ElevationDegrees, Is.EqualTo(elevationBeforeClick).Within(0.0001f));
+
+            controller.AdvanceAimStage();
+            Assert.That(controller.AimStage, Is.EqualTo(CueAimStage.Elevation));
+            Assert.That(
+                Vector2.Angle(directionBeforeClick, new Vector2(controller.Direction.X, controller.Direction.Y)),
+                Is.LessThan(0.001f));
+            Assert.That(controller.ElevationDegrees, Is.EqualTo(elevationBeforeClick).Within(0.0001f));
+
+            yield return null;
+            controller.ProcessStagedInput(new LocalPlayerInputSnapshot(Vector2.zero, false));
+            controller.ProcessStagedInput(new LocalPlayerInputSnapshot(new Vector2(0f, 30f), false));
+            Assert.That(controller.ElevationDegrees, Is.GreaterThan(elevationBeforeClick));
 
             Object.Destroy(cue);
             Object.Destroy(cueBall);

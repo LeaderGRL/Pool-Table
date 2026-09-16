@@ -83,15 +83,19 @@ namespace PoolTable.Presentation.Camera
                 return false;
             }
 
-            var direction = aimingController.Direction;
-            var planarDirection = new Vector3(direction.X, 0f, direction.Y).normalized;
+            var strikeDirection = aimingController.StrikeDirection.normalized;
+            if (strikeDirection.sqrMagnitude <= 0.000001f)
+            {
+                return false;
+            }
+
             var cueBallPosition = aimingController.CueBall.transform.position;
             desiredPosition = cueBallPosition
-                - (planarDirection * cameraDistance)
+                - (strikeDirection * cameraDistance)
                 + (Vector3.up * heightAboveCueBall);
 
             var focusPoint = cueBallPosition
-                + (planarDirection * lookAheadDistance)
+                + (strikeDirection * lookAheadDistance)
                 + (Vector3.up * targetHeightOffset);
             var forward = focusPoint - desiredPosition;
 

@@ -11,6 +11,7 @@ using PoolTable.Gameplay.BallInHand;
 using PoolTable.Gameplay.Balls;
 using PoolTable.Gameplay.Pockets;
 using PoolTable.Gameplay.Shots;
+using PoolTable.Presentation.Camera;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -185,6 +186,15 @@ namespace PoolTable.Presentation.Diagnostics
             Require(HasInitializedInputReader(spin), "The spin controller must initialize its local input reader.");
             Require(HasInitializedInputReader(shotPower), "The shot-power controller must initialize its local input reader.");
 
+            Require(aiming.AimStage == CueAimStage.Yaw, "Mouse aiming must start with yaw.");
+            aiming.AdvanceAimStage();
+            Require(aiming.AimStage == CueAimStage.Elevation, "The first mouse confirmation must advance from yaw to elevation.");
+            aiming.AdvanceAimStage();
+            Require(aiming.AimStage == CueAimStage.Locked, "The second mouse confirmation must lock aiming before shot power.");
+            aiming.enabled = false;
+            aiming.enabled = true;
+            Require(aiming.AimStage == CueAimStage.Yaw, "Re-entering aiming must reset the mouse flow to yaw first.");
+
             var directionBefore = new Vector2(aiming.Direction.X, aiming.Direction.Y);
             SetSmokeGamepadState(0.75f, 0f, 0f, 0f, 0f, 0f);
             yield return new WaitForSecondsRealtime(InputObservationSeconds);
@@ -194,6 +204,25 @@ namespace PoolTable.Presentation.Diagnostics
             Require(
                 (directionAfter - directionBefore).sqrMagnitude > 0.000001f,
                 "The aiming controller must consume the injected Input System aim axis during Update.");
+
+            var aimingCamera = UnityEngine.Camera.main?.GetComponent<AimingCameraController>();
+            Require(aimingCamera != null, "The output camera must provide AimingCameraController during local-control smoke validation.");
+            Require(aimingCamera.ApplyCameraPose(0f, true), "The aiming camera must resolve a valid pose before elevation validation.");
+            var elevationBefore = aiming.ElevationDegrees;
+            var cameraPositionBeforeElevation = aimingCamera.transform.position;
+            var cameraForwardBeforeElevation = aimingCamera.transform.forward;
+
+            SetSmokeGamepadState(0f, 0.75f, 0f, 0f, 0f, 0f);
+            yield return new WaitForSecondsRealtime(InputObservationSeconds);
+            ThrowIfRuntimeErrors();
+            Require(aiming.ElevationDegrees > elevationBefore, "The aiming controller must consume vertical aim input as cue elevation.");
+            Require(aimingCamera.ApplyCameraPose(0f, true), "The aiming camera must resolve a valid elevated pose.");
+            Require(
+                aimingCamera.transform.position.y > cameraPositionBeforeElevation.y + 0.001f,
+                "The aiming camera must rise with cue elevation instead of remaining on a planar yaw orbit.");
+            Require(
+                Vector3.Angle(cameraForwardBeforeElevation, aimingCamera.transform.forward) > 0.05f,
+                "The aiming camera orientation must follow cue elevation.");
 
             Require(spin.Spin.IsCentered, "Cue-ball spin must start centered.");
             SetSmokeGamepadState(0f, 0f, 0.5f, 0.5f, 1f, 0f);

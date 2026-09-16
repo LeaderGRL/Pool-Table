@@ -69,6 +69,50 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator AimingCamera_FollowsCueElevationDuringPitchStage()
+        {
+            yield return LoadPoolTableScene();
+
+            var aimingController = Object.FindFirstObjectByType<CueAimingController>();
+            var outputCamera = Camera.main;
+            var cameraController = outputCamera.GetComponent<AimingCameraController>();
+
+            Assert.That(aimingController, Is.Not.Null);
+            Assert.That(cameraController, Is.Not.Null);
+            Assert.That(aimingController.AimStage, Is.EqualTo(CueAimStage.Yaw));
+
+            Assert.That(cameraController.ApplyCameraPose(0f, true), Is.True);
+            var directionBeforePitch = new Vector2(aimingController.Direction.X, aimingController.Direction.Y);
+            var cameraPositionBeforePitch = outputCamera.transform.position;
+            var cameraForwardBeforePitch = outputCamera.transform.forward;
+
+            aimingController.AdvanceAimStage();
+            Assert.That(aimingController.AimStage, Is.EqualTo(CueAimStage.Elevation));
+            yield return null;
+
+            aimingController.ProcessStagedInput(new PoolTable.Input.LocalPlayerInputSnapshot(new Vector2(0f, 100f), false));
+            Assert.That(aimingController.ElevationDegrees, Is.GreaterThan(0f));
+            Assert.That(
+                Vector2.Angle(directionBeforePitch, new Vector2(aimingController.Direction.X, aimingController.Direction.Y)),
+                Is.LessThan(0.001f),
+                "Pitch adjustment must not alter the locked yaw direction.");
+
+            Assert.That(cameraController.ApplyCameraPose(0f, true), Is.True);
+            Assert.That(
+                outputCamera.transform.position.y,
+                Is.GreaterThan(cameraPositionBeforePitch.y + 0.01f),
+                "The aiming camera must rise with the elevated cue instead of staying on a planar orbit.");
+            Assert.That(
+                Quaternion.Angle(Quaternion.LookRotation(cameraForwardBeforePitch), outputCamera.transform.rotation),
+                Is.GreaterThan(0.1f),
+                "The aiming camera orientation must follow cue elevation.");
+            Assert.That(
+                outputCamera.transform.forward.y,
+                Is.LessThan(cameraForwardBeforePitch.y - 0.001f),
+                "Increasing cue elevation must pitch the camera downward along the cue line.");
+        }
+
+        [UnityTest]
         public IEnumerator BallInHandPlacement_UsesSideOverviewAndRestoresOutputCamera()
         {
             yield return LoadPoolTableScene();

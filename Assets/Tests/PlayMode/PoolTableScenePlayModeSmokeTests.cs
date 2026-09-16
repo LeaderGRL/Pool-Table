@@ -1803,14 +1803,13 @@ namespace PoolTable.Tests.PlayMode
         {
             Assert.That(cameraController.ApplyCameraPose(0f, true), Is.True);
 
-            var direction = aimingController.Direction;
-            var planarDirection = new Vector3(direction.X, 0f, direction.Y).normalized;
+            var strikeDirection = aimingController.StrikeDirection.normalized;
             var cueBallPosition = aimingController.CueBall.transform.position;
             var expectedPosition = cueBallPosition
-                - (planarDirection * cameraController.DistanceBehindCueBall)
+                - (strikeDirection * cameraController.DistanceBehindCueBall)
                 + (Vector3.up * cameraController.HeightAboveCueBall);
             var expectedFocusPoint = cueBallPosition
-                + (planarDirection * cameraController.LookAheadDistance)
+                + (strikeDirection * cameraController.LookAheadDistance)
                 + (Vector3.up * cameraController.TargetHeightOffset);
 
             Assert.That(
@@ -1831,16 +1830,15 @@ namespace PoolTable.Tests.PlayMode
         {
             Assert.That(cameraController.ApplyCameraPose(0f, true), Is.True);
 
-            var direction = shotPowerController.AimingController.Direction;
-            var planarDirection = new Vector3(direction.X, 0f, direction.Y).normalized;
+            var strikeDirection = shotPowerController.AimingController.StrikeDirection.normalized;
             var cueBallPosition = shotPowerController.CueBall.position;
             var expectedDistance = cameraController.DistanceBehindCueBall
                 + (shotPowerController.NormalizedPower * cameraController.AdditionalDistanceAtFullPower);
             var expectedPosition = cueBallPosition
-                - (planarDirection * expectedDistance)
+                - (strikeDirection * expectedDistance)
                 + (Vector3.up * cameraController.HeightAboveCueBall);
             var expectedFocusPoint = cueBallPosition
-                + (planarDirection * cameraController.LookAheadDistance)
+                + (strikeDirection * cameraController.LookAheadDistance)
                 + (Vector3.up * cameraController.TargetHeightOffset);
 
             Assert.That(

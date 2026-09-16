@@ -7,8 +7,8 @@ namespace PoolTable.Gameplay.Aiming
 {
     public enum CueAimStage
     {
-        Elevation = 0,
-        Yaw = 1,
+        Yaw = 0,
+        Elevation = 1,
         Locked = 2,
     }
 
@@ -25,6 +25,7 @@ namespace PoolTable.Gameplay.Aiming
 
         private AimingState aimingState;
         private LocalPlayerInputReader localPlayerInputReader;
+        private bool primaryButtonWasPressedLastFrame;
         private bool secondaryButtonWasPressedLastFrame;
         private int stagedPointerSuppressionFrame = -1;
 
@@ -40,7 +41,7 @@ namespace PoolTable.Gameplay.Aiming
 
         public float MaximumElevationDegrees => maximumElevationDegrees;
 
-        public CueAimStage AimStage { get; private set; } = CueAimStage.Elevation;
+        public CueAimStage AimStage { get; private set; } = CueAimStage.Yaw;
 
         public float ElevationDegrees => aimingState?.ElevationDegrees
             ?? throw new InvalidOperationException("Aiming state is not initialized.");
@@ -69,9 +70,10 @@ namespace PoolTable.Gameplay.Aiming
 
         private void OnEnable()
         {
+            primaryButtonWasPressedLastFrame = false;
             secondaryButtonWasPressedLastFrame = false;
             stagedPointerSuppressionFrame = -1;
-            AimStage = CueAimStage.Elevation;
+            AimStage = CueAimStage.Yaw;
 
             if (localPlayerInputReader == null)
             {
@@ -97,10 +99,10 @@ namespace PoolTable.Gameplay.Aiming
 
             switch (AimStage)
             {
-                case CueAimStage.Elevation:
-                    AimStage = CueAimStage.Yaw;
-                    break;
                 case CueAimStage.Yaw:
+                    AimStage = CueAimStage.Elevation;
+                    break;
+                case CueAimStage.Elevation:
                     AimStage = CueAimStage.Locked;
                     break;
             }
@@ -123,6 +125,8 @@ namespace PoolTable.Gameplay.Aiming
                 return;
             }
 
+            var primaryButtonWasPressedThisFrame = input.PrimaryActionIsPressed && !primaryButtonWasPressedLastFrame;
+            primaryButtonWasPressedLastFrame = input.PrimaryActionIsPressed;
             var suppressAim = input.SecondaryActionIsPressed || secondaryButtonWasPressedLastFrame;
             secondaryButtonWasPressedLastFrame = input.SecondaryActionIsPressed;
 
@@ -133,7 +137,7 @@ namespace PoolTable.Gameplay.Aiming
 
                 if (stagePointerInput)
                 {
-                    if (stagedPointerSuppressionFrame == Time.frameCount)
+                    if (primaryButtonWasPressedThisFrame || stagedPointerSuppressionFrame == Time.frameCount)
                     {
                         ApplyCuePose();
                         return;
@@ -141,11 +145,11 @@ namespace PoolTable.Gameplay.Aiming
 
                     switch (AimStage)
                     {
-                        case CueAimStage.Elevation:
-                            aimingState.AdjustElevationDegrees(input.PointerDelta.y * pitchDegreesPerPointerUnit);
-                            break;
                         case CueAimStage.Yaw:
                             aimingState.RotateDegrees(input.PointerDelta.x * yawDegreesPerPointerUnit);
+                            break;
+                        case CueAimStage.Elevation:
+                            aimingState.AdjustElevationDegrees(input.PointerDelta.y * pitchDegreesPerPointerUnit);
                             break;
                     }
                 }
