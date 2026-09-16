@@ -1,9 +1,11 @@
 using System.Collections;
 using System.Linq;
 using NUnit.Framework;
+using PoolTable.Gameplay.Aiming;
 using PoolTable.Gameplay.BallInHand;
 using PoolTable.Gameplay.Balls;
 using PoolTable.Physics.Configuration;
+using PoolTable.Presentation.Camera;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -14,6 +16,28 @@ namespace PoolTable.Tests.PlayMode
     [Category("SceneSmoke")]
     public sealed class PlaytestCameraPolishPlayModeTests
     {
+        [UnityTest]
+        public IEnumerator AimingCamera_RuntimeViewUsesForwardEyeOffset()
+        {
+            yield return LoadPoolTableScene();
+
+            var aimingController = Object.FindFirstObjectByType<CueAimingController>();
+            var outputCamera = Camera.main;
+            var cameraController = outputCamera.GetComponent<AimingCameraController>();
+
+            Assert.That(aimingController, Is.Not.Null);
+            Assert.That(cameraController, Is.Not.Null);
+            Assert.That(cameraController.ForwardEyeOffsetMeters, Is.GreaterThan(0f));
+            Assert.That(cameraController.EffectiveDistanceBehindCueBall, Is.LessThan(cameraController.DistanceBehindCueBall));
+
+            var cueBallPosition = aimingController.CueBall.transform.position;
+            var planarOffset = Vector3.ProjectOnPlane(outputCamera.transform.position - cueBallPosition, Vector3.up);
+            Assert.That(
+                planarOffset.magnitude,
+                Is.EqualTo(cameraController.EffectiveDistanceBehindCueBall).Within(0.01f),
+                "Runtime aiming camera must move forward from the old cue-butt position.");
+        }
+
         [UnityTest]
         public IEnumerator BallInHandPlacement_UsesSideOverviewAndRestoresOutputCamera()
         {
