@@ -152,6 +152,16 @@ namespace PoolTable.Presentation.Diagnostics
             Require(activeScene.IsValid() && activeScene.isLoaded, "The active scene must be loaded.");
             Require(activeScene.name == "PoolTable", $"Expected PoolTable scene, found {activeScene.name}.");
 
+            var qualityLevel = QualitySettings.GetQualityLevel();
+            var qualityNames = QualitySettings.names;
+            Require(
+                qualityLevel >= 0 && qualityLevel < qualityNames.Length,
+                $"Active quality level index {qualityLevel} is outside the configured quality levels.");
+            var qualityName = qualityNames[qualityLevel];
+            Require(
+                qualityName == "Pool Table Windows",
+                $"Expected Pool Table Windows quality, found {qualityName}.");
+
             var identities = FindObjectsByType<BallIdentity>(FindObjectsInactive.Include);
             var activeIdentities = identities
                 .Where(identity => identity != null && identity.gameObject.activeInHierarchy)
@@ -166,6 +176,7 @@ namespace PoolTable.Presentation.Diagnostics
 
             report.SceneName = activeScene.name;
             report.BallCount = activeIdentities.Length;
+            report.QualityLevel = qualityName;
             report.Startup = true;
             report.Checkpoints.Add("startup");
         }
@@ -690,6 +701,7 @@ namespace PoolTable.Presentation.Diagnostics
         public bool Success;
         public string SceneName;
         public int BallCount;
+        public string QualityLevel;
         public bool Startup;
         public bool InputSystem;
         public bool LocalControls;
