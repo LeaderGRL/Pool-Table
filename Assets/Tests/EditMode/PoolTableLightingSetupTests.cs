@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using PoolTable.Gameplay.Balls;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -51,11 +52,16 @@ namespace PoolTable.Tests.EditMode
                     Is.EqualTo(ReflectionCubemapPath));
 
                 var tableBounds = CalculateTableBounds(scene);
+                var ballBounds = CalculateBallBounds(scene);
                 var probeBounds = new Bounds(reflectionProbe.transform.position, reflectionProbe.size);
                 Assert.That(probeBounds.min.x, Is.LessThanOrEqualTo(tableBounds.min.x));
                 Assert.That(probeBounds.max.x, Is.GreaterThanOrEqualTo(tableBounds.max.x));
+                Assert.That(probeBounds.min.y, Is.LessThanOrEqualTo(tableBounds.min.y));
+                Assert.That(probeBounds.max.y, Is.GreaterThanOrEqualTo(tableBounds.max.y));
                 Assert.That(probeBounds.min.z, Is.LessThanOrEqualTo(tableBounds.min.z));
                 Assert.That(probeBounds.max.z, Is.GreaterThanOrEqualTo(tableBounds.max.z));
+                Assert.That(probeBounds.min.y, Is.LessThanOrEqualTo(ballBounds.min.y));
+                Assert.That(probeBounds.max.y, Is.GreaterThanOrEqualTo(ballBounds.max.y));
 
                 Assert.That(RenderSettings.ambientMode, Is.EqualTo(AmbientMode.Trilight));
                 Assert.That(RenderSettings.ambientIntensity, Is.EqualTo(0.72f).Within(0.001f));
@@ -81,6 +87,7 @@ namespace PoolTable.Tests.EditMode
             var serializedAsset = new SerializedObject(urpAsset);
             AssertEnabled(serializedAsset.FindProperty("m_ReflectionProbeBlending"));
             AssertEnabled(serializedAsset.FindProperty("m_ReflectionProbeBoxProjection"));
+            AssertEnabled(serializedAsset.FindProperty("m_SoftShadowsSupported"));
         }
 
         [Test]
@@ -134,6 +141,37 @@ namespace PoolTable.Tests.EditMode
                 }
             }
 
+            Assert.That(hasBounds, Is.True);
+            return bounds;
+        }
+
+        private static Bounds CalculateBallBounds(Scene scene)
+        {
+            var hasBounds = false;
+            var bounds = default(Bounds);
+            var ballCount = 0;
+
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                foreach (var identity in root.GetComponentsInChildren<BallIdentity>(true))
+                {
+                    ballCount++;
+                    foreach (var renderer in identity.GetComponentsInChildren<Renderer>(true))
+                    {
+                        if (!hasBounds)
+                        {
+                            bounds = renderer.bounds;
+                            hasBounds = true;
+                        }
+                        else
+                        {
+                            bounds.Encapsulate(renderer.bounds);
+                        }
+                    }
+                }
+            }
+
+            Assert.That(ballCount, Is.EqualTo(16));
             Assert.That(hasBounds, Is.True);
             return bounds;
         }
