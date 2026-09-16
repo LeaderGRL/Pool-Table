@@ -47,8 +47,18 @@ namespace PoolTable.Presentation.Audio
                 return;
             }
 
+            var normalClosingSpeedMetersPerSecond = 0f;
+            for (var contactIndex = 0; contactIndex < collision.contactCount; contactIndex++)
+            {
+                normalClosingSpeedMetersPerSecond = Mathf.Max(
+                    normalClosingSpeedMetersPerSecond,
+                    BallImpactAudioModel.CalculateNormalClosingSpeed(
+                        collision.relativeVelocity,
+                        collision.GetContact(contactIndex).normal));
+            }
+
             var cue = BallImpactAudioModel.Evaluate(
-                collision.relativeVelocity.magnitude,
+                normalClosingSpeedMetersPerSecond,
                 ballRigidbody.mass,
                 collision.rigidbody.mass,
                 SFX_BallCollision.Length);

@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using PoolTable.Core.Balls;
 using PoolTable.Presentation.Audio;
+using UnityEngine;
 
 namespace PoolTable.Tests.EditMode
 {
@@ -19,6 +20,40 @@ namespace PoolTable.Tests.EditMode
 
             Assert.That(cue.ImpactEnergyJoules, Is.EqualTo(0.0425f).Within(0.000001f));
             Assert.That(cue.ShouldPlay, Is.True);
+        }
+
+        [Test]
+        public void CalculateNormalClosingSpeed_IgnoresTangentialVelocity()
+        {
+            var closingSpeed = BallImpactAudioModel.CalculateNormalClosingSpeed(
+                new Vector3(1f, 0f, 5f),
+                Vector3.right);
+
+            Assert.That(closingSpeed, Is.EqualTo(1f).Within(0.000001f));
+        }
+
+        [Test]
+        public void CalculateNormalClosingSpeed_ReturnsZeroForPurelyTangentialContact()
+        {
+            var closingSpeed = BallImpactAudioModel.CalculateNormalClosingSpeed(
+                new Vector3(0f, 0f, 5f),
+                Vector3.right);
+
+            Assert.That(closingSpeed, Is.Zero.Within(0.000001f));
+        }
+
+        [Test]
+        public void CalculateNormalClosingSpeed_IsIndependentOfNormalOrientation()
+        {
+            var forward = BallImpactAudioModel.CalculateNormalClosingSpeed(
+                Vector3.right * 2f,
+                Vector3.right);
+            var reversed = BallImpactAudioModel.CalculateNormalClosingSpeed(
+                Vector3.right * 2f,
+                Vector3.left);
+
+            Assert.That(forward, Is.EqualTo(2f).Within(0.000001f));
+            Assert.That(reversed, Is.EqualTo(forward).Within(0.000001f));
         }
 
         [Test]

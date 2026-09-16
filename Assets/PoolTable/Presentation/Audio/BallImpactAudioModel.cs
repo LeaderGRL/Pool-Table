@@ -10,12 +10,12 @@ namespace PoolTable.Presentation.Audio
         public const float MinimumAudibleVolume = 0.08f;
 
         public static BallImpactAudioCue Evaluate(
-            float relativeSpeedMetersPerSecond,
+            float normalClosingSpeedMetersPerSecond,
             float firstBallMassKilograms,
             float secondBallMassKilograms,
             int clipCount)
         {
-            if (!IsFinitePositive(relativeSpeedMetersPerSecond)
+            if (!IsFinitePositive(normalClosingSpeedMetersPerSecond)
                 || !IsFinitePositive(firstBallMassKilograms)
                 || !IsFinitePositive(secondBallMassKilograms)
                 || clipCount <= 0)
@@ -29,8 +29,8 @@ namespace PoolTable.Presentation.Audio
             var impactEnergyJoules =
                 0.5f
                 * reducedMassKilograms
-                * relativeSpeedMetersPerSecond
-                * relativeSpeedMetersPerSecond;
+                * normalClosingSpeedMetersPerSecond
+                * normalClosingSpeedMetersPerSecond;
 
             if (impactEnergyJoules < MinimumAudibleEnergyJoules)
             {
@@ -57,6 +57,22 @@ namespace PoolTable.Presentation.Audio
                 volume);
         }
 
+        public static float CalculateNormalClosingSpeed(
+            Vector3 relativeVelocityMetersPerSecond,
+            Vector3 contactNormal)
+        {
+            if (!IsFinite(relativeVelocityMetersPerSecond)
+                || !IsFinite(contactNormal)
+                || contactNormal.sqrMagnitude <= Mathf.Epsilon)
+            {
+                return 0f;
+            }
+
+            return Mathf.Abs(Vector3.Dot(
+                relativeVelocityMetersPerSecond,
+                contactNormal.normalized));
+        }
+
         public static bool IsPrimaryEmitter(BallId firstBall, BallId secondBall)
         {
             return firstBall.Number < secondBall.Number;
@@ -65,6 +81,16 @@ namespace PoolTable.Presentation.Audio
         private static bool IsFinitePositive(float value)
         {
             return value > 0f && !float.IsNaN(value) && !float.IsInfinity(value);
+        }
+
+        private static bool IsFinite(Vector3 value)
+        {
+            return !float.IsNaN(value.x)
+                && !float.IsNaN(value.y)
+                && !float.IsNaN(value.z)
+                && !float.IsInfinity(value.x)
+                && !float.IsInfinity(value.y)
+                && !float.IsInfinity(value.z);
         }
     }
 
