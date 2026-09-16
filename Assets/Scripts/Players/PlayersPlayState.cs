@@ -3,6 +3,8 @@ using UnityEngine;
 public class PlayersPlayState : PlayersBaseState
 {
     private bool waitingForBallInHandPlacement;
+    private bool pointerPrimaryWasPressed;
+    private bool pointerYawAdjustmentStarted;
 
     //s[SerializeField] private GameObject whiteBall;
     public override void EnterState(PlayersStateManagement player)
@@ -12,6 +14,11 @@ public class PlayersPlayState : PlayersBaseState
         player.SetShotPowerEnabled(false);
         player.SetAimingEnabled(true);
         player.SetSpinControlEnabled(true);
+
+        waitingForBallInHandPlacement = false;
+        pointerPrimaryWasPressed = LegacyMouseInput.PointerPrimaryButtonIsPressed;
+        pointerYawAdjustmentStarted = false;
+        player.ResetPointerAimingSequence();
 
         if (GameManager.instance.getTurnNumber() == 0)
         {
@@ -101,14 +108,35 @@ public class PlayersPlayState : PlayersBaseState
 
             if (LegacyMouseInput.PrimaryButtonIsPressed)
             {
+                pointerPrimaryWasPressed = LegacyMouseInput.PointerPrimaryButtonIsPressed;
                 return;
             }
 
             waitingForBallInHandPlacement = false;
+            pointerPrimaryWasPressed = false;
+            pointerYawAdjustmentStarted = false;
+            player.ResetPointerAimingSequence();
             return;
         }
 
-        if (LegacyMouseInput.PrimaryButtonIsPressed)
+        var pointerPrimaryIsPressed = LegacyMouseInput.PointerPrimaryButtonIsPressed;
+        var pointerPrimaryPressedThisFrame = pointerPrimaryIsPressed && !pointerPrimaryWasPressed;
+        pointerPrimaryWasPressed = pointerPrimaryIsPressed;
+
+        if (pointerPrimaryPressedThisFrame)
+        {
+            if (!pointerYawAdjustmentStarted)
+            {
+                pointerYawAdjustmentStarted = true;
+                player.BeginPointerYawAdjustment();
+                return;
+            }
+
+            player.SwitchState(player.shootState);
+            return;
+        }
+
+        if (LegacyMouseInput.GamepadPrimaryButtonIsPressed)
         {
             player.SwitchState(player.shootState);
         }

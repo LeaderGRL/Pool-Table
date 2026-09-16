@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace PoolTable.Gameplay.Aiming
 {
+    public enum PointerAimPhase
+    {
+        Elevation,
+        Yaw,
+    }
+
     [DisallowMultipleComponent]
     public sealed class CueAimingController : MonoBehaviour
     {
@@ -19,6 +25,7 @@ namespace PoolTable.Gameplay.Aiming
         private AimingState aimingState;
         private LocalPlayerInputReader localPlayerInputReader;
         private bool secondaryButtonWasPressedLastFrame;
+        private PointerAimPhase pointerAimPhase = PointerAimPhase.Elevation;
 
         public GameObject CueBall => cueBall;
 
@@ -31,6 +38,8 @@ namespace PoolTable.Gameplay.Aiming
         public float MinimumElevationDegrees => minimumElevationDegrees;
 
         public float MaximumElevationDegrees => maximumElevationDegrees;
+
+        public PointerAimPhase PointerAdjustmentPhase => pointerAimPhase;
 
         public float ElevationDegrees => aimingState?.ElevationDegrees
             ?? throw new InvalidOperationException("Aiming state is not initialized.");
@@ -60,6 +69,7 @@ namespace PoolTable.Gameplay.Aiming
         private void OnEnable()
         {
             secondaryButtonWasPressedLastFrame = false;
+            ResetPointerAdjustmentSequence();
 
             if (localPlayerInputReader == null)
             {
@@ -76,7 +86,46 @@ namespace PoolTable.Gameplay.Aiming
 
         private void Update()
         {
-            ProcessInput(localPlayerInputReader.Read());
+            ProcessRuntimeInput(localPlayerInputReader.Read());
+        }
+
+        public void BeginPointerYawAdjustment()
+        {
+            pointerAimPhase = PointerAimPhase.Yaw;
+        }
+
+        public void ResetPointerAdjustmentSequence()
+        {
+            pointerAimPhase = PointerAimPhase.Elevation;
+        }
+
+        internal void ProcessRuntimeInput(LocalPlayerInputSnapshot input)
+        {
+            if (aimingState == null || cueBall == null)
+            {
+                return;
+            }
+
+            var suppressAim = ShouldSuppressAim(input);
+            if (!suppressAim)
+            {
+                var yawDegrees = input.AimAxis.x * Time.deltaTime * 120f;
+                var pitchDegrees = input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond;
+
+                if (pointerAimPhase == PointerAimPhase.Elevation)
+                {
+                    pitchDegrees += input.PointerDelta.y * pitchDegreesPerPointerUnit;
+                }
+                else
+                {
+                    yawDegrees += input.PointerDelta.x * yawDegreesPerPointerUnit;
+                }
+
+                aimingState.RotateDegrees(yawDegrees);
+                aimingState.AdjustElevationDegrees(pitchDegrees);
+            }
+
+            ApplyCuePose();
         }
 
         internal void ProcessInput(LocalPlayerInputSnapshot input)
@@ -86,9 +135,7 @@ namespace PoolTable.Gameplay.Aiming
                 return;
             }
 
-            var suppressAim = input.SecondaryActionIsPressed || secondaryButtonWasPressedLastFrame;
-            secondaryButtonWasPressedLastFrame = input.SecondaryActionIsPressed;
-
+            var suppressAim = ShouldSuppressAim(input);
             if (!suppressAim)
             {
                 aimingState.RotateDegrees((input.PointerDelta.x * yawDegreesPerPointerUnit) + (input.AimAxis.x * Time.deltaTime * 120f));
@@ -98,6 +145,13 @@ namespace PoolTable.Gameplay.Aiming
             }
 
             ApplyCuePose();
+        }
+
+        private bool ShouldSuppressAim(LocalPlayerInputSnapshot input)
+        {
+            var suppressAim = input.SecondaryActionIsPressed || secondaryButtonWasPressedLastFrame;
+            secondaryButtonWasPressedLastFrame = input.SecondaryActionIsPressed;
+            return suppressAim;
         }
 
         private void InitializeFromCurrentPose()

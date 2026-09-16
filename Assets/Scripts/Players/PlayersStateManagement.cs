@@ -111,6 +111,26 @@ public class PlayersStateManagement : MonoBehaviour
         }
     }
 
+    public void ResetPointerAimingSequence()
+    {
+        if (aimingController != null)
+        {
+            aimingController.gameObject.SendMessage(
+                "ResetPointerAdjustmentSequence",
+                SendMessageOptions.DontRequireReceiver);
+        }
+    }
+
+    public void BeginPointerYawAdjustment()
+    {
+        if (aimingController != null)
+        {
+            aimingController.gameObject.SendMessage(
+                "BeginPointerYawAdjustment",
+                SendMessageOptions.DontRequireReceiver);
+        }
+    }
+
     public bool IsShotPowerEnabled()
     {
         return shotPowerController != null && shotPowerController.enabled;
