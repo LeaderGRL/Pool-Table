@@ -86,7 +86,7 @@ namespace PoolTable.Gameplay.Aiming
 
         private void Update()
         {
-            ProcessInput(localPlayerInputReader.Read());
+            ProcessInputInternal(localPlayerInputReader.Read(), true);
         }
 
         public void AdvanceAimStage()
@@ -104,6 +104,16 @@ namespace PoolTable.Gameplay.Aiming
 
         internal void ProcessInput(LocalPlayerInputSnapshot input)
         {
+            ProcessInputInternal(input, false);
+        }
+
+        internal void ProcessStagedInput(LocalPlayerInputSnapshot input)
+        {
+            ProcessInputInternal(input, true);
+        }
+
+        private void ProcessInputInternal(LocalPlayerInputSnapshot input, bool stagePointerInput)
+        {
             if (aimingState == null || cueBall == null)
             {
                 return;
@@ -117,14 +127,22 @@ namespace PoolTable.Gameplay.Aiming
                 aimingState.RotateDegrees(input.AimAxis.x * Time.deltaTime * 120f);
                 aimingState.AdjustElevationDegrees(input.AimAxis.y * Time.deltaTime * controllerPitchDegreesPerSecond);
 
-                switch (AimStage)
+                if (stagePointerInput)
                 {
-                    case CueAimStage.Elevation:
-                        aimingState.AdjustElevationDegrees(input.PointerDelta.y * pitchDegreesPerPointerUnit);
-                        break;
-                    case CueAimStage.Yaw:
-                        aimingState.RotateDegrees(input.PointerDelta.x * yawDegreesPerPointerUnit);
-                        break;
+                    switch (AimStage)
+                    {
+                        case CueAimStage.Elevation:
+                            aimingState.AdjustElevationDegrees(input.PointerDelta.y * pitchDegreesPerPointerUnit);
+                            break;
+                        case CueAimStage.Yaw:
+                            aimingState.RotateDegrees(input.PointerDelta.x * yawDegreesPerPointerUnit);
+                            break;
+                    }
+                }
+                else
+                {
+                    aimingState.RotateDegrees(input.PointerDelta.x * yawDegreesPerPointerUnit);
+                    aimingState.AdjustElevationDegrees(input.PointerDelta.y * pitchDegreesPerPointerUnit);
                 }
             }
 
