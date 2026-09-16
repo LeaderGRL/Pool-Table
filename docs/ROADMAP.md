@@ -192,20 +192,21 @@ Rendering work is paused while the current playable build is made easier to vali
 40F. `DONE` **Gameplay: Add limited cue elevation**
     Modern aiming now supports cue elevation from 0 to 20 degrees, keeps spin input isolated through the secondary-button release frame, and carries elevation into the cue pose and conservative planar strike component. The merged build was manually retested successfully before follow-up control and camera polish. Reference: GitHub issue #96 / PR #97.
 
-40G. `PR` **Camera: Move aiming and shot views toward a realistic cue grip position**
+40G. `DONE` **Camera: Move aiming and shot views toward a realistic cue grip position**
     Place the runtime player eye around 60-65% of the cue length behind the cue ball and roughly 18-20 cm above cue-ball height for aiming and shot-power presentation, matching the low close sight-line used by billiards simulations and the user-provided scene reference. A shared cue-local camera rig now derives both camera position and orientation from the full 3D strike direction, so pitch, yaw, and maximum shot pullback keep the camera on the same side of the cue instead of crossing its axis. The cue butt stays behind the camera so the full cue cannot appear on screen, while the front third remains readable. Cue elevation keeps a 3-degree baseline and raises its effective minimum dynamically near cushions so the physical cue clears the rail instead of clipping through it. Unity Pipeline is installed for live Editor control and was used to reproduce the reported camera defects, drive maximum-elevation/pullback states, and capture Game View evidence. Reference: GitHub issue #99 / PR #101.
 
-40H. `PR` **Gameplay: Stage mouse yaw before pitch and shot power**
+40H. `DONE` **Gameplay: Stage mouse yaw before pitch and shot power**
     Mouse aiming starts with yaw-only control, the first left click locks yaw and enables elevation-only control, and the second left click locks elevation and enters the existing shot-power interaction. Confirmation-frame pointer movement cannot leak across either aim-stage boundary or into shot-power pullback regardless of Unity Update ordering. The aiming and shot cameras follow cue elevation through camera height and pitch while preserving a planar table look target so the cue remains readable in frame. Controller aiming remains continuous and its established trigger flow is preserved. Spin drag continues to suppress pointer aiming through its release frame. Explicit PlayMode coverage locks the requested yaw -> click -> pitch -> click -> shot contract, camera elevation tracking, cue visibility, and second-click pullback guard. Reference: GitHub issue #99 / PR #101.
 
-40I. `PR` **Camera: Add ball-in-hand side overview**
+40I. `DONE` **Camera: Add ball-in-hand side overview**
     During cue-ball placement, temporarily frame the table from its long side, derive distance from the regulation table dimensions, projected table depth, and Unity's fitted camera projection so physical-camera gate fitting and ultrawide aspects keep all four corners visible while the table stays large in frame, keep placement ownership over competing camera controllers, keep direct pointer projection aligned with that view, and restore the previous camera pose and field of view when placement ends. Reference: GitHub issue #99 / PR #101.
 
-Phase 6 should resume only after this stabilization gate provides a trustworthy baseline. PR #87 remains open but paused while this work is completed.
+The stabilization gate is complete and Phase 6 can resume from this validated playable baseline.
 
 ## Phase 6 — URP conversion
 
-41. `TODO` **Rendering: Install and configure URP**
+41. `PR` **Rendering: Install and configure URP**
+    Install the Unity 6.5-compatible Universal Render Pipeline package and establish the project-wide baseline render-pipeline asset without performing the later material, lighting, post-processing, or per-platform quality-profile conversions. Validation after integration with current `main`: repository validation passed, EditMode 307/307, PlayMode 34/34, Windows player smoke passed. Reference: GitHub issue #86 / PR #87.
 42. `TODO` **Rendering: Convert legacy materials to URP**
 43. `TODO` **Rendering: Rebuild pool-table PBR materials**
 44. `TODO` **Rendering: Rebuild lighting and reflection setup**
@@ -263,4 +264,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current work is stabilization steps **40G–40I — realistic cue camera framing, staged mouse aiming, and ball-in-hand overview** (issue #99 / PR #101), now in review after the hands-on retest of the merged #96 / #97 gameplay-control build. Rendering PR #87 remains intentionally paused until this playtest-polish pass is merged and manually retested. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 6 work is **Rendering: Install and configure URP** (issue #86 / PR #87). Stabilization steps 40G–40I are merged through PR #101 and manually validated. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
