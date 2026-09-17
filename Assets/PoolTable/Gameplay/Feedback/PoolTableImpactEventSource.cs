@@ -72,6 +72,8 @@ namespace PoolTable.Gameplay.Feedback
 
         public event Action<PocketedBall> BallPocketed;
 
+        public event Action<PocketCaptureFeedbackObservation> PocketCaptureObserved;
+
         public event Action<CueStrikeObservation> CueStrikeApplied;
 
         public void Dispose()
@@ -120,6 +122,18 @@ namespace PoolTable.Gameplay.Feedback
         private void OnBallCaptured(PocketedBall pocketedBall)
         {
             BallPocketed?.Invoke(pocketedBall);
+
+            for (var index = 0; index < pocketCaptureVolumes.Length; index++)
+            {
+                var pocketCaptureVolume = pocketCaptureVolumes[index];
+                if (pocketCaptureVolume != null && pocketCaptureVolume.Pocket == pocketedBall.Pocket)
+                {
+                    PocketCaptureObserved?.Invoke(new PocketCaptureFeedbackObservation(
+                        pocketedBall,
+                        pocketCaptureVolume.MouthWorldPosition));
+                    return;
+                }
+            }
         }
 
         private void OnCueStrikeApplied(CueStrikeObservation observation)
@@ -160,5 +174,18 @@ namespace PoolTable.Gameplay.Feedback
         public float NormalClosingSpeedMetersPerSecond { get; }
 
         public float ImpulseNewtonSeconds { get; }
+    }
+
+    public readonly struct PocketCaptureFeedbackObservation
+    {
+        public PocketCaptureFeedbackObservation(PocketedBall pocketedBall, Vector3 mouthWorldPosition)
+        {
+            PocketedBall = pocketedBall;
+            MouthWorldPosition = mouthWorldPosition;
+        }
+
+        public PocketedBall PocketedBall { get; }
+
+        public Vector3 MouthWorldPosition { get; }
     }
 }
