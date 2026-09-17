@@ -54,8 +54,7 @@ namespace PoolTable.Presentation.Audio
                 return;
             }
 
-            soundManager.SetPitch(cue.Pitch);
-            soundManager.PlaySoundEffect(clip, cue.Volume);
+            soundManager.PlaySoundEffect(clip, cue.Volume, cue.Pitch);
         }
     }
 }

@@ -29,7 +29,7 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [Test]
-        public void Presenter_AppliesDistinctPitchForEachImpactLayer()
+        public void Presenter_PreservesDistinctPitchForOverlappingImpactLayers()
         {
             var soundManager = CreateSoundManager(out var audioSource);
             railClip = CreateClip("Rail impact");
@@ -45,10 +45,13 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(audioSource.pitch, Is.EqualTo(0.92f).Within(0.0001f));
 
             presenter.PlayPocketCapture(default);
-            Assert.That(audioSource.pitch, Is.EqualTo(0.78f).Within(0.0001f));
-
             presenter.PlayCueStrike(new CueStrikeObservation(1f, 6.6666667f));
-            Assert.That(audioSource.pitch, Is.EqualTo(0.94f).Within(0.0001f));
+
+            var voices = soundManagerObject.GetComponents<AudioSource>();
+            Assert.That(voices, Has.Length.EqualTo(3));
+            Assert.That(voices[0].pitch, Is.EqualTo(0.92f).Within(0.0001f));
+            Assert.That(voices[1].pitch, Is.EqualTo(0.78f).Within(0.0001f));
+            Assert.That(voices[2].pitch, Is.EqualTo(0.94f).Within(0.0001f));
         }
 
         private SoundManager CreateSoundManager(out AudioSource audioSource)
@@ -66,7 +69,7 @@ namespace PoolTable.Tests.PlayMode
 
         private static AudioClip CreateClip(string name)
         {
-            return AudioClip.Create(name, 128, 1, 44100, false);
+            return AudioClip.Create(name, 44100, 1, 44100, false);
         }
     }
 }

@@ -10,6 +10,20 @@ namespace PoolTable.Tests.EditMode
         private const float Radius = BilliardsPhysicalSpecification.BallRadiusMeters;
 
         [Test]
+        public void NormalClosingSpeed_IgnoresSeparatingRailNormals()
+        {
+            var incomingLinearVelocity = Vector3.right * 2f;
+            var approachingNormal = new Vector3(-0.5f, 0f, 0.8660254f);
+            var separatingNormal = Vector3.right;
+
+            var closingSpeed = BallRailCollisionResponse.CalculateMaximumNormalClosingSpeed(
+                incomingLinearVelocity,
+                new[] { approachingNormal, separatingNormal });
+
+            Assert.That(closingSpeed, Is.EqualTo(1f).Within(0.0001f));
+        }
+
+        [Test]
         public void CalculateResponse_HeadOnImpactReflectsNormalSpeedWithConfiguredRestitution()
         {
             var result = RailCollisionResponseModel.CalculateResponse(

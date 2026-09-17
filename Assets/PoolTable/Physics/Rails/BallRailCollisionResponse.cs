@@ -158,22 +158,33 @@ namespace PoolTable.Physics.Rails
             return appliedRailVelocityChange * rigidbody.mass;
         }
 
-        private static float CalculateMaximumNormalClosingSpeed(
+        internal static float CalculateMaximumNormalClosingSpeed(
             Vector3 incomingLinearVelocity,
             IReadOnlyList<Vector3> railNormals)
         {
             var maximumClosingSpeed = 0f;
+            var planarIncomingLinearVelocity = new Vector3(
+                incomingLinearVelocity.x,
+                0f,
+                incomingLinearVelocity.z);
+
             for (var index = 0; index < railNormals.Count; index++)
             {
-                var normal = railNormals[index];
-                if (normal.sqrMagnitude <= Mathf.Epsilon)
+                var planarNormal = new Vector3(
+                    railNormals[index].x,
+                    0f,
+                    railNormals[index].z);
+                if (planarNormal.sqrMagnitude <= Mathf.Epsilon)
                 {
                     continue;
                 }
 
+                var incomingNormalSpeed = Vector3.Dot(
+                    planarIncomingLinearVelocity,
+                    planarNormal.normalized);
                 maximumClosingSpeed = Mathf.Max(
                     maximumClosingSpeed,
-                    Mathf.Abs(Vector3.Dot(incomingLinearVelocity, normal.normalized)));
+                    -incomingNormalSpeed);
             }
 
             return maximumClosingSpeed;
