@@ -13,6 +13,10 @@ namespace PoolTable.Presentation.Camera
         [SerializeField, Min(0f)] private float heightAboveAction = 2.2f;
         [SerializeField, Min(0f)] private float distancePerMeterSpread = 0.75f;
         [SerializeField, Min(0f)] private float heightPerMeterSpread = 0.5f;
+        [SerializeField, Min(0f)] private float motionLeadSeconds = 0.14f;
+        [SerializeField, Min(0f)] private float maximumMotionLeadDistance = 0.32f;
+        [SerializeField, Min(0f)] private float distancePerMeterPerSecond = 0.1f;
+        [SerializeField, Min(0f)] private float maximumSpeedFramingDistance = 0.35f;
         [SerializeField, Min(0f)] private float targetHeightOffset = 0.05f;
         [SerializeField] private Vector2 tableViewDirection = new Vector2(-1f, -1f);
         [SerializeField, Min(0f)] private float positionSharpness = 5f;
@@ -25,6 +29,14 @@ namespace PoolTable.Presentation.Camera
         public Rigidbody CueBall => cueBall;
 
         public float MinimumMovingSpeedMetersPerSecond => minimumMovingSpeedMetersPerSecond;
+
+        public float MotionLeadSeconds => motionLeadSeconds;
+
+        public float MaximumMotionLeadDistance => maximumMotionLeadDistance;
+
+        public float DistancePerMeterPerSecond => distancePerMeterPerSecond;
+
+        public float MaximumSpeedFramingDistance => maximumSpeedFramingDistance;
 
         private void OnEnable()
         {
@@ -64,10 +76,18 @@ namespace PoolTable.Presentation.Camera
             desiredPosition = default;
             desiredRotation = default;
 
-            if (!TryGetActionFrame(out var actionCenter, out var spreadRadius))
+            if (!TryGetActionFrame(out var actionCenter, out var spreadRadius, out var averageLinearVelocity))
             {
                 return false;
             }
+
+            var framingAdjustment = SpectateShotFramingModel.Evaluate(
+                averageLinearVelocity,
+                motionLeadSeconds,
+                maximumMotionLeadDistance,
+                distancePerMeterPerSecond,
+                maximumSpeedFramingDistance);
+            var framedCenter = actionCenter + framingAdjustment.MotionLead;
 
             var planarViewDirection = new Vector3(tableViewDirection.x, 0f, tableViewDirection.y);
             if (planarViewDirection.sqrMagnitude <= 0.000001f)
@@ -76,13 +96,15 @@ namespace PoolTable.Presentation.Camera
             }
 
             planarViewDirection.Normalize();
-            var cameraDistance = distanceFromAction + (spreadRadius * distancePerMeterSpread);
+            var cameraDistance = distanceFromAction
+                + (spreadRadius * distancePerMeterSpread)
+                + framingAdjustment.AdditionalDistance;
             var cameraHeight = heightAboveAction + (spreadRadius * heightPerMeterSpread);
-            desiredPosition = actionCenter
+            desiredPosition = framedCenter
                 - (planarViewDirection * cameraDistance)
                 + (Vector3.up * cameraHeight);
 
-            var focusPoint = actionCenter + (Vector3.up * targetHeightOffset);
+            var focusPoint = framedCenter + (Vector3.up * targetHeightOffset);
             var forward = focusPoint - desiredPosition;
             if (forward.sqrMagnitude <= 0.000001f)
             {
@@ -95,8 +117,17 @@ namespace PoolTable.Presentation.Camera
 
         internal bool TryGetActionFrame(out Vector3 actionCenter, out float spreadRadius)
         {
+            return TryGetActionFrame(out actionCenter, out spreadRadius, out _);
+        }
+
+        internal bool TryGetActionFrame(
+            out Vector3 actionCenter,
+            out float spreadRadius,
+            out Vector3 averageLinearVelocity)
+        {
             actionCenter = default;
             spreadRadius = 0f;
+            averageLinearVelocity = default;
 
             if (observedBalls == null)
             {
@@ -116,6 +147,7 @@ namespace PoolTable.Presentation.Camera
                 }
 
                 actionCenter += body.position;
+                averageLinearVelocity += body.linearVelocity;
                 movingCount++;
             }
 
@@ -127,10 +159,12 @@ namespace PoolTable.Presentation.Camera
                 }
 
                 actionCenter = cueBall.position;
+                averageLinearVelocity = Vector3.ProjectOnPlane(cueBall.linearVelocity, Vector3.up);
                 return true;
             }
 
             actionCenter /= movingCount;
+            averageLinearVelocity = Vector3.ProjectOnPlane(averageLinearVelocity / movingCount, Vector3.up);
             foreach (var body in observedBalls)
             {
                 if (body == null
