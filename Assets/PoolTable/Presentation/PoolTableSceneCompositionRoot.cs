@@ -4,6 +4,7 @@ using PoolTable.Gameplay.Instrumentation;
 using PoolTable.Gameplay.Shots;
 using PoolTable.Presentation.Audio;
 using PoolTable.Presentation.Camera;
+using PoolTable.Presentation.UI;
 using PoolTable.Presentation.Vfx;
 using UnityEngine;
 
@@ -27,6 +28,7 @@ namespace PoolTable.Presentation
         private CueImpactVfxPresenter cueImpactVfxPresenter;
         private PocketCaptureVfxPresenter pocketCaptureVfxPresenter;
         private CameraImpactImpulseController cameraImpactImpulseController;
+        private ModernMatchHudController modernMatchHudController;
 
         public SoundManager SoundManager => soundManager;
         public Transform BallsRoot => ballsRoot;
@@ -40,6 +42,7 @@ namespace PoolTable.Presentation
         public CueImpactVfxPresenter CueImpactVfxPresenter => cueImpactVfxPresenter;
         public PocketCaptureVfxPresenter PocketCaptureVfxPresenter => pocketCaptureVfxPresenter;
         public CameraImpactImpulseController CameraImpactImpulseController => cameraImpactImpulseController;
+        public ModernMatchHudController ModernMatchHudController => modernMatchHudController;
 
         private void Awake()
         {
@@ -113,6 +116,13 @@ namespace PoolTable.Presentation
 
             cueImpactVfxPresenter = new CueImpactVfxPresenter(transform, cueImpactParticleShader);
             pocketCaptureVfxPresenter = new PocketCaptureVfxPresenter(transform, cueImpactParticleShader);
+            modernMatchHudController = gameObject.GetComponent<ModernMatchHudController>();
+            if (modernMatchHudController == null)
+            {
+                modernMatchHudController = gameObject.AddComponent<ModernMatchHudController>();
+            }
+
+            modernMatchHudController.Initialize(ballsRoot);
             impactEventSource.RailImpactObserved += impactAudioPresenter.PlayRailImpact;
             impactEventSource.RailImpactObserved += cameraImpactImpulseController.PlayRailImpact;
             impactEventSource.BallPocketed += impactAudioPresenter.PlayPocketCapture;
