@@ -19,7 +19,7 @@ namespace PoolTable.Physics.Rails
         private RailCollisionObservation _pendingObservation;
         private bool _hasPendingObservation;
 
-        internal event Action<RailCollisionObservation> RailCollisionResolved;
+        public event Action<RailCollisionObservation> RailCollisionResolved;
 
         private void Awake()
         {
@@ -101,18 +101,25 @@ namespace PoolTable.Physics.Rails
             _pendingNativeRailImpulse = Vector3.zero;
             _stepAppliedResponse = response;
 
+            var normalClosingSpeedMetersPerSecond = CalculateMaximumNormalClosingSpeed(
+                _stepIncomingLinearVelocity,
+                _railNormals);
+
             if (!_hasPendingObservation)
             {
                 _pendingObservation = new RailCollisionObservation(
                     Time.fixedTimeAsDouble,
                     collision.relativeVelocity.magnitude,
+                    normalClosingSpeedMetersPerSecond,
                     collision.GetContact(0).point,
                     appliedLinearImpulse);
                 _hasPendingObservation = true;
                 return;
             }
 
-            _pendingObservation = _pendingObservation.WithAdditionalImpulse(appliedLinearImpulse);
+            _pendingObservation = _pendingObservation.WithAdditionalImpulse(
+                appliedLinearImpulse,
+                normalClosingSpeedMetersPerSecond);
         }
 
         internal void FlushPendingObservation()
@@ -150,32 +157,70 @@ namespace PoolTable.Physics.Rails
                 + new Vector3(0f, nativeRailVelocityChange.y, 0f);
             return appliedRailVelocityChange * rigidbody.mass;
         }
+
+        internal static float CalculateMaximumNormalClosingSpeed(
+            Vector3 incomingLinearVelocity,
+            IReadOnlyList<Vector3> railNormals)
+        {
+            var maximumClosingSpeed = 0f;
+            var planarIncomingLinearVelocity = new Vector3(
+                incomingLinearVelocity.x,
+                0f,
+                incomingLinearVelocity.z);
+
+            for (var index = 0; index < railNormals.Count; index++)
+            {
+                var planarNormal = new Vector3(
+                    railNormals[index].x,
+                    0f,
+                    railNormals[index].z);
+                if (planarNormal.sqrMagnitude <= Mathf.Epsilon)
+                {
+                    continue;
+                }
+
+                var incomingNormalSpeed = Vector3.Dot(
+                    planarIncomingLinearVelocity,
+                    planarNormal.normalized);
+                maximumClosingSpeed = Mathf.Max(
+                    maximumClosingSpeed,
+                    -incomingNormalSpeed);
+            }
+
+            return maximumClosingSpeed;
+        }
     }
 
-    internal readonly struct RailCollisionObservation
+    public readonly struct RailCollisionObservation
     {
         public RailCollisionObservation(
             double simulationTimeSeconds,
             float relativeSpeedMetersPerSecond,
+            float normalClosingSpeedMetersPerSecond,
             Vector3 contactPointMeters,
             Vector3 appliedLinearImpulse)
         {
             SimulationTimeSeconds = simulationTimeSeconds;
             RelativeSpeedMetersPerSecond = relativeSpeedMetersPerSecond;
+            NormalClosingSpeedMetersPerSecond = normalClosingSpeedMetersPerSecond;
             ContactPointMeters = contactPointMeters;
             AppliedLinearImpulse = appliedLinearImpulse;
         }
 
         public double SimulationTimeSeconds { get; }
         public float RelativeSpeedMetersPerSecond { get; }
+        public float NormalClosingSpeedMetersPerSecond { get; }
         public Vector3 ContactPointMeters { get; }
         public Vector3 AppliedLinearImpulse { get; }
 
-        public RailCollisionObservation WithAdditionalImpulse(Vector3 appliedLinearImpulse)
+        public RailCollisionObservation WithAdditionalImpulse(
+            Vector3 appliedLinearImpulse,
+            float normalClosingSpeedMetersPerSecond)
         {
             return new RailCollisionObservation(
                 SimulationTimeSeconds,
                 RelativeSpeedMetersPerSecond,
+                Mathf.Max(NormalClosingSpeedMetersPerSecond, normalClosingSpeedMetersPerSecond),
                 ContactPointMeters,
                 AppliedLinearImpulse + appliedLinearImpulse);
         }

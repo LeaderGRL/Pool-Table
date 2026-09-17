@@ -222,9 +222,10 @@ URP will also introduce Unity 6 Render Graph considerations, which must be taken
 
 ## Phase 7 — presentation and juice
 
-47. `PR` **Audio: Rebuild impact audio from collision energy**
+47. `DONE` **Audio: Rebuild impact audio from collision energy**
     Replace the legacy tag-filtered, relative-speed-divided ball collision SFX with a typed ball-to-ball impact path whose loudness and clip band are derived from reduced-mass collision energy using normal closing speed at the contact, so tangential motion cannot overstate a glancing impact. Keep the existing composition-root `SoundManager` injection and Presentation assembly boundary, emit each mirrored ball pair only once, and leave rail, pocket, and cue layers to step 48. Local validation: repository validation passed, EditMode 338/338, PlayMode 37/37, and the Windows player build/smoke passed in `Build-Latest`. Reference: GitHub issue #112 / PR #113.
-48. `TODO` **Audio: Add rail, pocket and cue impact layers**
+48. `PR` **Audio: Add rail, pocket and cue impact layers**
+    Add three explicit impact layers on top of the ball-to-ball energy model. Rail playback derives intensity from normal closing energy reported by the custom rail response, pocket playback listens to the typed six-pocket capture path, and cue playback listens to the modern shot-power commit event at the fixed-step strike boundary. Gameplay relays the required scalar facts so Presentation keeps its existing Core + Gameplay dependency boundary. The scene reuses the existing cushion and cue clips and a lower-pitched neutral dry impact for pocket capture. Local validation: repository validation passed, EditMode 343/343, PlayMode 38/38, and the Windows player build/smoke passed in `Build-Latest`. CI follow-up: the overlapping-pitch PlayMode test now uses a 10-second overlap window so headless DSP timing cannot recycle a voice during the three immediate impact calls; PlayMode remains 38/38 locally. Reference: GitHub issue #114 / PR #115.
 49. `TODO` **VFX: Add chalk and cue impact feedback**
 50. `TODO` **VFX: Add pocket feedback**
 51. `TODO` **Camera: Add impact impulse and shot framing**

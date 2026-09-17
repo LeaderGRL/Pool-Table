@@ -4406,7 +4406,12 @@ MonoBehaviour:
   m_EditorClassIdentifier:
   soundManager: {fileID: 1008307702}
   ballsRoot: {fileID: 1362464029}
+  pocketCaptureVolumesRoot: {fileID: 109172902}
+  shotPowerController: {fileID: 534474672}
   shotSimulationInstrumentation: {fileID: 1362464031}
+  railImpactClip: {fileID: 8300000, guid: c80ca13961427834cbe642278d658b49, type: 3}
+  pocketCaptureClip: {fileID: 8300000, guid: 06ea9412f5d74ce46b8a8bb297722ecd, type: 3}
+  cueImpactClip: {fileID: 8300000, guid: 7f94f34936023dc40adfb5be4fea3f8e, type: 3}
 --- !u!114 &1008307705
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -691,6 +691,10 @@ namespace PoolTable.Tests.PlayMode
                     resolvedRailObservations,
                     Has.Count.EqualTo(1),
                     "Overlapping rail colliders in one physics step must emit one aggregated rail observation.");
+                Assert.That(
+                    resolvedRailObservations[0].NormalClosingSpeedMetersPerSecond,
+                    Is.EqualTo(2f).Within(0.05f),
+                    "Rail impact observations must expose normal closing speed instead of tangential contact speed.");
 
                 var expectedResponse = RailCollisionResponseModel.CalculateManifoldResponse(
                     Vector3.right * 2f,
@@ -957,6 +961,8 @@ namespace PoolTable.Tests.PlayMode
             var originalRotation = cueBall.rotation;
             var measuredSpeeds = new float[2];
             var masses = new[] { BilliardsSimulationConfiguration.BallMassKilograms, 1f };
+            var cueStrikeObservations = new List<CueStrikeObservation>();
+            shotPowerController.CueStrikeApplied += cueStrikeObservations.Add;
 
             for (var massIndex = 0; massIndex < masses.Length; massIndex++)
             {
@@ -1003,6 +1009,13 @@ namespace PoolTable.Tests.PlayMode
                 yield return new WaitForFixedUpdate();
 
                 Assert.That(shotPowerController.ShotCommitted, Is.True);
+                Assert.That(cueStrikeObservations, Has.Count.EqualTo(massIndex + 1));
+                Assert.That(
+                    cueStrikeObservations[massIndex].NormalizedPower,
+                    Is.EqualTo(1f).Within(0.000001f));
+                Assert.That(
+                    cueStrikeObservations[massIndex].ShotSpeedMetersPerSecond,
+                    Is.EqualTo(shotPowerController.MaximumShotSpeedMetersPerSecond).Within(0.0001f));
                 Assert.That(spinController.Spin.IsCentered, Is.True, "A committed shot must leave the next shot centered.");
                 Assert.That(
                     shotPowerController.enabled,
@@ -1470,6 +1483,21 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(soundEffectSource, Is.Not.Null, "SoundManager must keep its SFX AudioSource reference.");
             Assert.That(soundEffectSource.gameObject.activeInHierarchy, Is.True, "The SFX AudioSource object must be active.");
             Assert.That(soundEffectSource.enabled, Is.True, "The SFX AudioSource must be enabled.");
+            Assert.That(
+                compositionRoot.PocketCaptureVolumesRoot,
+                Is.Not.Null,
+                "Impact audio must keep the typed pocket-capture root explicitly wired.");
+            Assert.That(
+                compositionRoot.ShotPowerController,
+                Is.Not.Null,
+                "Impact audio must keep the modern shot-power controller explicitly wired.");
+            Assert.That(compositionRoot.RailImpactClip, Is.Not.Null, "Rail impact audio must have a clip assigned.");
+            Assert.That(compositionRoot.PocketCaptureClip, Is.Not.Null, "Pocket capture audio must have a clip assigned.");
+            Assert.That(compositionRoot.CueImpactClip, Is.Not.Null, "Cue impact audio must have a clip assigned.");
+            Assert.That(
+                compositionRoot.PocketCaptureVolumesRoot.GetComponentsInChildren<PocketCaptureVolume>(true),
+                Has.Length.EqualTo(6),
+                "Impact audio must subscribe to all six typed pocket capture volumes.");
 
             var billiardBalls = EnumerateSceneObjects(activeScene)
                 .Where(gameObject => BilliardBallTags.Contains(gameObject.tag))

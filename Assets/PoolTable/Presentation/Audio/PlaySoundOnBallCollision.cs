@@ -74,8 +74,10 @@ namespace PoolTable.Presentation.Audio
                 return;
             }
 
-            SoundManager.SetPitch(UnityEngine.Random.Range(0.9f, 1.1f));
-            SoundManager.PlaySoundEffect(clip, cue.Volume);
+            SoundManager.PlaySoundEffect(
+                clip,
+                cue.Volume,
+                UnityEngine.Random.Range(0.9f, 1.1f));
         }
     }
 }
