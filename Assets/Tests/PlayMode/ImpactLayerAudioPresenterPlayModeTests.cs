@@ -10,6 +10,7 @@ namespace PoolTable.Tests.PlayMode
     public sealed class ImpactLayerAudioPresenterPlayModeTests
     {
         private const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
+        private const int OverlapTestClipLengthSamples = 441000;
         private GameObject soundManagerObject;
         private AudioClip railClip;
         private AudioClip pocketClip;
@@ -69,7 +70,7 @@ namespace PoolTable.Tests.PlayMode
 
         private static AudioClip CreateClip(string name)
         {
-            return AudioClip.Create(name, 44100, 1, 44100, false);
+            return AudioClip.Create(name, OverlapTestClipLengthSamples, 1, 44100, false);
         }
     }
 }
