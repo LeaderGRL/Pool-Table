@@ -3,6 +3,7 @@ using PoolTable.Gameplay.Feedback;
 using PoolTable.Gameplay.Instrumentation;
 using PoolTable.Gameplay.Shots;
 using PoolTable.Presentation.Audio;
+using PoolTable.Presentation.Vfx;
 using UnityEngine;
 
 namespace PoolTable.Presentation
@@ -18,9 +19,11 @@ namespace PoolTable.Presentation
         [SerializeField] private AudioClip railImpactClip;
         [SerializeField] private AudioClip pocketCaptureClip;
         [SerializeField] private AudioClip cueImpactClip;
+        [SerializeField] private Shader cueImpactParticleShader;
 
         private PoolTableImpactEventSource impactEventSource;
         private PoolTableImpactAudioPresenter impactAudioPresenter;
+        private CueImpactVfxPresenter cueImpactVfxPresenter;
 
         public SoundManager SoundManager => soundManager;
         public Transform BallsRoot => ballsRoot;
@@ -30,6 +33,8 @@ namespace PoolTable.Presentation
         public AudioClip RailImpactClip => railImpactClip;
         public AudioClip PocketCaptureClip => pocketCaptureClip;
         public AudioClip CueImpactClip => cueImpactClip;
+        public Shader CueImpactParticleShader => cueImpactParticleShader;
+        public CueImpactVfxPresenter CueImpactVfxPresenter => cueImpactVfxPresenter;
 
         private void Awake()
         {
@@ -63,6 +68,11 @@ namespace PoolTable.Presentation
                 throw new InvalidOperationException("The scene composition root requires rail, pocket, and cue impact clips.");
             }
 
+            if (cueImpactParticleShader == null)
+            {
+                throw new InvalidOperationException("The scene composition root requires the cue-impact particle shader.");
+            }
+
             var collisionAudioBehaviours = ballsRoot.GetComponentsInChildren<PlaySoundOnBallCollision>(true);
 
             if (collisionAudioBehaviours.Length == 0)
@@ -84,9 +94,11 @@ namespace PoolTable.Presentation
                 railImpactClip,
                 pocketCaptureClip,
                 cueImpactClip);
+            cueImpactVfxPresenter = new CueImpactVfxPresenter(transform, cueImpactParticleShader);
             impactEventSource.RailImpactObserved += impactAudioPresenter.PlayRailImpact;
             impactEventSource.BallPocketed += impactAudioPresenter.PlayPocketCapture;
             impactEventSource.CueStrikeApplied += impactAudioPresenter.PlayCueStrike;
+            impactEventSource.CueStrikeApplied += cueImpactVfxPresenter.PlayCueStrike;
         }
 
         private void OnDestroy()
@@ -98,7 +110,13 @@ namespace PoolTable.Presentation
                 impactEventSource.CueStrikeApplied -= impactAudioPresenter.PlayCueStrike;
             }
 
+            if (impactEventSource != null && cueImpactVfxPresenter != null)
+            {
+                impactEventSource.CueStrikeApplied -= cueImpactVfxPresenter.PlayCueStrike;
+            }
+
             impactEventSource?.Dispose();
+            cueImpactVfxPresenter?.Dispose();
         }
     }
 }

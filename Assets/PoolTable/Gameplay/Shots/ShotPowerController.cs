@@ -30,6 +30,8 @@ namespace PoolTable.Gameplay.Shots
         private CueBallStrikeMotion queuedStrike;
         private float queuedShotSpeedMetersPerSecond;
         private float queuedNormalizedPower;
+        private Vector3 queuedStrikeDirection = Vector3.forward;
+        private Vector3 queuedContactPointOffset;
 
         public event Action<CueStrikeObservation> CueStrikeApplied;
 
@@ -72,6 +74,8 @@ namespace PoolTable.Gameplay.Shots
             queuedStrike = default;
             queuedShotSpeedMetersPerSecond = 0f;
             queuedNormalizedPower = 0f;
+            queuedStrikeDirection = Vector3.forward;
+            queuedContactPointOffset = Vector3.zero;
             restPosition = transform.position;
             restRotation = transform.rotation;
             hasRestPose = true;
@@ -109,7 +113,9 @@ namespace PoolTable.Gameplay.Shots
             ShotCommitted = true;
             var observation = new CueStrikeObservation(
                 queuedNormalizedPower,
-                queuedShotSpeedMetersPerSecond);
+                queuedShotSpeedMetersPerSecond,
+                cueBall.position + queuedContactPointOffset,
+                queuedStrikeDirection);
             enabled = false;
             CueStrikeApplied?.Invoke(observation);
         }
@@ -147,10 +153,16 @@ namespace PoolTable.Gameplay.Shots
             }
 
             var shotSpeed = shotPowerState.NormalizedPower * maximumShotSpeedMetersPerSecond;
+            queuedStrikeDirection = aimingController.StrikeDirection.normalized;
+            var queuedSpin = spinController?.Spin ?? default;
+            queuedContactPointOffset = CueBallStrikeModel.CalculateContactPointOffset(
+                queuedStrikeDirection,
+                queuedSpin,
+                BilliardsPhysicalSpecification.BallRadiusMeters);
             queuedStrike = CueBallStrikeModel.CalculateVelocityChange(
-                aimingController.StrikeDirection,
+                queuedStrikeDirection,
                 shotSpeed,
-                spinController?.Spin ?? default,
+                queuedSpin,
                 BilliardsPhysicalSpecification.BallRadiusMeters);
             queuedShotSpeedMetersPerSecond = shotSpeed;
             queuedNormalizedPower = shotPowerState.NormalizedPower;
@@ -186,13 +198,43 @@ namespace PoolTable.Gameplay.Shots
     public readonly struct CueStrikeObservation
     {
         public CueStrikeObservation(float normalizedPower, float shotSpeedMetersPerSecond)
+            : this(
+                normalizedPower,
+                shotSpeedMetersPerSecond,
+                Vector3.zero,
+                Vector3.forward)
+        {
+        }
+
+        public CueStrikeObservation(
+            float normalizedPower,
+            float shotSpeedMetersPerSecond,
+            Vector3 contactPointWorldPosition,
+            Vector3 strikeDirection)
         {
             NormalizedPower = Mathf.Clamp01(normalizedPower);
             ShotSpeedMetersPerSecond = Mathf.Max(0f, shotSpeedMetersPerSecond);
+            ContactPointWorldPosition = IsFinite(contactPointWorldPosition)
+                ? contactPointWorldPosition
+                : Vector3.zero;
+            StrikeDirection = IsFinite(strikeDirection) && strikeDirection.sqrMagnitude > 0.000001f
+                ? strikeDirection.normalized
+                : Vector3.forward;
         }
 
         public float NormalizedPower { get; }
 
         public float ShotSpeedMetersPerSecond { get; }
+
+        public Vector3 ContactPointWorldPosition { get; }
+
+        public Vector3 StrikeDirection { get; }
+
+        private static bool IsFinite(Vector3 value)
+        {
+            return float.IsFinite(value.x)
+                && float.IsFinite(value.y)
+                && float.IsFinite(value.z);
+        }
     }
 }

@@ -111,6 +111,37 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void CalculateContactPointOffset_CenteredHitUsesIncomingSphereSurface()
+        {
+            var radius = BilliardsPhysicalSpecification.BallRadiusMeters;
+            var offset = CueBallStrikeModel.CalculateContactPointOffset(
+                Vector3.right,
+                default,
+                radius);
+
+            Assert.That(offset.x, Is.EqualTo(-radius).Within(0.000001f));
+            Assert.That(offset.y, Is.Zero.Within(0.000001f));
+            Assert.That(offset.z, Is.Zero.Within(0.000001f));
+            Assert.That(offset.magnitude, Is.EqualTo(radius).Within(0.000001f));
+        }
+
+        [Test]
+        public void CalculateContactPointOffset_SideSpinOffsetsTipAcrossSphereSurface()
+        {
+            var radius = BilliardsPhysicalSpecification.BallRadiusMeters;
+            var offset = CueBallStrikeModel.CalculateContactPointOffset(
+                Vector3.right,
+                new CueBallSpin(1f, 0f),
+                radius);
+            var expectedTangentOffset =
+                radius * BilliardsSimulationConfiguration.CueTipMaximumContactOffsetRatio;
+
+            Assert.That(offset.z, Is.EqualTo(expectedTangentOffset).Within(0.000001f));
+            Assert.That(offset.x, Is.LessThan(0f));
+            Assert.That(offset.magnitude, Is.EqualTo(radius).Within(0.000001f));
+        }
+
+        [Test]
         public void CalculateVelocityChange_RejectsInvalidPhysicalInputs()
         {
             Assert.Throws<System.ArgumentException>(() => CueBallStrikeModel.CalculateVelocityChange(

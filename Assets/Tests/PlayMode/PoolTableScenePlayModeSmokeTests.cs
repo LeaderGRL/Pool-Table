@@ -971,6 +971,9 @@ namespace PoolTable.Tests.PlayMode
                 cueBall.rotation = originalRotation;
                 cueBall.linearVelocity = Vector3.zero;
                 cueBall.angularVelocity = Vector3.zero;
+                var expectedStrikeDirection = shotPowerController.AimingController.StrikeDirection.normalized;
+                var expectedContactPoint = cueBall.position
+                    - (expectedStrikeDirection * BilliardsPhysicalSpecification.BallRadiusMeters);
 
                 shotPowerController.enabled = true;
                 Assert.That(shotPowerController.NormalizedPower, Is.Zero);
@@ -1016,6 +1019,14 @@ namespace PoolTable.Tests.PlayMode
                 Assert.That(
                     cueStrikeObservations[massIndex].ShotSpeedMetersPerSecond,
                     Is.EqualTo(shotPowerController.MaximumShotSpeedMetersPerSecond).Within(0.0001f));
+                Assert.That(
+                    Vector3.Distance(cueStrikeObservations[massIndex].ContactPointWorldPosition, expectedContactPoint),
+                    Is.LessThan(0.00001f),
+                    "Cue-strike feedback must observe the physical contact point on the cue ball.");
+                Assert.That(
+                    Vector3.Angle(cueStrikeObservations[massIndex].StrikeDirection, expectedStrikeDirection),
+                    Is.LessThan(0.001f),
+                    "Cue-strike feedback must preserve the committed 3D strike direction.");
                 Assert.That(spinController.Spin.IsCentered, Is.True, "A committed shot must leave the next shot centered.");
                 Assert.That(
                     shotPowerController.enabled,
@@ -1494,6 +1505,21 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(compositionRoot.RailImpactClip, Is.Not.Null, "Rail impact audio must have a clip assigned.");
             Assert.That(compositionRoot.PocketCaptureClip, Is.Not.Null, "Pocket capture audio must have a clip assigned.");
             Assert.That(compositionRoot.CueImpactClip, Is.Not.Null, "Cue impact audio must have a clip assigned.");
+            Assert.That(
+                compositionRoot.CueImpactParticleShader,
+                Is.Not.Null,
+                "Cue-impact VFX must keep its URP particle shader explicitly referenced by the scene.");
+            Assert.That(
+                compositionRoot.CueImpactParticleShader.name,
+                Is.EqualTo("Universal Render Pipeline/Particles/Unlit"));
+            Assert.That(
+                compositionRoot.CueImpactVfxPresenter,
+                Is.Not.Null,
+                "The composition root must create the cue-impact VFX presenter.");
+            Assert.That(
+                compositionRoot.CueImpactVfxPresenter.Root.childCount,
+                Is.EqualTo(2),
+                "Cue-impact VFX must keep one reusable chalk system and one reusable contact-accent system.");
             Assert.That(
                 compositionRoot.PocketCaptureVolumesRoot.GetComponentsInChildren<PocketCaptureVolume>(true),
                 Has.Length.EqualTo(6),

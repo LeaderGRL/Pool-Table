@@ -4412,6 +4412,7 @@ MonoBehaviour:
   railImpactClip: {fileID: 8300000, guid: c80ca13961427834cbe642278d658b49, type: 3}
   pocketCaptureClip: {fileID: 8300000, guid: 06ea9412f5d74ce46b8a8bb297722ecd, type: 3}
   cueImpactClip: {fileID: 8300000, guid: 7f94f34936023dc40adfb5be4fea3f8e, type: 3}
+  cueImpactParticleShader: {fileID: 4800000, guid: 0406db5a14f94604a8c57ccfbc9f3b46, type: 3}
 --- !u!114 &1008307705
 MonoBehaviour:
   m_ObjectHideFlags: 0

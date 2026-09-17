@@ -47,12 +47,10 @@ namespace PoolTable.Physics.Cue
             planarDirection.Normalize();
             var linearVelocityChange = planarDirection * (shotSpeedChangeMetersPerSecond * planarMagnitude);
 
-            var cueFaceRight = Vector3.Cross(normalizedStrikeDirection, Vector3.up).normalized;
-            var cueFaceUp = Vector3.Cross(cueFaceRight, normalizedStrikeDirection).normalized;
-            var maximumContactOffset =
-                ballRadiusMeters * BilliardsSimulationConfiguration.CueTipMaximumContactOffsetRatio;
-            var contactOffset = maximumContactOffset
-                * ((cueFaceRight * spin.Side) + (cueFaceUp * spin.Vertical));
+            var contactOffset = CalculateTangentContactOffset(
+                normalizedStrikeDirection,
+                spin,
+                ballRadiusMeters);
 
             var inverseInertiaPerUnitMass =
                 1f / (SolidSphereInertiaFactor * ballRadiusMeters * ballRadiusMeters);
@@ -60,6 +58,48 @@ namespace PoolTable.Physics.Cue
                 Vector3.Cross(contactOffset, linearVelocityChange) * inverseInertiaPerUnitMass;
 
             return new CueBallStrikeMotion(linearVelocityChange, angularVelocityChange);
+        }
+
+        public static Vector3 CalculateContactPointOffset(
+            Vector3 shotDirection,
+            CueBallSpin spin,
+            float ballRadiusMeters)
+        {
+            ValidatePositiveFinite(ballRadiusMeters, nameof(ballRadiusMeters));
+
+            if (!IsFinite(shotDirection) || shotDirection.sqrMagnitude <= MinimumDirectionMagnitudeSquared)
+            {
+                throw new System.ArgumentException("Cue strike direction must be finite and non-zero.", nameof(shotDirection));
+            }
+
+            var normalizedStrikeDirection = shotDirection.normalized;
+            var tangentContactOffset = CalculateTangentContactOffset(
+                normalizedStrikeDirection,
+                spin,
+                ballRadiusMeters);
+            var axialDistance = Mathf.Sqrt(Mathf.Max(
+                0f,
+                (ballRadiusMeters * ballRadiusMeters) - tangentContactOffset.sqrMagnitude));
+
+            return tangentContactOffset - (normalizedStrikeDirection * axialDistance);
+        }
+
+        private static Vector3 CalculateTangentContactOffset(
+            Vector3 normalizedStrikeDirection,
+            CueBallSpin spin,
+            float ballRadiusMeters)
+        {
+            var cueFaceRight = Vector3.Cross(normalizedStrikeDirection, Vector3.up).normalized;
+            if (cueFaceRight.sqrMagnitude <= MinimumDirectionMagnitudeSquared)
+            {
+                cueFaceRight = Vector3.Cross(normalizedStrikeDirection, Vector3.right).normalized;
+            }
+
+            var cueFaceUp = Vector3.Cross(cueFaceRight, normalizedStrikeDirection).normalized;
+            var maximumContactOffset =
+                ballRadiusMeters * BilliardsSimulationConfiguration.CueTipMaximumContactOffsetRatio;
+            return maximumContactOffset
+                * ((cueFaceRight * spin.Side) + (cueFaceUp * spin.Vertical));
         }
 
         private static bool IsFinite(Vector3 value)
