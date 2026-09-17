@@ -13,12 +13,17 @@ namespace PoolTable.Presentation.Camera
         [SerializeField, Min(0f)] private float heightAboveAction = 2.2f;
         [SerializeField, Min(0f)] private float distancePerMeterSpread = 0.75f;
         [SerializeField, Min(0f)] private float heightPerMeterSpread = 0.5f;
+        [SerializeField, Min(0f)] private float motionLeadSeconds = 0.14f;
+        [SerializeField, Min(0f)] private float maximumMotionLeadDistance = 0.32f;
+        [SerializeField, Min(0f)] private float distancePerMeterPerSecond = 0.1f;
+        [SerializeField, Min(0f)] private float maximumSpeedFramingDistance = 0.35f;
         [SerializeField, Min(0f)] private float targetHeightOffset = 0.05f;
         [SerializeField] private Vector2 tableViewDirection = new Vector2(-1f, -1f);
         [SerializeField, Min(0f)] private float positionSharpness = 5f;
         [SerializeField, Min(0f)] private float rotationSharpness = 7f;
 
         private Rigidbody[] observedBalls;
+        private CameraImpactImpulseController impactImpulseController;
 
         public Transform BallsRoot => ballsRoot;
 
@@ -26,15 +31,30 @@ namespace PoolTable.Presentation.Camera
 
         public float MinimumMovingSpeedMetersPerSecond => minimumMovingSpeedMetersPerSecond;
 
+        public float MotionLeadSeconds => motionLeadSeconds;
+
+        public float MaximumMotionLeadDistance => maximumMotionLeadDistance;
+
+        public float DistancePerMeterPerSecond => distancePerMeterPerSecond;
+
+        public float MaximumSpeedFramingDistance => maximumSpeedFramingDistance;
+
         private void OnEnable()
         {
+            impactImpulseController = GetComponent<CameraImpactImpulseController>();
+            impactImpulseController?.RemoveLastAppliedOffset();
             RefreshObservedBalls();
             ApplyCameraPose(0f, true);
         }
 
         private void LateUpdate()
         {
-            ApplyCameraPose(Time.deltaTime, false);
+            impactImpulseController ??= GetComponent<CameraImpactImpulseController>();
+            impactImpulseController?.RemoveLastAppliedOffset();
+            if (ApplyCameraPose(Time.deltaTime, false))
+            {
+                impactImpulseController?.ApplyCurrentImpulse(Time.deltaTime);
+            }
         }
 
         internal void RefreshObservedBalls()
@@ -64,10 +84,23 @@ namespace PoolTable.Presentation.Camera
             desiredPosition = default;
             desiredRotation = default;
 
-            if (!TryGetActionFrame(out var actionCenter, out var spreadRadius))
+            if (!TryGetActionFrame(
+                    out var actionCenter,
+                    out var spreadRadius,
+                    out var averageLinearVelocity,
+                    out var averagePlanarSpeedMetersPerSecond))
             {
                 return false;
             }
+
+            var framingAdjustment = SpectateShotFramingModel.Evaluate(
+                averageLinearVelocity,
+                averagePlanarSpeedMetersPerSecond,
+                motionLeadSeconds,
+                maximumMotionLeadDistance,
+                distancePerMeterPerSecond,
+                maximumSpeedFramingDistance);
+            var framedCenter = actionCenter + framingAdjustment.MotionLead;
 
             var planarViewDirection = new Vector3(tableViewDirection.x, 0f, tableViewDirection.y);
             if (planarViewDirection.sqrMagnitude <= 0.000001f)
@@ -76,13 +109,15 @@ namespace PoolTable.Presentation.Camera
             }
 
             planarViewDirection.Normalize();
-            var cameraDistance = distanceFromAction + (spreadRadius * distancePerMeterSpread);
+            var cameraDistance = distanceFromAction
+                + (spreadRadius * distancePerMeterSpread)
+                + framingAdjustment.AdditionalDistance;
             var cameraHeight = heightAboveAction + (spreadRadius * heightPerMeterSpread);
-            desiredPosition = actionCenter
+            desiredPosition = framedCenter
                 - (planarViewDirection * cameraDistance)
                 + (Vector3.up * cameraHeight);
 
-            var focusPoint = actionCenter + (Vector3.up * targetHeightOffset);
+            var focusPoint = framedCenter + (Vector3.up * targetHeightOffset);
             var forward = focusPoint - desiredPosition;
             if (forward.sqrMagnitude <= 0.000001f)
             {
@@ -95,8 +130,31 @@ namespace PoolTable.Presentation.Camera
 
         internal bool TryGetActionFrame(out Vector3 actionCenter, out float spreadRadius)
         {
+            return TryGetActionFrame(out actionCenter, out spreadRadius, out _, out _);
+        }
+
+        internal bool TryGetActionFrame(
+            out Vector3 actionCenter,
+            out float spreadRadius,
+            out Vector3 averageLinearVelocity)
+        {
+            return TryGetActionFrame(
+                out actionCenter,
+                out spreadRadius,
+                out averageLinearVelocity,
+                out _);
+        }
+
+        internal bool TryGetActionFrame(
+            out Vector3 actionCenter,
+            out float spreadRadius,
+            out Vector3 averageLinearVelocity,
+            out float averagePlanarSpeedMetersPerSecond)
+        {
             actionCenter = default;
             spreadRadius = 0f;
+            averageLinearVelocity = default;
+            averagePlanarSpeedMetersPerSecond = 0f;
 
             if (observedBalls == null)
             {
@@ -116,6 +174,9 @@ namespace PoolTable.Presentation.Camera
                 }
 
                 actionCenter += body.position;
+                var planarLinearVelocity = Vector3.ProjectOnPlane(body.linearVelocity, Vector3.up);
+                averageLinearVelocity += planarLinearVelocity;
+                averagePlanarSpeedMetersPerSecond += planarLinearVelocity.magnitude;
                 movingCount++;
             }
 
@@ -127,10 +188,14 @@ namespace PoolTable.Presentation.Camera
                 }
 
                 actionCenter = cueBall.position;
+                averageLinearVelocity = Vector3.ProjectOnPlane(cueBall.linearVelocity, Vector3.up);
+                averagePlanarSpeedMetersPerSecond = averageLinearVelocity.magnitude;
                 return true;
             }
 
             actionCenter /= movingCount;
+            averageLinearVelocity = Vector3.ProjectOnPlane(averageLinearVelocity / movingCount, Vector3.up);
+            averagePlanarSpeedMetersPerSecond /= movingCount;
             foreach (var body in observedBalls)
             {
                 if (body == null

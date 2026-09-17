@@ -3,6 +3,7 @@ using PoolTable.Gameplay.Feedback;
 using PoolTable.Gameplay.Instrumentation;
 using PoolTable.Gameplay.Shots;
 using PoolTable.Presentation.Audio;
+using PoolTable.Presentation.Camera;
 using PoolTable.Presentation.Vfx;
 using UnityEngine;
 
@@ -25,6 +26,7 @@ namespace PoolTable.Presentation
         private PoolTableImpactAudioPresenter impactAudioPresenter;
         private CueImpactVfxPresenter cueImpactVfxPresenter;
         private PocketCaptureVfxPresenter pocketCaptureVfxPresenter;
+        private CameraImpactImpulseController cameraImpactImpulseController;
 
         public SoundManager SoundManager => soundManager;
         public Transform BallsRoot => ballsRoot;
@@ -37,6 +39,7 @@ namespace PoolTable.Presentation
         public Shader CueImpactParticleShader => cueImpactParticleShader;
         public CueImpactVfxPresenter CueImpactVfxPresenter => cueImpactVfxPresenter;
         public PocketCaptureVfxPresenter PocketCaptureVfxPresenter => pocketCaptureVfxPresenter;
+        public CameraImpactImpulseController CameraImpactImpulseController => cameraImpactImpulseController;
 
         private void Awake()
         {
@@ -96,11 +99,25 @@ namespace PoolTable.Presentation
                 railImpactClip,
                 pocketCaptureClip,
                 cueImpactClip);
+            var outputCamera = UnityEngine.Camera.main;
+            if (outputCamera == null)
+            {
+                throw new InvalidOperationException("The scene composition root requires a tagged Main Camera.");
+            }
+
+            cameraImpactImpulseController = outputCamera.GetComponent<CameraImpactImpulseController>();
+            if (cameraImpactImpulseController == null)
+            {
+                cameraImpactImpulseController = outputCamera.gameObject.AddComponent<CameraImpactImpulseController>();
+            }
+
             cueImpactVfxPresenter = new CueImpactVfxPresenter(transform, cueImpactParticleShader);
             pocketCaptureVfxPresenter = new PocketCaptureVfxPresenter(transform, cueImpactParticleShader);
             impactEventSource.RailImpactObserved += impactAudioPresenter.PlayRailImpact;
+            impactEventSource.RailImpactObserved += cameraImpactImpulseController.PlayRailImpact;
             impactEventSource.BallPocketed += impactAudioPresenter.PlayPocketCapture;
             impactEventSource.CueStrikeApplied += impactAudioPresenter.PlayCueStrike;
+            impactEventSource.CueStrikeApplied += cameraImpactImpulseController.PlayCueStrike;
             impactEventSource.CueStrikeApplied += cueImpactVfxPresenter.PlayCueStrike;
             impactEventSource.PocketCaptureObserved += pocketCaptureVfxPresenter.PlayPocketCapture;
         }
@@ -117,6 +134,12 @@ namespace PoolTable.Presentation
             if (impactEventSource != null && cueImpactVfxPresenter != null)
             {
                 impactEventSource.CueStrikeApplied -= cueImpactVfxPresenter.PlayCueStrike;
+            }
+
+            if (impactEventSource != null && cameraImpactImpulseController != null)
+            {
+                impactEventSource.RailImpactObserved -= cameraImpactImpulseController.PlayRailImpact;
+                impactEventSource.CueStrikeApplied -= cameraImpactImpulseController.PlayCueStrike;
             }
 
             if (impactEventSource != null && pocketCaptureVfxPresenter != null)

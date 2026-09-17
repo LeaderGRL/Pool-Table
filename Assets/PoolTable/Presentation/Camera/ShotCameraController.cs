@@ -21,6 +21,8 @@ namespace PoolTable.Presentation.Camera
         [SerializeField, Min(0f)] private float positionSharpness = 14f;
         [SerializeField, Min(0f)] private float rotationSharpness = 18f;
 
+        private CameraImpactImpulseController impactImpulseController;
+
         public ShotPowerController ShotPowerController => shotPowerController;
 
         public float DistanceBehindCueBall => distanceBehindCueBall;
@@ -49,12 +51,19 @@ namespace PoolTable.Presentation.Camera
 
         private void OnEnable()
         {
+            impactImpulseController = GetComponent<CameraImpactImpulseController>();
+            impactImpulseController?.RemoveLastAppliedOffset();
             ApplyRuntimeCameraPose(0f, true);
         }
 
         private void LateUpdate()
         {
-            ApplyRuntimeCameraPose(Time.deltaTime, false);
+            impactImpulseController ??= GetComponent<CameraImpactImpulseController>();
+            impactImpulseController?.RemoveLastAppliedOffset();
+            if (ApplyRuntimeCameraPose(Time.deltaTime, false))
+            {
+                impactImpulseController?.ApplyCurrentImpulse(Time.deltaTime);
+            }
         }
 
         internal bool ApplyCameraPose(float deltaTime, bool snap)

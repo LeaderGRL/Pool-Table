@@ -1573,6 +1573,10 @@ namespace PoolTable.Tests.PlayMode
                 Is.EqualTo(2),
                 "Pocket-capture VFX must keep one reusable dust system and one reusable accent system.");
             Assert.That(
+                compositionRoot.CameraImpactImpulseController,
+                Is.SameAs(outputCameraObject.GetComponent<CameraImpactImpulseController>()),
+                "The composition root must compose one camera-impact controller on the output camera.");
+            Assert.That(
                 compositionRoot.PocketCaptureVolumesRoot.GetComponentsInChildren<PocketCaptureVolume>(true),
                 Has.Length.EqualTo(6),
                 "Impact audio must subscribe to all six typed pocket capture volumes.");
