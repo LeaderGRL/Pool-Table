@@ -274,4 +274,4 @@ Relay is intended for a listen-server model: the host creates the session and pl
 
 ## Resume order
 
-Current Phase 7 work is **VFX: Add chalk and cue impact feedback** (issue #116 / PR #117). URP conversion is merged through the platform quality profiles in PR #111, impact audio is merged through PR #115, and stabilization steps 40G–40I are merged through PR #101 and manually validated. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
+Current Phase 7 work is **VFX: Add pocket feedback** (issue #118 / PR #119). URP conversion is merged through the platform quality profiles in PR #111, impact audio is merged through PR #115, cue-impact VFX is merged through PR #117, and stabilization steps 40G–40I are merged through PR #101 and manually validated. Before every new issue, review this roadmap and verify the current status from repository, test, or merged-PR evidence.
