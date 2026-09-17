@@ -6,18 +6,18 @@ namespace PoolTable.Presentation.Camera
     {
         public static SpectateShotFrameAdjustment Evaluate(
             Vector3 averageLinearVelocity,
+            float averagePlanarSpeedMetersPerSecond,
             float motionLeadSeconds,
             float maximumMotionLeadDistance,
             float distancePerMeterPerSecond,
             float maximumSpeedFramingDistance)
         {
             var planarVelocity = Vector3.ProjectOnPlane(averageLinearVelocity, Vector3.up);
-            var speed = planarVelocity.magnitude;
             var motionLead = Vector3.ClampMagnitude(
                 planarVelocity * Mathf.Max(0f, motionLeadSeconds),
                 Mathf.Max(0f, maximumMotionLeadDistance));
             var additionalDistance = Mathf.Min(
-                speed * Mathf.Max(0f, distancePerMeterPerSecond),
+                Mathf.Max(0f, averagePlanarSpeedMetersPerSecond) * Mathf.Max(0f, distancePerMeterPerSecond),
                 Mathf.Max(0f, maximumSpeedFramingDistance));
 
             return new SpectateShotFrameAdjustment(motionLead, additionalDistance);

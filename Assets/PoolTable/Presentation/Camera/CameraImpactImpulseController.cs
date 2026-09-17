@@ -12,6 +12,9 @@ namespace PoolTable.Presentation.Camera
         private SpectateCameraController spectateCameraController;
         private CameraImpactImpulseCue activeCue;
         private float remainingSeconds;
+        private Vector3 lastAppliedWorldPositionOffset;
+        private Quaternion lastAppliedRotationOffset = Quaternion.identity;
+        private bool hasAppliedOffset;
 
         public bool IsPlaying => remainingSeconds > 0f && activeCue.ShouldPlay;
 
@@ -23,9 +26,12 @@ namespace PoolTable.Presentation.Camera
             spectateCameraController = GetComponent<SpectateCameraController>();
         }
 
-        private void LateUpdate()
+        private void Update()
         {
-            ApplyCurrentImpulse(Time.deltaTime);
+            if (!CanApplyFeedback())
+            {
+                Clear();
+            }
         }
 
         internal void PlayCueStrike(CueStrikeObservation observation)
@@ -66,8 +72,11 @@ namespace PoolTable.Presentation.Camera
                 Mathf.Sin(phase * 0.83f) * 0.3f,
                 Mathf.Sin(phase * 1.73f)) * (activeCue.RotationAmplitudeDegrees * envelope);
 
-            transform.position += transform.TransformVector(localPositionOffset);
-            transform.rotation *= Quaternion.Euler(localRotationOffset);
+            lastAppliedWorldPositionOffset = transform.TransformVector(localPositionOffset);
+            lastAppliedRotationOffset = Quaternion.Euler(localRotationOffset);
+            transform.position += lastAppliedWorldPositionOffset;
+            transform.rotation *= lastAppliedRotationOffset;
+            hasAppliedOffset = true;
 
             remainingSeconds = Mathf.Max(0f, remainingSeconds - Mathf.Max(0f, deltaTime));
             if (remainingSeconds <= 0f)
@@ -76,6 +85,20 @@ namespace PoolTable.Presentation.Camera
             }
 
             return true;
+        }
+
+        internal void RemoveLastAppliedOffset()
+        {
+            if (!hasAppliedOffset)
+            {
+                return;
+            }
+
+            transform.position -= lastAppliedWorldPositionOffset;
+            transform.rotation *= Quaternion.Inverse(lastAppliedRotationOffset);
+            lastAppliedWorldPositionOffset = Vector3.zero;
+            lastAppliedRotationOffset = Quaternion.identity;
+            hasAppliedOffset = false;
         }
 
         private bool CanApplyFeedback()
@@ -96,9 +119,8 @@ namespace PoolTable.Presentation.Camera
                 || cue.RotationAmplitudeDegrees >= activeCue.RotationAmplitudeDegrees)
             {
                 activeCue = cue;
+                remainingSeconds = cue.DurationSeconds;
             }
-
-            remainingSeconds = Mathf.Max(remainingSeconds, cue.DurationSeconds);
         }
 
         private void OnDisable()
@@ -108,6 +130,7 @@ namespace PoolTable.Presentation.Camera
 
         private void Clear()
         {
+            RemoveLastAppliedOffset();
             activeCue = CameraImpactImpulseCue.Silent;
             remainingSeconds = 0f;
         }

@@ -68,10 +68,12 @@ namespace PoolTable.Tests.PlayMode
                 spectateCameraController.TryGetActionFrame(
                     out var actionCenter,
                     out var spreadRadius,
-                    out var averageVelocity),
+                    out var averageVelocity,
+                    out var averagePlanarSpeed),
                 Is.True);
             var adjustment = SpectateShotFramingModel.Evaluate(
                 averageVelocity,
+                averagePlanarSpeed,
                 spectateCameraController.MotionLeadSeconds,
                 spectateCameraController.MaximumMotionLeadDistance,
                 spectateCameraController.DistancePerMeterPerSecond,
@@ -85,6 +87,46 @@ namespace PoolTable.Tests.PlayMode
                 Is.LessThanOrEqualTo(spectateCameraController.MaximumMotionLeadDistance + 0.0001f));
 
             cueBall.linearVelocity = Vector3.zero;
+        }
+
+        [UnityTest]
+        public IEnumerator SpectateCamera_OpposingFastMotionStillPullsBack()
+        {
+            yield return LoadPoolTableScene();
+
+            var outputCamera = Camera.main;
+            var spectateCameraController = outputCamera.GetComponent<SpectateCameraController>();
+            var cueBall = spectateCameraController.CueBall;
+            var objectBall = spectateCameraController.BallsRoot
+                .GetComponentsInChildren<Rigidbody>(true)
+                .First(body => body != cueBall);
+
+            cueBall.linearVelocity = new Vector3(5f, 0f, 0f);
+            objectBall.linearVelocity = new Vector3(-5f, 0f, 0f);
+            spectateCameraController.RefreshObservedBalls();
+
+            Assert.That(
+                spectateCameraController.TryGetActionFrame(
+                    out _,
+                    out _,
+                    out var averageVelocity,
+                    out var averagePlanarSpeed),
+                Is.True);
+            var adjustment = SpectateShotFramingModel.Evaluate(
+                averageVelocity,
+                averagePlanarSpeed,
+                spectateCameraController.MotionLeadSeconds,
+                spectateCameraController.MaximumMotionLeadDistance,
+                spectateCameraController.DistancePerMeterPerSecond,
+                spectateCameraController.MaximumSpeedFramingDistance);
+
+            Assert.That(averageVelocity.magnitude, Is.LessThan(0.001f));
+            Assert.That(averagePlanarSpeed, Is.EqualTo(5f).Within(0.001f));
+            Assert.That(adjustment.MotionLead, Is.EqualTo(Vector3.zero));
+            Assert.That(adjustment.AdditionalDistance, Is.GreaterThan(0f));
+
+            cueBall.linearVelocity = Vector3.zero;
+            objectBall.linearVelocity = Vector3.zero;
         }
 
         [UnityTest]
@@ -111,22 +153,67 @@ namespace PoolTable.Tests.PlayMode
 
             spectateCameraController.enabled = true;
             Assert.That(spectateCameraController.ApplyCameraPose(0f, true), Is.True);
-            var basePosition = outputCamera.transform.position;
-            var baseRotation = outputCamera.transform.rotation;
+            impulseController.PlayCueStrike(new PoolTable.Gameplay.Shots.CueStrikeObservation(1f, 6.6666667f));
+
+            for (var frame = 0; frame < 10; frame++)
+            {
+                impulseController.RemoveLastAppliedOffset();
+                var basePosition = outputCamera.transform.position;
+                var baseRotation = outputCamera.transform.rotation;
+
+                Assert.That(impulseController.ApplyCurrentImpulse(0.01f), Is.True);
+                Assert.That(
+                    Vector3.Distance(outputCamera.transform.position, basePosition),
+                    Is.LessThanOrEqualTo(0.014f),
+                    "The strongest cue impulse must remain a subtle camera offset without accumulating drift.");
+                Assert.That(
+                    Quaternion.Angle(outputCamera.transform.rotation, baseRotation),
+                    Is.LessThanOrEqualTo(0.5f),
+                    "The strongest cue impulse must keep camera rotation readable without accumulating drift.");
+
+                impulseController.RemoveLastAppliedOffset();
+                Assert.That(
+                    Vector3.Distance(outputCamera.transform.position, basePosition),
+                    Is.LessThanOrEqualTo(0.000001f),
+                    "Removing the impulse must restore the gameplay camera position exactly.");
+                Assert.That(
+                    Quaternion.Angle(outputCamera.transform.rotation, baseRotation),
+                    Is.LessThanOrEqualTo(0.0001f),
+                    "Removing the impulse must restore the gameplay camera rotation exactly.");
+            }
+
+            impulseController.RemoveLastAppliedOffset();
+            Assert.That(spectateCameraController.ApplyCameraPose(0f, true), Is.True);
+            spectateCameraController.enabled = false;
+        }
+
+        [UnityTest]
+        public IEnumerator CameraImpactImpulse_WeakerImpactDoesNotExtendStrongerCue()
+        {
+            yield return LoadPoolTableScene();
+
+            var outputCamera = Camera.main;
+            var impulseController = outputCamera.GetComponent<CameraImpactImpulseController>();
+            var spectateCameraController = outputCamera.GetComponent<SpectateCameraController>();
+            spectateCameraController.enabled = true;
 
             impulseController.PlayCueStrike(new PoolTable.Gameplay.Shots.CueStrikeObservation(1f, 6.6666667f));
-            Assert.That(impulseController.ApplyCurrentImpulse(0f), Is.True);
+            impulseController.RemoveLastAppliedOffset();
+            Assert.That(spectateCameraController.ApplyCameraPose(0f, true), Is.True);
+            Assert.That(impulseController.ApplyCurrentImpulse(0.13f), Is.True);
+            var remainingAfterStrongCue = impulseController.RemainingSeconds;
+
+            impulseController.PlayRailImpact(new PoolTable.Gameplay.Feedback.RailImpactObservation(
+                CameraImpactImpulseModel.MinimumRailImpactEnergyJoules,
+                1f,
+                0.05f));
 
             Assert.That(
-                Vector3.Distance(outputCamera.transform.position, basePosition),
-                Is.LessThanOrEqualTo(0.014f),
-                "The strongest cue impulse must remain a subtle camera offset.");
-            Assert.That(
-                Quaternion.Angle(outputCamera.transform.rotation, baseRotation),
-                Is.LessThanOrEqualTo(0.5f),
-                "The strongest cue impulse must keep camera rotation readable.");
+                impulseController.RemainingSeconds,
+                Is.EqualTo(remainingAfterStrongCue).Within(0.000001f),
+                "A weaker rail impact must not rewind or extend a stronger active cue.");
 
-            spectateCameraController.ApplyCameraPose(0f, true);
+            impulseController.RemoveLastAppliedOffset();
             spectateCameraController.enabled = false;
         }
 
