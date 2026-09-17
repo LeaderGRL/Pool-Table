@@ -24,6 +24,7 @@ namespace PoolTable.Presentation
         private PoolTableImpactEventSource impactEventSource;
         private PoolTableImpactAudioPresenter impactAudioPresenter;
         private CueImpactVfxPresenter cueImpactVfxPresenter;
+        private PocketCaptureVfxPresenter pocketCaptureVfxPresenter;
 
         public SoundManager SoundManager => soundManager;
         public Transform BallsRoot => ballsRoot;
@@ -35,6 +36,7 @@ namespace PoolTable.Presentation
         public AudioClip CueImpactClip => cueImpactClip;
         public Shader CueImpactParticleShader => cueImpactParticleShader;
         public CueImpactVfxPresenter CueImpactVfxPresenter => cueImpactVfxPresenter;
+        public PocketCaptureVfxPresenter PocketCaptureVfxPresenter => pocketCaptureVfxPresenter;
 
         private void Awake()
         {
@@ -95,10 +97,12 @@ namespace PoolTable.Presentation
                 pocketCaptureClip,
                 cueImpactClip);
             cueImpactVfxPresenter = new CueImpactVfxPresenter(transform, cueImpactParticleShader);
+            pocketCaptureVfxPresenter = new PocketCaptureVfxPresenter(transform, cueImpactParticleShader);
             impactEventSource.RailImpactObserved += impactAudioPresenter.PlayRailImpact;
             impactEventSource.BallPocketed += impactAudioPresenter.PlayPocketCapture;
             impactEventSource.CueStrikeApplied += impactAudioPresenter.PlayCueStrike;
             impactEventSource.CueStrikeApplied += cueImpactVfxPresenter.PlayCueStrike;
+            impactEventSource.PocketCaptureObserved += pocketCaptureVfxPresenter.PlayPocketCapture;
         }
 
         private void OnDestroy()
@@ -115,8 +119,14 @@ namespace PoolTable.Presentation
                 impactEventSource.CueStrikeApplied -= cueImpactVfxPresenter.PlayCueStrike;
             }
 
+            if (impactEventSource != null && pocketCaptureVfxPresenter != null)
+            {
+                impactEventSource.PocketCaptureObserved -= pocketCaptureVfxPresenter.PlayPocketCapture;
+            }
+
             impactEventSource?.Dispose();
             cueImpactVfxPresenter?.Dispose();
+            pocketCaptureVfxPresenter?.Dispose();
         }
     }
 }

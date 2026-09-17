@@ -17,6 +17,9 @@ namespace PoolTable.Gameplay.Pockets
 
         public SphereCollider TriggerCollider => GetComponent<SphereCollider>();
 
+        public Vector3 MouthWorldPosition =>
+            transform.position + (Vector3.up * BilliardsPhysicalSpecification.PocketCaptureDepthBelowBedMeters);
+
         public bool TryCapture(BallPocketCapture ballCapture)
         {
             if (ballCapture == null || !ballCapture.TryCapture(Pocket, out var observation))

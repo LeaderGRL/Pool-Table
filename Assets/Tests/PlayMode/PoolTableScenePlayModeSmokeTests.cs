@@ -23,6 +23,7 @@ using PoolTable.Physics.Rails;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
 using PoolTable.Presentation.Camera;
+using PoolTable.Presentation.Vfx;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -351,6 +352,10 @@ namespace PoolTable.Tests.PlayMode
                     Vector3.Distance(volume.transform.position, PocketCaptureLayout.GetCenter(volume.Pocket)),
                     Is.LessThan(0.0001f),
                     $"Pocket {volume.Pocket.Index} must remain on the authoritative metric capture layout.");
+                Assert.That(
+                    volume.MouthWorldPosition.y,
+                    Is.EqualTo(BilliardsPhysicalSpecification.ReferenceTableBedHeightMeters).Within(0.0001f),
+                    $"Pocket {volume.Pocket.Index} feedback must originate at the playing-surface height.");
             }
 
             var ballCaptures = EnumerateSceneObjects(activeScene)
@@ -359,6 +364,45 @@ namespace PoolTable.Tests.PlayMode
                 .ToArray();
             Assert.That(ballCaptures, Has.Length.EqualTo(16));
             Assert.That(SceneContainsObject(activeScene, "pocket_destroy"), Is.False);
+        }
+
+        [UnityTest]
+        public IEnumerator PocketCapture_EmitsPresentationVfxAtCapturedPocket()
+        {
+            yield return LoadPoolTableScene();
+
+            var activeScene = SceneManager.GetActiveScene();
+            var compositionRoot = Object.FindFirstObjectByType<PoolTableSceneCompositionRoot>();
+            var volume = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<PocketCaptureVolume>())
+                .First(candidate => candidate != null && candidate.Pocket == new PocketId(1));
+            var objectBallIdentity = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => gameObject.GetComponent<BallIdentity>())
+                .First(identity => identity != null && identity.Id.Number == 1);
+            var capture = objectBallIdentity.GetComponent<BallPocketCapture>();
+
+            Assert.That(compositionRoot, Is.Not.Null);
+            Assert.That(compositionRoot.PocketCaptureVfxPresenter, Is.Not.Null);
+            Assert.That(compositionRoot.PocketCaptureVfxPresenter.DustParticles.particleCount, Is.Zero);
+            Assert.That(compositionRoot.PocketCaptureVfxPresenter.AccentParticles.particleCount, Is.Zero);
+
+            Assert.That(volume.TryCapture(capture), Is.True);
+
+            var expectedCue = PocketCaptureVfxModel.Evaluate();
+            Assert.That(
+                compositionRoot.PocketCaptureVfxPresenter.DustParticles.particleCount,
+                Is.EqualTo(expectedCue.DustParticleCount));
+            Assert.That(
+                compositionRoot.PocketCaptureVfxPresenter.AccentParticles.particleCount,
+                Is.EqualTo(expectedCue.AccentParticleCount));
+
+            var particles = new ParticleSystem.Particle[expectedCue.DustParticleCount];
+            var particleCount = compositionRoot.PocketCaptureVfxPresenter.DustParticles.GetParticles(particles);
+            Assert.That(particleCount, Is.EqualTo(expectedCue.DustParticleCount));
+            Assert.That(
+                Vector3.Distance(particles[0].position, volume.MouthWorldPosition),
+                Is.LessThan(BilliardsPhysicalSpecification.PocketCaptureRadiusMeters + 0.01f),
+                "The composed pocket VFX must stay localized to the typed pocket's world-space footprint.");
         }
 
         [UnityTest]
@@ -1520,6 +1564,14 @@ namespace PoolTable.Tests.PlayMode
                 compositionRoot.CueImpactVfxPresenter.Root.childCount,
                 Is.EqualTo(2),
                 "Cue-impact VFX must keep one reusable chalk system and one reusable contact-accent system.");
+            Assert.That(
+                compositionRoot.PocketCaptureVfxPresenter,
+                Is.Not.Null,
+                "The composition root must create the pocket-capture VFX presenter.");
+            Assert.That(
+                compositionRoot.PocketCaptureVfxPresenter.Root.childCount,
+                Is.EqualTo(2),
+                "Pocket-capture VFX must keep one reusable dust system and one reusable accent system.");
             Assert.That(
                 compositionRoot.PocketCaptureVolumesRoot.GetComponentsInChildren<PocketCaptureVolume>(true),
                 Has.Length.EqualTo(6),
