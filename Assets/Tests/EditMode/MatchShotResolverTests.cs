@@ -304,12 +304,12 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
-        public void Resolve_LegalCalledEightBallFinishesWithShooterAsWinner()
+        public void Resolve_EightBallWithoutDeclarationAfterGroupClearedFinishesWithShooterAsWinner()
         {
             var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
             var eightBall = new BallId(BallId.EightBallNumber);
             var snapshot = Snapshot(8, 9, 10);
-            var intent = Intent(MatchPlayerId.PlayerOne, eightBall, PocketOne);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
             var facts = Facts(eightBall, new PocketedBall(eightBall, PocketOne));
 
             var resolution = resolver.Resolve(state, intent, facts, snapshot);
@@ -387,8 +387,126 @@ namespace PoolTable.Tests.EditMode
             Assert.That(resolution.State, Is.Not.SameAs(state));
         }
 
+        [TestCase(2, BallGroup.Solids)]
+        [TestCase(10, BallGroup.Stripes)]
+        public void Resolve_CleanBreakSingleFamilyAssignsThatGroupAndContinues(
+            int ballNumber,
+            BallGroup expectedShooterGroup)
+        {
+            var state = MatchState.CreateInitial();
+            var groupedBall = new BallId(ballNumber);
+            var snapshot = Snapshot(2, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.8f);
+            var facts = Facts(groupedBall, new PocketedBall(groupedBall, PocketOne));
+            var expectedOpponentGroup = expectedShooterGroup == BallGroup.Solids
+                ? BallGroup.Stripes
+                : BallGroup.Solids;
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.RequiresBreakFollowUp, Is.False);
+            Assert.That(resolution.GroupAssigned, Is.True);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.GroupsAssigned));
+            Assert.That(resolution.State.PlayerOne.Group, Is.EqualTo(expectedShooterGroup));
+            Assert.That(resolution.State.PlayerTwo.Group, Is.EqualTo(expectedOpponentGroup));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolution.ShooterContinues, Is.True);
+            Assert.That(resolution.TurnAdvanced, Is.False);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+        }
+
         [Test]
-        public void Resolve_BreakRequiresExplicitFollowUpWithoutGuessingPolicy()
+        public void Resolve_CleanBreakMixedFamiliesKeepsTableOpenAndAdvancesTurn()
+        {
+            var state = MatchState.CreateInitial();
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.8f);
+            var facts = Facts(
+                solid,
+                new PocketedBall(solid, PocketOne),
+                new PocketedBall(stripe, new PocketId(2)));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.RequiresBreakFollowUp, Is.False);
+            Assert.That(resolution.GroupAssigned, Is.False);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.OpenTable));
+            Assert.That(resolution.State.PlayerOne.Group, Is.EqualTo(BallGroup.None));
+            Assert.That(resolution.State.PlayerTwo.Group, Is.EqualTo(BallGroup.None));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.ShooterContinues, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+        }
+
+        [Test]
+        public void Resolve_BreakScratchWithSingleFamilyPreservesAssignmentAndGrantsOpponentBallInHand()
+        {
+            var state = MatchState.CreateInitial();
+            var cueBall = new BallId(BallId.CueBallNumber);
+            var solid = new BallId(2);
+            var snapshot = Snapshot(2, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.8f);
+            var facts = new ShotFacts(
+                solid,
+                new[]
+                {
+                    new PocketedBall(solid, PocketOne),
+                    new PocketedBall(cueBall, new PocketId(2)),
+                },
+                Array.Empty<BallId>());
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.RequiresBreakFollowUp, Is.False);
+            Assert.That(resolution.GroupAssigned, Is.True);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.GroupsAssigned));
+            Assert.That(resolution.State.PlayerOne.Group, Is.EqualTo(BallGroup.Solids));
+            Assert.That(resolution.State.PlayerTwo.Group, Is.EqualTo(BallGroup.Stripes));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.HasBallInHand, Is.True);
+            Assert.That(resolution.State.BallInHand.Recipient, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.BallInHand.PlacementArea, Is.EqualTo(CueBallPlacementArea.Anywhere));
+            Assert.That(resolution.FoulResolution.Has(ShotFoul.CueBallScratch), Is.True);
+            Assert.That(resolution.GrantsTwoShotEntitlement, Is.True);
+            Assert.That(resolution.ShooterContinues, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
+        }
+
+        [Test]
+        public void Resolve_BreakEightBallLossTakesPrecedenceOverAssignmentAndScratch()
+        {
+            var state = MatchState.CreateInitial();
+            var cueBall = new BallId(BallId.CueBallNumber);
+            var solid = new BallId(2);
+            var eightBall = new BallId(BallId.EightBallNumber);
+            var snapshot = Snapshot(2, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.8f);
+            var facts = new ShotFacts(
+                solid,
+                new[]
+                {
+                    new PocketedBall(solid, PocketOne),
+                    new PocketedBall(eightBall, new PocketId(2)),
+                    new PocketedBall(cueBall, new PocketId(3)),
+                },
+                Array.Empty<BallId>());
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.MatchFinished, Is.True);
+            Assert.That(resolution.State.Result.Value.Winner, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.Result.Value.Loser, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolution.State.HasBallInHand, Is.False);
+            Assert.That(resolution.GroupAssigned, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.False);
+            Assert.That(resolution.RequiresBreakFollowUp, Is.False);
+        }
+
+        [Test]
+        public void Resolve_CleanBreakWithoutPocketOpensTableAndAdvancesTurn()
         {
             var state = MatchState.CreateInitial();
             var one = new BallId(1);
@@ -401,16 +519,16 @@ namespace PoolTable.Tests.EditMode
 
             var resolution = resolver.Resolve(state, intent, facts, snapshot);
 
-            Assert.That(resolution.RequiresBreakFollowUp, Is.True);
-            Assert.That(resolution.State, Is.SameAs(state));
-            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.Break));
+            Assert.That(resolution.RequiresBreakFollowUp, Is.False);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.OpenTable));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
             Assert.That(resolution.FoulResolution.IsClean, Is.True);
             Assert.That(resolution.BreakEvaluation.HasValue, Is.True);
             Assert.That(resolution.BreakEvaluation.Value.IsLegal, Is.True);
             Assert.That(
                 resolution.BreakEvaluation.Value.Reason,
                 Is.EqualTo(BreakEvaluationReason.FourOrMoreObjectBallsReachedRails));
-            Assert.That(resolution.TurnAdvanced, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
             Assert.That(resolution.ShooterContinues, Is.False);
         }
 
