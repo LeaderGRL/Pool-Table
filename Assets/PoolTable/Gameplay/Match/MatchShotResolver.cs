@@ -65,28 +65,46 @@ namespace PoolTable.Gameplay.Match
             var calledShotSucceeded = WasCalledShotSuccessful(state, intent, facts, tableBeforeShot);
             var resolvedState = state;
             var groupAssigned = false;
+            var shooterContinues = false;
+            ClassifyPocketedGroups(
+                facts,
+                out var hasPocketedSolids,
+                out var hasPocketedStripes,
+                out var firstGroupedBall);
 
-            if (state.IsTableOpen && calledShotSucceeded)
+            if (state.IsTableOpen)
             {
-                var calledBall = intent.CalledShot.Value.ObjectBall;
-                if (calledBall.Group == BallGroup.Solids || calledBall.Group == BallGroup.Stripes)
+                if (hasPocketedSolids != hasPocketedStripes)
                 {
                     resolvedState = PlayerGroupAssignmentRule.AssignFromLegallyPocketedBall(
                         state,
                         state.CurrentPlayer,
-                        calledBall);
+                        firstGroupedBall);
                     groupAssigned = true;
+                    shooterContinues = true;
                 }
             }
+            else if (state.Phase == MatchPhase.GroupsAssigned)
+            {
+                var shooterGroup = state.GetPlayer(state.CurrentPlayer).Group;
+                var pocketedOwnGroup = shooterGroup == BallGroup.Solids
+                    ? hasPocketedSolids
+                    : hasPocketedStripes;
+                var pocketedOpponentGroup = shooterGroup == BallGroup.Solids
+                    ? hasPocketedStripes
+                    : hasPocketedSolids;
 
-            if (calledShotSucceeded)
+                shooterContinues = pocketedOwnGroup && !pocketedOpponentGroup;
+            }
+
+            if (shooterContinues)
             {
                 return new ShotResolution(
                     resolvedState,
                     foulResolution,
                     breakEvaluation: null,
                     requiresBreakFollowUp: false,
-                    calledShotSucceeded: true,
+                    calledShotSucceeded: calledShotSucceeded,
                     shooterContinues: true,
                     turnAdvanced: false,
                     groupAssigned: groupAssigned);
@@ -98,10 +116,41 @@ namespace PoolTable.Gameplay.Match
                 foulResolution,
                 breakEvaluation: null,
                 requiresBreakFollowUp: false,
-                calledShotSucceeded: false,
+                calledShotSucceeded: calledShotSucceeded,
                 shooterContinues: false,
                 turnAdvanced: true,
                 groupAssigned: groupAssigned);
+        }
+
+        private static void ClassifyPocketedGroups(
+            ShotFacts facts,
+            out bool hasSolids,
+            out bool hasStripes,
+            out BallId firstGroupedBall)
+        {
+            hasSolids = false;
+            hasStripes = false;
+            firstGroupedBall = default;
+            var hasGroupedBall = false;
+
+            for (var index = 0; index < facts.PocketedBalls.Count; index++)
+            {
+                var ball = facts.PocketedBalls[index];
+                if (ball.Group == BallGroup.Solids)
+                {
+                    hasSolids = true;
+                }
+                else if (ball.Group == BallGroup.Stripes)
+                {
+                    hasStripes = true;
+                }
+
+                if (!hasGroupedBall && ball.Group != BallGroup.None)
+                {
+                    firstGroupedBall = ball;
+                    hasGroupedBall = true;
+                }
+            }
         }
 
         private static void ValidateInputs(
@@ -150,14 +199,6 @@ namespace PoolTable.Gameplay.Match
                 || (intent.CalledShot.HasValue && !intent.CalledShot.Value.IsValid))
             {
                 throw new ArgumentException("Shot intent must be a valid constructed intent.", nameof(intent));
-            }
-
-            if (intent.CalledShot.HasValue
-                && !tableBeforeShot.Contains(intent.CalledShot.Value.ObjectBall))
-            {
-                throw new ArgumentException(
-                    "The called object ball must exist in the pre-shot table snapshot.",
-                    nameof(intent));
             }
 
             ValidateObservedBallsExistBeforeShot(facts, tableBeforeShot);
