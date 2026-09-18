@@ -33,6 +33,192 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void Resolve_CleanOwnGroupPocketWithoutCalledShotContinuesTurn()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var solid = new BallId(2);
+            var snapshot = Snapshot(2, 3, 8, 9);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(solid, new PocketedBall(solid, PocketOne));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolution.ShooterContinues, Is.True);
+            Assert.That(resolution.TurnAdvanced, Is.False);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+        }
+
+        [Test]
+        public void Resolve_OpenTableSingleFamilyPocketWithoutCalledShotAssignsGroupsAndContinues()
+        {
+            var state = OpenTableRule.EnterAfterBreak(MatchState.CreateInitial());
+            var solid = new BallId(2);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(solid, new PocketedBall(solid, PocketOne));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.GroupAssigned, Is.True);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.GroupsAssigned));
+            Assert.That(resolution.State.PlayerOne.Group, Is.EqualTo(BallGroup.Solids));
+            Assert.That(resolution.State.PlayerTwo.Group, Is.EqualTo(BallGroup.Stripes));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolution.ShooterContinues, Is.True);
+            Assert.That(resolution.TurnAdvanced, Is.False);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+        }
+
+        [Test]
+        public void Resolve_OpenTableMixedFamiliesKeepTableOpenAndAdvanceTurn()
+        {
+            var state = OpenTableRule.EnterAfterBreak(MatchState.CreateInitial());
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(
+                solid,
+                new PocketedBall(solid, PocketOne),
+                new PocketedBall(stripe, new PocketId(2)));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.GroupAssigned, Is.False);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.OpenTable));
+            Assert.That(resolution.State.PlayerOne.Group, Is.EqualTo(BallGroup.None));
+            Assert.That(resolution.State.PlayerTwo.Group, Is.EqualTo(BallGroup.None));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.ShooterContinues, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+        }
+
+        [Test]
+        public void Resolve_OpenTableMixedFamiliesIgnoreSuccessfulLegacyCallAndAdvanceTurn()
+        {
+            var state = OpenTableRule.EnterAfterBreak(MatchState.CreateInitial());
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = Intent(MatchPlayerId.PlayerOne, solid, PocketOne);
+            var facts = Facts(
+                solid,
+                new PocketedBall(solid, PocketOne),
+                new PocketedBall(stripe, new PocketId(2)));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.CalledShotSucceeded, Is.True);
+            Assert.That(resolution.GroupAssigned, Is.False);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.OpenTable));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.ShooterContinues, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+        }
+
+        [Test]
+        public void Resolve_OpponentOnlyPocketAdvancesTurnWithoutFoul()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(solid, new PocketedBall(stripe, PocketOne));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.ShooterContinues, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+            Assert.That(resolution.State.HasBallInHand, Is.False);
+        }
+
+        [Test]
+        public void Resolve_MixedGroupsAdvanceTurnWithoutFoul()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(
+                solid,
+                new PocketedBall(solid, PocketOne),
+                new PocketedBall(stripe, new PocketId(2)));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.ShooterContinues, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+            Assert.That(resolution.State.HasBallInHand, Is.False);
+        }
+
+        [Test]
+        public void Resolve_MixedGroupsIgnoreSuccessfulLegacyCallAndAdvanceTurn()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = Intent(MatchPlayerId.PlayerOne, solid, PocketOne);
+            var facts = Facts(
+                solid,
+                new PocketedBall(solid, PocketOne),
+                new PocketedBall(stripe, new PocketId(2)));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.CalledShotSucceeded, Is.True);
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.ShooterContinues, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+        }
+
+        [Test]
+        public void Resolve_LegalNoPocketAdvancesTurnWithoutFoul()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var solid = new BallId(2);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = new ShotFacts(solid, Array.Empty<PocketedBall>(), new[] { solid });
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.ShooterContinues, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+            Assert.That(resolution.State.HasBallInHand, Is.False);
+        }
+
+        [Test]
+        public void Resolve_MissedCallDoesNotOverrideObservedOwnGroupPocket()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var solid = new BallId(2);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = Intent(MatchPlayerId.PlayerOne, solid, new PocketId(2));
+            var facts = Facts(solid, new PocketedBall(solid, PocketOne));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.CalledShotSucceeded, Is.False);
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolution.ShooterContinues, Is.True);
+            Assert.That(resolution.TurnAdvanced, Is.False);
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+        }
+
+        [Test]
         public void Resolve_CleanMissedCalledShotAdvancesTurn()
         {
             var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
@@ -250,15 +436,25 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
-        public void Resolve_RejectsCalledBallMissingFromPreShotSnapshot()
+        public void Resolve_StaleLegacyCallDoesNotOverrideObservedOpenTablePocket()
         {
             var state = OpenTableRule.EnterAfterBreak(MatchState.CreateInitial());
             var calledBall = new BallId(2);
+            var stripe = new BallId(10);
             var snapshot = Snapshot(3, 8, 10);
             var intent = Intent(MatchPlayerId.PlayerOne, calledBall, PocketOne);
-            var facts = new ShotFacts(new BallId(3), Array.Empty<PocketedBall>(), new[] { new BallId(3) });
+            var facts = Facts(stripe, new PocketedBall(stripe, PocketOne));
 
-            Assert.Throws<ArgumentException>(() => resolver.Resolve(state, intent, facts, snapshot));
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.CalledShotSucceeded, Is.False);
+            Assert.That(resolution.GroupAssigned, Is.True);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.GroupsAssigned));
+            Assert.That(resolution.State.PlayerOne.Group, Is.EqualTo(BallGroup.Stripes));
+            Assert.That(resolution.State.PlayerTwo.Group, Is.EqualTo(BallGroup.Solids));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolution.ShooterContinues, Is.True);
+            Assert.That(resolution.TurnAdvanced, Is.False);
         }
 
         [Test]
