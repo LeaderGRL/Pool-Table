@@ -116,7 +116,7 @@ namespace PoolTable.Tests.EditMode
         {
             var result = Evaluate(
                 MatchState.CreateInitial(),
-                firstContact: null,
+                firstContact: 1,
                 pocketed: new[] { BallId.CueBallNumber },
                 rails: Array.Empty<int>(),
                 table: StandardTable());

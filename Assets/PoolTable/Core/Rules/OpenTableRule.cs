@@ -19,5 +19,24 @@ namespace PoolTable.Core.Rules
 
             return state.WithPhase(MatchPhase.OpenTable);
         }
+
+        public static MatchState PassOpeningControl(MatchState state)
+        {
+            if (state == null)
+            {
+                throw new ArgumentNullException(nameof(state));
+            }
+
+            if (state.Phase == MatchPhase.Break || state.Phase == MatchPhase.Finished || state.TourNumber != 1)
+            {
+                throw new InvalidOperationException("Opening control can only pass immediately after the break flow.");
+            }
+
+            var incomingPlayer = state.CurrentPlayer == MatchPlayerId.PlayerOne
+                ? MatchPlayerId.PlayerTwo
+                : MatchPlayerId.PlayerOne;
+
+            return state.WithCurrentPlayerPreservingTour(incomingPlayer);
+        }
     }
 }

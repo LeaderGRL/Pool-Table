@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using PoolTable.Core.Balls;
 using PoolTable.Core.Match;
 using PoolTable.Core.Rules;
 
@@ -14,7 +18,7 @@ namespace PoolTable.Gameplay.Match
             bool shooterContinues,
             bool turnAdvanced,
             bool groupAssigned,
-            bool grantsTwoShotEntitlement)
+            IEnumerable<BallId> ballsToRespot = null)
         {
             State = state;
             FoulResolution = foulResolution;
@@ -24,7 +28,7 @@ namespace PoolTable.Gameplay.Match
             ShooterContinues = shooterContinues;
             TurnAdvanced = turnAdvanced;
             GroupAssigned = groupAssigned;
-            GrantsTwoShotEntitlement = grantsTwoShotEntitlement;
+            BallsToRespot = new List<BallId>(ballsToRespot ?? Array.Empty<BallId>()).AsReadOnly();
         }
 
         public MatchState State { get; }
@@ -43,7 +47,9 @@ namespace PoolTable.Gameplay.Match
 
         public bool GroupAssigned { get; }
 
-        public bool GrantsTwoShotEntitlement { get; }
+        public bool GrantsTwoShotEntitlement => State.DeuxCoups == DeuxCoupsState.TwoRemaining;
+
+        public ReadOnlyCollection<BallId> BallsToRespot { get; }
 
         public bool MatchFinished => State.IsFinished;
     }
