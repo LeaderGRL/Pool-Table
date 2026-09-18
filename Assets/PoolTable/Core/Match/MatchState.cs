@@ -10,7 +10,15 @@ namespace PoolTable.Core.Match
             MatchPlayerState playerTwo,
             MatchPlayerId currentPlayer,
             MatchPhase phase)
-            : this(playerOne, playerTwo, currentPlayer, phase, BallInHandState.None, null)
+            : this(
+                playerOne,
+                playerTwo,
+                currentPlayer,
+                phase,
+                BallInHandState.None,
+                null,
+                DefaultTourNumber(phase),
+                DeuxCoupsState.Inactive)
         {
         }
 
@@ -20,7 +28,15 @@ namespace PoolTable.Core.Match
             MatchPlayerId currentPlayer,
             MatchPhase phase,
             BallInHandState ballInHand)
-            : this(playerOne, playerTwo, currentPlayer, phase, ballInHand, null)
+            : this(
+                playerOne,
+                playerTwo,
+                currentPlayer,
+                phase,
+                ballInHand,
+                null,
+                DefaultTourNumber(phase),
+                DeuxCoupsState.Inactive)
         {
         }
 
@@ -31,6 +47,27 @@ namespace PoolTable.Core.Match
             MatchPhase phase,
             BallInHandState ballInHand,
             MatchResult? result)
+            : this(
+                playerOne,
+                playerTwo,
+                currentPlayer,
+                phase,
+                ballInHand,
+                result,
+                DefaultTourNumber(phase),
+                DeuxCoupsState.Inactive)
+        {
+        }
+
+        private MatchState(
+            MatchPlayerState playerOne,
+            MatchPlayerState playerTwo,
+            MatchPlayerId currentPlayer,
+            MatchPhase phase,
+            BallInHandState ballInHand,
+            MatchResult? result,
+            int tourNumber,
+            DeuxCoupsState deuxCoups)
         {
             if (playerOne.Id != MatchPlayerId.PlayerOne)
             {
@@ -48,6 +85,8 @@ namespace PoolTable.Core.Match
             ValidatePhaseConsistency(playerOne, playerTwo, phase);
             ValidateBallInHand(currentPlayer, phase, ballInHand);
             ValidateResult(phase, result);
+            ValidateTourNumber(phase, tourNumber);
+            ValidateDeuxCoups(phase, deuxCoups);
 
             PlayerOne = playerOne;
             PlayerTwo = playerTwo;
@@ -55,6 +94,8 @@ namespace PoolTable.Core.Match
             Phase = phase;
             BallInHand = ballInHand;
             Result = result;
+            TourNumber = tourNumber;
+            DeuxCoups = deuxCoups;
         }
 
         public MatchPlayerState PlayerOne { get; }
@@ -68,6 +109,10 @@ namespace PoolTable.Core.Match
         public BallInHandState BallInHand { get; }
 
         public MatchResult? Result { get; }
+
+        public int TourNumber { get; }
+
+        public DeuxCoupsState DeuxCoups { get; }
 
         public bool HasBallInHand => BallInHand.IsActive;
 
@@ -97,7 +142,23 @@ namespace PoolTable.Core.Match
                 throw new InvalidOperationException("Current player cannot change after the match has finished.");
             }
 
-            return new MatchState(PlayerOne, PlayerTwo, currentPlayer, Phase, BallInHand, Result);
+            MatchPlayerState.ValidatePlayerId(currentPlayer);
+
+            var playerChanged = currentPlayer != CurrentPlayer;
+            var nextTourNumber = playerChanged && Phase != MatchPhase.Break
+                ? TourNumber + 1
+                : TourNumber;
+            var nextDeuxCoups = playerChanged ? DeuxCoupsState.Inactive : DeuxCoups;
+
+            return new MatchState(
+                PlayerOne,
+                PlayerTwo,
+                currentPlayer,
+                Phase,
+                BallInHand,
+                Result,
+                nextTourNumber,
+                nextDeuxCoups);
         }
 
         public MatchState AdvanceTurn()
@@ -116,7 +177,19 @@ namespace PoolTable.Core.Match
                 throw new InvalidOperationException("Finished phase requires a match result.");
             }
 
-            return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, phase, BallInHand, Result);
+            var nextTourNumber = Phase == MatchPhase.Break && phase != MatchPhase.Break
+                ? 1
+                : TourNumber;
+
+            return new MatchState(
+                PlayerOne,
+                PlayerTwo,
+                CurrentPlayer,
+                phase,
+                BallInHand,
+                Result,
+                nextTourNumber,
+                DeuxCoups);
         }
 
         internal MatchState WithAssignedGroups(MatchPlayerId solidsPlayer)
@@ -136,12 +209,55 @@ namespace PoolTable.Core.Match
                 CurrentPlayer,
                 MatchPhase.GroupsAssigned,
                 BallInHand,
-                Result);
+                Result,
+                TourNumber,
+                DeuxCoups);
         }
 
         internal MatchState WithBallInHand(BallInHandState ballInHand)
         {
-            return new MatchState(PlayerOne, PlayerTwo, CurrentPlayer, Phase, ballInHand, Result);
+            return new MatchState(
+                PlayerOne,
+                PlayerTwo,
+                CurrentPlayer,
+                Phase,
+                ballInHand,
+                Result,
+                TourNumber,
+                DeuxCoups);
+        }
+
+        internal MatchState WithCurrentPlayerPreservingTour(MatchPlayerId currentPlayer)
+        {
+            if (IsFinished)
+            {
+                throw new InvalidOperationException("Current player cannot change after the match has finished.");
+            }
+
+            MatchPlayerState.ValidatePlayerId(currentPlayer);
+
+            return new MatchState(
+                PlayerOne,
+                PlayerTwo,
+                currentPlayer,
+                Phase,
+                BallInHand,
+                Result,
+                TourNumber,
+                currentPlayer == CurrentPlayer ? DeuxCoups : DeuxCoupsState.Inactive);
+        }
+
+        internal MatchState WithDeuxCoups(DeuxCoupsState deuxCoups)
+        {
+            return new MatchState(
+                PlayerOne,
+                PlayerTwo,
+                CurrentPlayer,
+                Phase,
+                BallInHand,
+                Result,
+                TourNumber,
+                deuxCoups);
         }
 
         internal MatchState WithResult(MatchResult result)
@@ -152,7 +268,9 @@ namespace PoolTable.Core.Match
                 CurrentPlayer,
                 MatchPhase.Finished,
                 BallInHandState.None,
-                result);
+                result,
+                TourNumber,
+                DeuxCoupsState.Inactive);
         }
 
         public bool Equals(MatchState other)
@@ -163,7 +281,9 @@ namespace PoolTable.Core.Match
                 && CurrentPlayer == other.CurrentPlayer
                 && Phase == other.Phase
                 && BallInHand == other.BallInHand
-                && Nullable.Equals(Result, other.Result);
+                && Nullable.Equals(Result, other.Result)
+                && TourNumber == other.TourNumber
+                && DeuxCoups == other.DeuxCoups;
         }
 
         public override bool Equals(object obj) => Equals(obj as MatchState);
@@ -178,7 +298,46 @@ namespace PoolTable.Core.Match
                 hashCode = (hashCode * 397) ^ (int)Phase;
                 hashCode = (hashCode * 397) ^ BallInHand.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Result?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ TourNumber;
+                hashCode = (hashCode * 397) ^ (int)DeuxCoups;
                 return hashCode;
+            }
+        }
+
+        private static int DefaultTourNumber(MatchPhase phase)
+        {
+            return phase == MatchPhase.Break ? 0 : 1;
+        }
+
+        private static void ValidateTourNumber(MatchPhase phase, int tourNumber)
+        {
+            if (tourNumber < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(tourNumber), tourNumber, "Tour number cannot be negative.");
+            }
+
+            if (phase == MatchPhase.Break && tourNumber != 0)
+            {
+                throw new ArgumentException("Break phase must use Tour 0.", nameof(tourNumber));
+            }
+
+            if (phase != MatchPhase.Break && phase != MatchPhase.Finished && tourNumber < 1)
+            {
+                throw new ArgumentException("Active post-break play must start at Tour 1.", nameof(tourNumber));
+            }
+        }
+
+        private static void ValidateDeuxCoups(MatchPhase phase, DeuxCoupsState deuxCoups)
+        {
+            if (deuxCoups < DeuxCoupsState.Inactive || deuxCoups > DeuxCoupsState.TwoRemaining)
+            {
+                throw new ArgumentOutOfRangeException(nameof(deuxCoups), deuxCoups, "Unknown Deux coups state.");
+            }
+
+            if ((phase == MatchPhase.Break || phase == MatchPhase.Finished)
+                && deuxCoups != DeuxCoupsState.Inactive)
+            {
+                throw new ArgumentException("Deux coups cannot be active during the break or after the match finishes.", nameof(deuxCoups));
             }
         }
 

@@ -29,8 +29,7 @@ namespace PoolTable.Gameplay.Match
                         && WasCalledShotSuccessful(state, intent, facts, tableBeforeShot),
                     shooterContinues: false,
                     turnAdvanced: false,
-                    groupAssigned: false,
-                    grantsTwoShotEntitlement: false);
+                    groupAssigned: false);
             }
 
             var foulResolution = FoulResolutionRule.Evaluate(state, facts, tableBeforeShot);
@@ -59,8 +58,9 @@ namespace PoolTable.Gameplay.Match
                     var grantsBallInHand = foulResolution.Has(ShotFoul.CueBallScratch)
                         || foulResolution.Has(ShotFoul.CueBallOffTable);
                     breakState = grantsBallInHand
-                        ? BallInHandRule.GrantAfterStandardFoul(breakState, foulResolution)
-                        : breakState.AdvanceTurn();
+                        ? BallInHandRule.GrantAfterOpeningBreakCueBallFoul(breakState, foulResolution)
+                        : OpenTableRule.PassOpeningControl(breakState);
+                    breakState = DeuxCoupsRule.Grant(breakState);
 
                     return new ShotResolution(
                         breakState,
@@ -71,13 +71,13 @@ namespace PoolTable.Gameplay.Match
                         shooterContinues: false,
                         turnAdvanced: true,
                         groupAssigned: groupAssignedOnBreak,
-                        grantsTwoShotEntitlement: grantsBallInHand);
+                        ballsToRespot: CollectBallsToRespot(facts));
                 }
 
                 var shooterContinuesAfterBreak = groupAssignedOnBreak;
                 if (!shooterContinuesAfterBreak)
                 {
-                    breakState = breakState.AdvanceTurn();
+                    breakState = OpenTableRule.PassOpeningControl(breakState);
                 }
 
                 return new ShotResolution(
@@ -88,13 +88,18 @@ namespace PoolTable.Gameplay.Match
                     calledShotSucceeded: false,
                     shooterContinues: shooterContinuesAfterBreak,
                     turnAdvanced: !shooterContinuesAfterBreak,
-                    groupAssigned: groupAssignedOnBreak,
-                    grantsTwoShotEntitlement: false);
+                    groupAssigned: groupAssignedOnBreak);
             }
 
             if (foulResolution.HasFoul)
             {
-                var foulState = BallInHandRule.GrantAfterStandardFoul(state, foulResolution);
+                var losesCueBall = foulResolution.Has(ShotFoul.CueBallScratch)
+                    || foulResolution.Has(ShotFoul.CueBallOffTable);
+                var foulState = losesCueBall
+                    ? BallInHandRule.GrantAfterStandardFoul(state, foulResolution)
+                    : state.AdvanceTurn();
+                foulState = DeuxCoupsRule.Grant(foulState);
+
                 return new ShotResolution(
                     foulState,
                     foulResolution,
@@ -104,13 +109,15 @@ namespace PoolTable.Gameplay.Match
                     shooterContinues: false,
                     turnAdvanced: true,
                     groupAssigned: false,
-                    grantsTwoShotEntitlement: false);
+                    ballsToRespot: CollectBallsToRespot(facts));
             }
 
             var calledShotSucceeded = WasCalledShotSuccessful(state, intent, facts, tableBeforeShot);
             var resolvedState = state;
             var groupAssigned = false;
             var shooterContinues = false;
+            var pocketedOwnGroup = false;
+            var pocketedOpponentGroup = false;
             ClassifyPocketedGroups(
                 facts,
                 out var hasPocketedSolids,
@@ -132,14 +139,69 @@ namespace PoolTable.Gameplay.Match
             else if (state.Phase == MatchPhase.GroupsAssigned)
             {
                 var shooterGroup = state.GetPlayer(state.CurrentPlayer).Group;
-                var pocketedOwnGroup = shooterGroup == BallGroup.Solids
+                pocketedOwnGroup = shooterGroup == BallGroup.Solids
                     ? hasPocketedSolids
                     : hasPocketedStripes;
-                var pocketedOpponentGroup = shooterGroup == BallGroup.Solids
+                pocketedOpponentGroup = shooterGroup == BallGroup.Solids
                     ? hasPocketedStripes
                     : hasPocketedSolids;
 
                 shooterContinues = pocketedOwnGroup && !pocketedOpponentGroup;
+            }
+
+            var bonusWasActive = state.DeuxCoups != DeuxCoupsState.Inactive;
+            var mixedDuringBonus = bonusWasActive && hasPocketedSolids && hasPocketedStripes;
+            var assignedCoupMixte = state.Phase == MatchPhase.GroupsAssigned
+                && pocketedOwnGroup
+                && pocketedOpponentGroup;
+
+            if (state.DeuxCoups == DeuxCoupsState.TwoRemaining)
+            {
+                if (mixedDuringBonus)
+                {
+                    var incomingState = DeuxCoupsRule.Grant(resolvedState.AdvanceTurn());
+                    return new ShotResolution(
+                        incomingState,
+                        foulResolution,
+                        breakEvaluation: null,
+                        requiresBreakFollowUp: false,
+                        calledShotSucceeded: calledShotSucceeded,
+                        shooterContinues: false,
+                        turnAdvanced: true,
+                        groupAssigned: groupAssigned);
+                }
+
+                if (state.Phase == MatchPhase.GroupsAssigned
+                    && pocketedOpponentGroup
+                    && !pocketedOwnGroup)
+                {
+                    var incomingState = resolvedState.AdvanceTurn();
+                    return new ShotResolution(
+                        incomingState,
+                        foulResolution,
+                        breakEvaluation: null,
+                        requiresBreakFollowUp: false,
+                        calledShotSucceeded: calledShotSucceeded,
+                        shooterContinues: false,
+                        turnAdvanced: true,
+                        groupAssigned: groupAssigned);
+                }
+
+                resolvedState = DeuxCoupsRule.Consume(resolvedState);
+                return new ShotResolution(
+                    resolvedState,
+                    foulResolution,
+                    breakEvaluation: null,
+                    requiresBreakFollowUp: false,
+                    calledShotSucceeded: calledShotSucceeded,
+                    shooterContinues: true,
+                    turnAdvanced: false,
+                    groupAssigned: groupAssigned);
+            }
+
+            if (state.DeuxCoups == DeuxCoupsState.OneRemaining)
+            {
+                resolvedState = DeuxCoupsRule.Consume(resolvedState);
             }
 
             if (shooterContinues)
@@ -152,11 +214,15 @@ namespace PoolTable.Gameplay.Match
                     calledShotSucceeded: calledShotSucceeded,
                     shooterContinues: true,
                     turnAdvanced: false,
-                    groupAssigned: groupAssigned,
-                    grantsTwoShotEntitlement: false);
+                    groupAssigned: groupAssigned);
             }
 
             resolvedState = resolvedState.AdvanceTurn();
+            if (assignedCoupMixte || mixedDuringBonus)
+            {
+                resolvedState = DeuxCoupsRule.Grant(resolvedState);
+            }
+
             return new ShotResolution(
                 resolvedState,
                 foulResolution,
@@ -165,8 +231,33 @@ namespace PoolTable.Gameplay.Match
                 calledShotSucceeded: calledShotSucceeded,
                 shooterContinues: false,
                 turnAdvanced: true,
-                groupAssigned: groupAssigned,
-                grantsTwoShotEntitlement: false);
+                groupAssigned: groupAssigned);
+        }
+
+        private static BallId[] CollectBallsToRespot(ShotFacts facts)
+        {
+            var result = new BallId[facts.BallsDrivenOffTable.Count];
+            var count = 0;
+
+            for (var index = 0; index < facts.BallsDrivenOffTable.Count; index++)
+            {
+                var ball = facts.BallsDrivenOffTable[index];
+                if (ball.IsCueBall || ball.IsEightBall)
+                {
+                    continue;
+                }
+
+                result[count++] = ball;
+            }
+
+            if (count == result.Length)
+            {
+                return result;
+            }
+
+            var trimmed = new BallId[count];
+            Array.Copy(result, trimmed, count);
+            return trimmed;
         }
 
         private static void ClassifyPocketedGroups(

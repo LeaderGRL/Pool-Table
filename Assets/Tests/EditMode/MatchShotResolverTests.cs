@@ -47,6 +47,7 @@ namespace PoolTable.Tests.EditMode
             Assert.That(resolution.ShooterContinues, Is.True);
             Assert.That(resolution.TurnAdvanced, Is.False);
             Assert.That(resolution.FoulResolution.IsClean, Is.True);
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(1));
         }
 
         [Test]
@@ -158,6 +159,7 @@ namespace PoolTable.Tests.EditMode
             Assert.That(resolution.TurnAdvanced, Is.True);
             Assert.That(resolution.FoulResolution.IsClean, Is.True);
             Assert.That(resolution.State.HasBallInHand, Is.False);
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
         }
 
         [Test]
@@ -237,10 +239,28 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
-        public void Resolve_StandardFoulAdvancesTurnAndGrantsBallInHand()
+        public void Resolve_WrongFirstBallPassesControlAndGrantsDeuxCoupsWithoutBallInHand()
         {
             var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
-            var snapshot = Snapshot(2, 3, 8, 9);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = new ShotFacts(stripe, Array.Empty<PocketedBall>(), new[] { stripe });
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.FoulResolution.Has(ShotFoul.IllegalFirstContact), Is.True);
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(2));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
+            Assert.That(resolution.State.HasBallInHand, Is.False);
+        }
+
+        [Test]
+        public void Resolve_NoObjectBallContactPassesControlAndGrantsDeuxCoupsWithoutBallInHand()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
             var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
             var facts = new ShotFacts(null, Array.Empty<PocketedBall>(), Array.Empty<BallId>());
 
@@ -248,9 +268,231 @@ namespace PoolTable.Tests.EditMode
 
             Assert.That(resolution.FoulResolution.Has(ShotFoul.NoObjectBallContact), Is.True);
             Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
+            Assert.That(resolution.State.HasBallInHand, Is.False);
+        }
+
+        [TestCase(ShotFoul.CueBallScratch)]
+        [TestCase(ShotFoul.CueBallOffTable)]
+        public void Resolve_CueBallLossGrantsBallInHandAndDeuxCoups(ShotFoul expectedFoul)
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var solid = new BallId(2);
+            var cueBall = new BallId(BallId.CueBallNumber);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = expectedFoul == ShotFoul.CueBallScratch
+                ? new ShotFacts(
+                    solid,
+                    new[] { new PocketedBall(cueBall, PocketOne) },
+                    Array.Empty<BallId>())
+                : new ShotFacts(
+                    solid,
+                    Array.Empty<PocketedBall>(),
+                    new[] { solid },
+                    new[] { cueBall });
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.FoulResolution.Has(expectedFoul), Is.True);
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
             Assert.That(resolution.State.HasBallInHand, Is.True);
             Assert.That(resolution.State.BallInHand.Recipient, Is.EqualTo(MatchPlayerId.PlayerTwo));
-            Assert.That(resolution.State.BallInHand.PlacementArea, Is.EqualTo(CueBallPlacementArea.Anywhere));
+        }
+
+        [Test]
+        public void Resolve_NonEightObjectBallOffTableRequestsRespotAndGrantsDeuxCoups()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne);
+            var solid = new BallId(2);
+            var offTable = new BallId(3);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = new ShotFacts(
+                solid,
+                Array.Empty<PocketedBall>(),
+                new[] { solid },
+                new[] { offTable });
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.FoulResolution.Has(ShotFoul.ObjectBallOffTable), Is.True);
+            Assert.That(resolution.BallsToRespot, Is.EqualTo(new[] { offTable }));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
+            Assert.That(resolution.State.HasBallInHand, Is.False);
+        }
+
+        [Test]
+        public void Resolve_FirstBonusOwnGroupSuccessPreservesSecondOpportunityInSameTour()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne)
+                .WithDeuxCoups(DeuxCoupsState.TwoRemaining);
+            var solid = new BallId(2);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(solid, new PocketedBall(solid, PocketOne));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(1));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.OneRemaining));
+            Assert.That(resolution.ShooterContinues, Is.True);
+            Assert.That(resolution.TurnAdvanced, Is.False);
+        }
+
+        [Test]
+        public void Resolve_FirstBonusLegalMissPreservesSecondOpportunityInSameTour()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne)
+                .WithDeuxCoups(DeuxCoupsState.TwoRemaining);
+            var solid = new BallId(2);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = new ShotFacts(solid, Array.Empty<PocketedBall>(), new[] { solid });
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(1));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.OneRemaining));
+            Assert.That(resolution.ShooterContinues, Is.True);
+            Assert.That(resolution.TurnAdvanced, Is.False);
+        }
+
+        [Test]
+        public void Resolve_FirstBonusOpponentOnlyPocketEndsEntitlementAndPassesNormally()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne)
+                .WithDeuxCoups(DeuxCoupsState.TwoRemaining);
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(solid, new PocketedBall(stripe, PocketOne));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(2));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.Inactive));
+            Assert.That(resolution.TurnAdvanced, Is.True);
+        }
+
+        [Test]
+        public void Resolve_BonusMixedPocketTransfersFreshDeuxCoupsToOpponent()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne)
+                .WithDeuxCoups(DeuxCoupsState.TwoRemaining);
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(
+                solid,
+                new PocketedBall(solid, PocketOne),
+                new PocketedBall(stripe, new PocketId(2)));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(2));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
+            Assert.That(resolution.TurnAdvanced, Is.True);
+        }
+
+        [Test]
+        public void Resolve_FoulDuringFirstBonusRemovesOldBonusAndAppliesFreshOpponentEntitlement()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne)
+                .WithDeuxCoups(DeuxCoupsState.TwoRemaining);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = new ShotFacts(null, Array.Empty<PocketedBall>(), Array.Empty<BallId>());
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(2));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
+        }
+
+        [Test]
+        public void Resolve_SecondBonusOwnGroupSuccessReturnsToNormalContinuation()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne)
+                .WithDeuxCoups(DeuxCoupsState.OneRemaining);
+            var solid = new BallId(2);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(solid, new PocketedBall(solid, PocketOne));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.Inactive));
+            Assert.That(resolution.ShooterContinues, Is.True);
+            Assert.That(resolution.TurnAdvanced, Is.False);
+        }
+
+        [Test]
+        public void Resolve_SecondBonusLegalMissReturnsToNormalControlPass()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne)
+                .WithDeuxCoups(DeuxCoupsState.OneRemaining);
+            var solid = new BallId(2);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = new ShotFacts(solid, Array.Empty<PocketedBall>(), new[] { solid });
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(2));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.Inactive));
+            Assert.That(resolution.TurnAdvanced, Is.True);
+        }
+
+        [Test]
+        public void Resolve_SecondBonusOpponentOnlyPocketReturnsToNormalControlPass()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne)
+                .WithDeuxCoups(DeuxCoupsState.OneRemaining);
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(solid, new PocketedBall(stripe, PocketOne));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(2));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.Inactive));
+            Assert.That(resolution.TurnAdvanced, Is.True);
+        }
+
+        [Test]
+        public void Resolve_SecondBonusMixedPocketTransfersFreshDeuxCoupsToOpponent()
+        {
+            var state = CreateAssignedState(BallGroup.Solids, MatchPlayerId.PlayerOne)
+                .WithDeuxCoups(DeuxCoupsState.OneRemaining);
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(
+                solid,
+                new PocketedBall(solid, PocketOne),
+                new PocketedBall(stripe, new PocketId(2)));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(2));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
             Assert.That(resolution.TurnAdvanced, Is.True);
         }
 
@@ -413,6 +655,7 @@ namespace PoolTable.Tests.EditMode
             Assert.That(resolution.ShooterContinues, Is.True);
             Assert.That(resolution.TurnAdvanced, Is.False);
             Assert.That(resolution.FoulResolution.IsClean, Is.True);
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(1));
         }
 
         [Test]
@@ -439,6 +682,7 @@ namespace PoolTable.Tests.EditMode
             Assert.That(resolution.ShooterContinues, Is.False);
             Assert.That(resolution.TurnAdvanced, Is.True);
             Assert.That(resolution.FoulResolution.IsClean, Is.True);
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(1));
         }
 
         [Test]
@@ -471,6 +715,8 @@ namespace PoolTable.Tests.EditMode
             Assert.That(resolution.State.BallInHand.PlacementArea, Is.EqualTo(CueBallPlacementArea.Anywhere));
             Assert.That(resolution.FoulResolution.Has(ShotFoul.CueBallScratch), Is.True);
             Assert.That(resolution.GrantsTwoShotEntitlement, Is.True);
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(1));
             Assert.That(resolution.ShooterContinues, Is.False);
             Assert.That(resolution.TurnAdvanced, Is.True);
         }
@@ -530,6 +776,7 @@ namespace PoolTable.Tests.EditMode
                 Is.EqualTo(BreakEvaluationReason.FourOrMoreObjectBallsReachedRails));
             Assert.That(resolution.TurnAdvanced, Is.True);
             Assert.That(resolution.ShooterContinues, Is.False);
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(1));
         }
 
         [Test]

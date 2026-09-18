@@ -20,6 +20,8 @@ namespace PoolTable.Tests.EditMode
             Assert.That(state.Result, Is.Null);
             Assert.That(state.PlayerOne.HasAssignedGroup, Is.False);
             Assert.That(state.PlayerTwo.HasAssignedGroup, Is.False);
+            Assert.That(state.TourNumber, Is.Zero);
+            Assert.That(state.DeuxCoups, Is.EqualTo(DeuxCoupsState.Inactive));
         }
 
         [Test]
@@ -42,13 +44,34 @@ namespace PoolTable.Tests.EditMode
         [Test]
         public void AdvanceTurn_ReturnsNewStateWithoutMutatingOriginal()
         {
-            var initial = MatchState.CreateInitial();
+            var initial = MatchState.CreateInitial().WithPhase(MatchPhase.OpenTable);
 
             var next = initial.AdvanceTurn();
 
             Assert.That(initial.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(initial.TourNumber, Is.EqualTo(1));
             Assert.That(next.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(next.TourNumber, Is.EqualTo(2));
             Assert.That(next, Is.Not.SameAs(initial));
+        }
+
+        [Test]
+        public void WithCurrentPlayer_DoesNotAdvanceTourWhenPlayerDoesNotChange()
+        {
+            var initial = MatchState.CreateInitial().WithPhase(MatchPhase.OpenTable);
+
+            var samePlayer = initial.WithCurrentPlayer(MatchPlayerId.PlayerOne);
+
+            Assert.That(samePlayer.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(samePlayer.TourNumber, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void DeuxCoupsState_ExposesInactiveOneAndTwoRemainingStates()
+        {
+            Assert.That((int)DeuxCoupsState.Inactive, Is.EqualTo(0));
+            Assert.That((int)DeuxCoupsState.OneRemaining, Is.EqualTo(1));
+            Assert.That((int)DeuxCoupsState.TwoRemaining, Is.EqualTo(2));
         }
 
         [TestCase(MatchPlayerId.PlayerOne, BallGroup.Solids, BallGroup.Stripes)]

@@ -27,6 +27,33 @@ namespace PoolTable.Core.Rules
                 new BallInHandState(incomingPlayer, CueBallPlacementArea.Anywhere));
         }
 
+        public static MatchState GrantAfterOpeningBreakCueBallFoul(
+            MatchState state,
+            FoulResolution foulResolution)
+        {
+            ValidateGrantState(state);
+
+            if (state.Phase == MatchPhase.Break || state.Phase == MatchPhase.Finished || state.TourNumber != 1)
+            {
+                throw new InvalidOperationException(
+                    "Opening-break ball-in-hand requires the first post-break Tour state.");
+            }
+
+            if (!foulResolution.Has(ShotFoul.CueBallScratch)
+                && !foulResolution.Has(ShotFoul.CueBallOffTable))
+            {
+                throw new ArgumentException(
+                    "Opening-break ball-in-hand requires a cue-ball scratch or off-table foul.",
+                    nameof(foulResolution));
+            }
+
+            var incomingPlayer = OtherPlayer(state.CurrentPlayer);
+            var incomingState = state.WithCurrentPlayerPreservingTour(incomingPlayer);
+
+            return incomingState.WithBallInHand(
+                new BallInHandState(incomingPlayer, CueBallPlacementArea.Anywhere));
+        }
+
         public static MatchState ChooseAboveHeadStringAfterBreakFoul(
             MatchState state,
             FoulResolution foulResolution)
