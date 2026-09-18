@@ -13,7 +13,8 @@ namespace PoolTable.Gameplay.Match
             bool calledShotSucceeded,
             bool shooterContinues,
             bool turnAdvanced,
-            bool groupAssigned)
+            bool groupAssigned,
+            bool grantsTwoShotEntitlement)
         {
             State = state;
             FoulResolution = foulResolution;
@@ -23,6 +24,7 @@ namespace PoolTable.Gameplay.Match
             ShooterContinues = shooterContinues;
             TurnAdvanced = turnAdvanced;
             GroupAssigned = groupAssigned;
+            GrantsTwoShotEntitlement = grantsTwoShotEntitlement;
         }
 
         public MatchState State { get; }
@@ -40,6 +42,8 @@ namespace PoolTable.Gameplay.Match
         public bool TurnAdvanced { get; }
 
         public bool GroupAssigned { get; }
+
+        public bool GrantsTwoShotEntitlement { get; }
 
         public bool MatchFinished => State.IsFinished;
     }

@@ -29,7 +29,8 @@ namespace PoolTable.Gameplay.Match
                         && WasCalledShotSuccessful(state, intent, facts, tableBeforeShot),
                     shooterContinues: false,
                     turnAdvanced: false,
-                    groupAssigned: false);
+                    groupAssigned: false,
+                    grantsTwoShotEntitlement: false);
             }
 
             var foulResolution = FoulResolutionRule.Evaluate(state, facts, tableBeforeShot);
@@ -37,15 +38,58 @@ namespace PoolTable.Gameplay.Match
             if (state.Phase == MatchPhase.Break)
             {
                 var breakEvaluation = LegalBreakRule.Evaluate(facts);
+                ClassifyPocketedGroups(
+                    facts,
+                    out var breakHasPocketedSolids,
+                    out var breakHasPocketedStripes,
+                    out var firstBreakGroupedBall);
+
+                var breakState = OpenTableRule.EnterAfterBreak(state);
+                var groupAssignedOnBreak = breakHasPocketedSolids != breakHasPocketedStripes;
+                if (groupAssignedOnBreak)
+                {
+                    breakState = PlayerGroupAssignmentRule.AssignFromLegallyPocketedBall(
+                        breakState,
+                        state.CurrentPlayer,
+                        firstBreakGroupedBall);
+                }
+
+                if (foulResolution.HasFoul)
+                {
+                    var grantsBallInHand = foulResolution.Has(ShotFoul.CueBallScratch)
+                        || foulResolution.Has(ShotFoul.CueBallOffTable);
+                    breakState = grantsBallInHand
+                        ? BallInHandRule.GrantAfterStandardFoul(breakState, foulResolution)
+                        : breakState.AdvanceTurn();
+
+                    return new ShotResolution(
+                        breakState,
+                        foulResolution,
+                        breakEvaluation,
+                        requiresBreakFollowUp: false,
+                        calledShotSucceeded: false,
+                        shooterContinues: false,
+                        turnAdvanced: true,
+                        groupAssigned: groupAssignedOnBreak,
+                        grantsTwoShotEntitlement: grantsBallInHand);
+                }
+
+                var shooterContinuesAfterBreak = groupAssignedOnBreak;
+                if (!shooterContinuesAfterBreak)
+                {
+                    breakState = breakState.AdvanceTurn();
+                }
+
                 return new ShotResolution(
-                    state,
+                    breakState,
                     foulResolution,
                     breakEvaluation,
-                    requiresBreakFollowUp: true,
+                    requiresBreakFollowUp: false,
                     calledShotSucceeded: false,
-                    shooterContinues: false,
-                    turnAdvanced: false,
-                    groupAssigned: false);
+                    shooterContinues: shooterContinuesAfterBreak,
+                    turnAdvanced: !shooterContinuesAfterBreak,
+                    groupAssigned: groupAssignedOnBreak,
+                    grantsTwoShotEntitlement: false);
             }
 
             if (foulResolution.HasFoul)
@@ -59,7 +103,8 @@ namespace PoolTable.Gameplay.Match
                     calledShotSucceeded: false,
                     shooterContinues: false,
                     turnAdvanced: true,
-                    groupAssigned: false);
+                    groupAssigned: false,
+                    grantsTwoShotEntitlement: false);
             }
 
             var calledShotSucceeded = WasCalledShotSuccessful(state, intent, facts, tableBeforeShot);
@@ -107,7 +152,8 @@ namespace PoolTable.Gameplay.Match
                     calledShotSucceeded: calledShotSucceeded,
                     shooterContinues: true,
                     turnAdvanced: false,
-                    groupAssigned: groupAssigned);
+                    groupAssigned: groupAssigned,
+                    grantsTwoShotEntitlement: false);
             }
 
             resolvedState = resolvedState.AdvanceTurn();
@@ -119,7 +165,8 @@ namespace PoolTable.Gameplay.Match
                 calledShotSucceeded: calledShotSucceeded,
                 shooterContinues: false,
                 turnAdvanced: true,
-                groupAssigned: groupAssigned);
+                groupAssigned: groupAssigned,
+                grantsTwoShotEntitlement: false);
         }
 
         private static void ClassifyPocketedGroups(

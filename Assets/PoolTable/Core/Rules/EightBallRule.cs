@@ -17,11 +17,6 @@ namespace PoolTable.Core.Rules
         {
             ValidateInputs(state, intent, facts, tableBeforeShot);
 
-            if (state.Phase == MatchPhase.Break)
-            {
-                return state;
-            }
-
             var eightBallPocketed = WasEightBallPocketed(facts);
             var eightBallDrivenOffTable = facts.WasDrivenOffTable(EightBall);
 
@@ -59,10 +54,6 @@ namespace PoolTable.Core.Rules
                     lossReasons |= MatchEndReason.EightBallPocketedBeforeGroupCleared;
                 }
 
-                if (!WasEightBallPocketedInCalledPocket(intent, facts))
-                {
-                    lossReasons |= MatchEndReason.EightBallPocketedInUncalledPocket;
-                }
             }
 
             if (lossReasons != MatchEndReason.None)
@@ -134,18 +125,6 @@ namespace PoolTable.Core.Rules
 
             var shooterGroup = state.GetPlayer(state.CurrentPlayer).Group;
             return !tableBeforeShot.HasRemainingBalls(shooterGroup);
-        }
-
-        private static bool WasEightBallPocketedInCalledPocket(ShotIntent intent, ShotFacts facts)
-        {
-            if (!intent.CalledShot.HasValue)
-            {
-                return false;
-            }
-
-            var calledShot = intent.CalledShot.Value;
-            return calledShot.ObjectBall.IsEightBall
-                && facts.WasPocketedIn(EightBall, calledShot.Pocket);
         }
 
         private static MatchPlayerId OtherPlayer(MatchPlayerId player)

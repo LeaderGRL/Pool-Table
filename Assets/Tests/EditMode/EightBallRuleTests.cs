@@ -11,11 +11,11 @@ namespace PoolTable.Tests.EditMode
     public sealed class EightBallRuleTests
     {
         [Test]
-        public void Resolve_LegalCalledEightBallAfterGroupCleared_ShooterWins()
+        public void Resolve_EightBallAfterGroupClearedWithoutDeclaration_ShooterWins()
         {
             var state = AssignedState(MatchPlayerId.PlayerOne, BallGroup.Solids);
             var table = Balls(8, 9, 10, 11, 12, 13, 14, 15);
-            var intent = Intent(MatchPlayerId.PlayerOne, new CalledShot(new BallId(8), new PocketId(3)));
+            var intent = Intent(MatchPlayerId.PlayerOne);
             var facts = Facts(
                 firstContact: 8,
                 pocketed: new[] { Pocketed(8, 3) });
@@ -71,7 +71,7 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
-        public void Resolve_EightBallPocketedInDifferentPocketThanCalled_ShooterLoses()
+        public void Resolve_StaleCalledPocketDoesNotOverridePocheLibreEightBallWin()
         {
             var state = AssignedState(MatchPlayerId.PlayerOne, BallGroup.Solids);
             var table = Balls(8, 9, 10, 11, 12, 13, 14, 15);
@@ -82,14 +82,13 @@ namespace PoolTable.Tests.EditMode
 
             var resolved = EightBallRule.Resolve(state, intent, facts, table);
 
-            AssertLoss(
-                resolved,
-                MatchPlayerId.PlayerTwo,
-                MatchEndReason.EightBallPocketedInUncalledPocket);
+            Assert.That(resolved.IsFinished, Is.True);
+            Assert.That(resolved.Result.Value.Winner, Is.EqualTo(MatchPlayerId.PlayerOne));
+            Assert.That(resolved.Result.Value.Reasons, Is.EqualTo(MatchEndReason.EightBallLegallyPocketed));
         }
 
         [Test]
-        public void Resolve_EightBallPocketedWithoutCall_ShooterLoses()
+        public void Resolve_PlayerTwoEightBallAfterGroupClearedWithoutDeclaration_ShooterWins()
         {
             var state = AssignedState(MatchPlayerId.PlayerTwo, BallGroup.Stripes);
             var table = Balls(1, 2, 3, 4, 5, 6, 7, 8);
@@ -100,10 +99,9 @@ namespace PoolTable.Tests.EditMode
 
             var resolved = EightBallRule.Resolve(state, intent, facts, table);
 
-            AssertLoss(
-                resolved,
-                MatchPlayerId.PlayerOne,
-                MatchEndReason.EightBallPocketedInUncalledPocket);
+            Assert.That(resolved.IsFinished, Is.True);
+            Assert.That(resolved.Result.Value.Winner, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolved.Result.Value.Reasons, Is.EqualTo(MatchEndReason.EightBallLegallyPocketed));
         }
 
         [Test]
@@ -141,11 +139,10 @@ namespace PoolTable.Tests.EditMode
             Assert.That(result.Winner, Is.EqualTo(MatchPlayerId.PlayerTwo));
             Assert.That(result.HasReason(MatchEndReason.EightBallPocketedWithFoul), Is.True);
             Assert.That(result.HasReason(MatchEndReason.EightBallPocketedBeforeGroupCleared), Is.True);
-            Assert.That(result.HasReason(MatchEndReason.EightBallPocketedInUncalledPocket), Is.True);
         }
 
         [Test]
-        public void Resolve_EightBallPocketedOnBreak_DoesNotFinishMatch()
+        public void Resolve_EightBallPocketedOnBreak_ShooterLosesImmediately()
         {
             var state = MatchState.CreateInitial(MatchPlayerId.PlayerOne);
             var facts = Facts(
@@ -158,12 +155,14 @@ namespace PoolTable.Tests.EditMode
                 facts,
                 StandardTable());
 
-            Assert.That(resolved, Is.SameAs(state));
-            Assert.That(resolved.IsFinished, Is.False);
+            AssertLoss(
+                resolved,
+                MatchPlayerId.PlayerTwo,
+                MatchEndReason.EightBallPocketedBeforeGroupCleared);
         }
 
         [Test]
-        public void Resolve_EightBallDrivenOffTableOnBreak_DoesNotFinishMatch()
+        public void Resolve_EightBallDrivenOffTableOnBreak_ShooterLosesImmediately()
         {
             var state = MatchState.CreateInitial(MatchPlayerId.PlayerTwo);
             var facts = Facts(firstContact: 1, offTable: new[] { 8 });
@@ -174,8 +173,10 @@ namespace PoolTable.Tests.EditMode
                 facts,
                 StandardTable());
 
-            Assert.That(resolved, Is.SameAs(state));
-            Assert.That(resolved.IsFinished, Is.False);
+            AssertLoss(
+                resolved,
+                MatchPlayerId.PlayerOne,
+                MatchEndReason.EightBallDrivenOffTable);
         }
 
         [Test]
