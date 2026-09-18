@@ -149,17 +149,34 @@ namespace PoolTable.Gameplay.Match
                 shooterContinues = pocketedOwnGroup && !pocketedOpponentGroup;
             }
 
-            var bonusWasActive = state.DeuxCoups != DeuxCoupsState.Inactive;
-            var mixedDuringBonus = bonusWasActive && hasPocketedSolids && hasPocketedStripes;
             var assignedCoupMixte = state.Phase == MatchPhase.GroupsAssigned
                 && pocketedOwnGroup
                 && pocketedOpponentGroup;
+            var mixedDuringBonus = state.DeuxCoups != DeuxCoupsState.Inactive
+                && assignedCoupMixte;
+            var openTableMixedFamilies = state.IsTableOpen
+                && hasPocketedSolids
+                && hasPocketedStripes;
 
             if (state.DeuxCoups == DeuxCoupsState.TwoRemaining)
             {
                 if (mixedDuringBonus)
                 {
                     var incomingState = DeuxCoupsRule.Grant(resolvedState.AdvanceTurn());
+                    return new ShotResolution(
+                        incomingState,
+                        foulResolution,
+                        breakEvaluation: null,
+                        requiresBreakFollowUp: false,
+                        calledShotSucceeded: calledShotSucceeded,
+                        shooterContinues: false,
+                        turnAdvanced: true,
+                        groupAssigned: groupAssigned);
+                }
+
+                if (openTableMixedFamilies)
+                {
+                    var incomingState = resolvedState.AdvanceTurn();
                     return new ShotResolution(
                         incomingState,
                         foulResolution,
@@ -218,7 +235,7 @@ namespace PoolTable.Gameplay.Match
             }
 
             resolvedState = resolvedState.AdvanceTurn();
-            if (assignedCoupMixte || mixedDuringBonus)
+            if (assignedCoupMixte)
             {
                 resolvedState = DeuxCoupsRule.Grant(resolvedState);
             }

@@ -50,6 +50,11 @@ namespace PoolTable.Core.Rules
 
             if (state.Phase == MatchPhase.Break)
             {
+                if (!facts.HasObjectBallContact)
+                {
+                    fouls |= ShotFoul.NoObjectBallContact;
+                }
+
                 return new FoulResolution(fouls);
             }
 

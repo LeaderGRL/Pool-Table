@@ -780,6 +780,54 @@ namespace PoolTable.Tests.EditMode
         }
 
         [Test]
+        public void Resolve_BreakWithoutObjectBallContactPassesControlAndGrantsDeuxCoups()
+        {
+            var state = MatchState.CreateInitial();
+            var snapshot = Snapshot(1, 2, 3, 4, 8, 9);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.8f);
+            var facts = new ShotFacts(
+                null,
+                Array.Empty<PocketedBall>(),
+                Array.Empty<BallId>());
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.FoulResolution.Has(ShotFoul.NoObjectBallContact), Is.True);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.OpenTable));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(1));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.TwoRemaining));
+            Assert.That(resolution.State.HasBallInHand, Is.False);
+            Assert.That(resolution.TurnAdvanced, Is.True);
+            Assert.That(resolution.ShooterContinues, Is.False);
+        }
+
+        [Test]
+        public void Resolve_OpenTableMixedFamiliesDuringFirstBonusEndsEntitlementAndPassesNormally()
+        {
+            var state = OpenTableRule.EnterAfterBreak(MatchState.CreateInitial())
+                .WithDeuxCoups(DeuxCoupsState.TwoRemaining);
+            var solid = new BallId(2);
+            var stripe = new BallId(10);
+            var snapshot = Snapshot(2, 3, 8, 9, 10);
+            var intent = new ShotIntent(MatchPlayerId.PlayerOne, Direction, 0.5f);
+            var facts = Facts(
+                solid,
+                new PocketedBall(solid, PocketOne),
+                new PocketedBall(stripe, new PocketId(2)));
+
+            var resolution = resolver.Resolve(state, intent, facts, snapshot);
+
+            Assert.That(resolution.FoulResolution.IsClean, Is.True);
+            Assert.That(resolution.State.Phase, Is.EqualTo(MatchPhase.OpenTable));
+            Assert.That(resolution.State.CurrentPlayer, Is.EqualTo(MatchPlayerId.PlayerTwo));
+            Assert.That(resolution.State.TourNumber, Is.EqualTo(2));
+            Assert.That(resolution.State.DeuxCoups, Is.EqualTo(DeuxCoupsState.Inactive));
+            Assert.That(resolution.TurnAdvanced, Is.True);
+            Assert.That(resolution.ShooterContinues, Is.False);
+        }
+
+        [Test]
         public void Resolve_RejectsIntentFromNonCurrentPlayer()
         {
             var state = OpenTableRule.EnterAfterBreak(MatchState.CreateInitial());
