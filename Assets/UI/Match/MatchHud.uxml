@@ -1,0 +1,52 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <Style src="MatchHud.uss" />
+    <ui:VisualElement name="match-root" class="match-root">
+        <ui:VisualElement name="setup-layer" class="setup-layer">
+            <ui:VisualElement class="setup-shell">
+                <ui:VisualElement class="setup-frame-art" picking-mode="Ignore" />
+                <ui:VisualElement class="setup-content">
+                    <ui:Label text="POOL TABLE" class="eyebrow" />
+                    <ui:Label text="MATCH SETUP" class="setup-title" />
+                    <ui:Label text="ENTER PLAYER NAMES" class="setup-caption" />
+
+                    <ui:VisualElement class="fields-row">
+                        <ui:VisualElement class="field-block">
+                            <ui:Label text="PLAYER 1" class="field-label" />
+                            <ui:TextField name="player-one-input" class="name-field" max-length="12" />
+                        </ui:VisualElement>
+                        <ui:VisualElement class="field-gap" />
+                        <ui:VisualElement class="field-block field-block--right">
+                            <ui:Label text="PLAYER 2" class="field-label field-label--right" />
+                            <ui:TextField name="player-two-input" class="name-field" max-length="12" />
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+
+                    <ui:Button name="start-button" text="START MATCH" class="start-button" />
+                    <ui:Label text="ENTER / A TO CONTINUE" class="input-hint" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="hud-layer" class="hud-layer">
+            <ui:VisualElement class="hud-frame">
+                <ui:VisualElement class="hud-master-art" picking-mode="Ignore" />
+                <ui:VisualElement name="player-one-panel" class="player-panel player-panel--left">
+                    <ui:VisualElement class="active-bezel active-bezel--left" picking-mode="Ignore" />
+                    <ui:Label name="player-one-name" text="PLAYER 1" class="player-name player-name--left" />
+                </ui:VisualElement>
+
+                <ui:VisualElement class="turn-plaque">
+                    <ui:VisualElement class="turn-content">
+                        <ui:Label text="TURN" class="turn-label" />
+                        <ui:Label name="turn-value" text="0" class="turn-value" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="player-two-panel" class="player-panel player-panel--right">
+                    <ui:VisualElement class="active-bezel active-bezel--right" picking-mode="Ignore" />
+                    <ui:Label name="player-two-name" text="PLAYER 2" class="player-name player-name--right" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

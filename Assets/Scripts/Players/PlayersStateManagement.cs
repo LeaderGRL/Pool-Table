@@ -3,6 +3,7 @@ using UnityEngine;
 public class PlayersStateManagement : MonoBehaviour
 {
     PlayersBaseState currentPlayerState;
+    private bool matchStarted = true;
 
     public static PlayersStateManagement Instance;
     public PlayersPlayState playState = new PlayersPlayState();
@@ -20,45 +21,85 @@ public class PlayersStateManagement : MonoBehaviour
 
     private void Awake()
     {
-
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
         if (Instance == null)
         {
             Instance = this;
         }
-        else
+        else if (Instance != this)
         {
             Destroy(this);
         }
-
+    }
+    // Start is called before the first frame update
+    void Start()
+    {
         currentPlayerState = playState;
 
-        playState.EnterState(this);
+        if (matchStarted)
+        {
+            playState.EnterState(this);
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!matchStarted || currentPlayerState == null)
+        {
+            return;
+        }
+
         currentPlayerState.UpdateState(this);
     }
 
     void LateUpdate() 
     {
+        if (!matchStarted || currentPlayerState == null)
+        {
+            return;
+        }
+
         currentPlayerState.LateUpdateState(this);
     }
 
     void OnMouseDown()
     {
+        if (!matchStarted || currentPlayerState == null)
+        {
+            return;
+        }
+
         currentPlayerState.OnMouseDown(this);
     }
 
     public void SwitchState(PlayersBaseState newState)
     {
+        if (!matchStarted)
+        {
+            return;
+        }
+
         currentPlayerState = newState;
         newState.EnterState(this);
+    }
+
+    public void SetMatchStarted(bool started)
+    {
+        if (matchStarted == started)
+        {
+            return;
+        }
+
+        matchStarted = started;
+        if (matchStarted && currentPlayerState != null)
+        {
+            currentPlayerState.EnterState(this);
+        }
+    }
+
+    public bool IsMatchStarted()
+    {
+        return matchStarted;
     }
 
     public Vector3 getPosition()
@@ -140,6 +181,11 @@ public class PlayersStateManagement : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (!matchStarted || currentPlayerState == null)
+        {
+            return;
+        }
+
         currentPlayerState.OnCollisionEnter(this, collision);
     }
 }

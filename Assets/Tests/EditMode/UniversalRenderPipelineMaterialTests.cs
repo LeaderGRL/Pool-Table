@@ -26,6 +26,7 @@ namespace PoolTable.Tests.EditMode
         {
             var materialPaths = AssetDatabase.FindAssets("t:Material", new[] { "Assets" })
                 .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(path => path.EndsWith(".mat", System.StringComparison.OrdinalIgnoreCase))
                 .OrderBy(path => path)
                 .ToArray();
 

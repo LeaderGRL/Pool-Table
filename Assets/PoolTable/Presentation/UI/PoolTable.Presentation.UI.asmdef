@@ -1,0 +1,16 @@
+{
+    "name": "PoolTable.Presentation.UI",
+    "rootNamespace": "PoolTable.Presentation.UI",
+    "references": [
+        "PoolTable.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
