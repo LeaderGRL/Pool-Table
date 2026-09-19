@@ -7,6 +7,7 @@ using PoolTable.Gameplay.BallInHand;
 using PoolTable.Gameplay.Balls;
 using PoolTable.Physics.Configuration;
 using PoolTable.Presentation.Camera;
+using PoolTable.Presentation.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
@@ -248,6 +249,8 @@ namespace PoolTable.Tests.PlayMode
                 shotCameraController.EffectiveDistanceBehindCueBall,
                 Is.InRange(1.05f, 1.15f),
                 "Shot-power presentation should keep the same close player-eye framing before pullback adds distance.");
+
+            Assert.That(cameraController.ApplyRuntimeCameraPose(0f, true), Is.True);
 
             var cueBallPosition = aimingController.CueBall.transform.position;
             var cueForward = aimingController.StrikeDirection.normalized;
@@ -608,6 +611,14 @@ namespace PoolTable.Tests.PlayMode
             yield return null;
             yield return null;
             yield return null;
+
+            var matchHud = Object.FindFirstObjectByType<MatchHudView>();
+            if (matchHud != null && matchHud.CurrentModel?.Screen == MatchPresentationScreen.Setup)
+            {
+                matchHud.SubmitSetup();
+                yield return null;
+                yield return null;
+            }
         }
 
         private sealed class TestCursorStateAccessor : ICursorStateAccessor

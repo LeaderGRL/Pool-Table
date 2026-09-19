@@ -22,6 +22,14 @@ namespace PoolTable.Tests.EditMode
 
         private static readonly string[] RuntimeAssemblyNames = ExpectedRuntimeReferences.Keys.ToArray();
 
+        private static readonly IReadOnlyDictionary<string, string[]> ExpectedCompatibilityReferences =
+            new Dictionary<string, string[]>
+            {
+                ["PoolTable.Presentation.UI"] = new[] { "PoolTable.Core" },
+            };
+
+        private static readonly string[] CompatibilityAssemblyNames = ExpectedCompatibilityReferences.Keys.ToArray();
+
         private static readonly IReadOnlyDictionary<string, string[]> ExpectedTestOnlyReferences =
             new Dictionary<string, string[]>
             {
@@ -54,6 +62,35 @@ namespace PoolTable.Tests.EditMode
             Assert.That(definition.references, Is.Empty);
         }
 
+        [Test]
+        public void LegacyCompatibilityAssemblies_KeepTheirExplicitDependencyBoundary()
+        {
+            foreach (var assemblyName in CompatibilityAssemblyNames)
+            {
+                var path = assemblyName switch
+                {
+                    "PoolTable.Presentation.UI" => Path.Combine(
+                        Application.dataPath,
+                        "PoolTable",
+                        "Presentation",
+                        "UI",
+                        "PoolTable.Presentation.UI.asmdef"),
+                    _ => throw new InvalidOperationException($"Unknown compatibility assembly {assemblyName}."),
+                };
+                var definition = LoadAssemblyDefinition(path, "autoReferenced");
+
+                Assert.That(definition.name, Is.EqualTo(assemblyName));
+                Assert.That(
+                    definition.autoReferenced,
+                    Is.True,
+                    $"{assemblyName} must remain visible to the temporary Assembly-CSharp migration bridge.");
+                Assert.That(
+                    definition.references ?? Array.Empty<string>(),
+                    Is.EquivalentTo(ExpectedCompatibilityReferences[assemblyName]),
+                    $"{assemblyName} has an unexpected compatibility dependency graph.");
+            }
+        }
+
         [TestCase("EditMode")]
         [TestCase("PlayMode")]
         public void TestAssemblies_ReferenceEveryModernRuntimeAssembly(string testMode)
@@ -66,6 +103,7 @@ namespace PoolTable.Tests.EditMode
             var definition = LoadAssemblyDefinition(path);
 
             var expectedReferences = RuntimeAssemblyNames
+                .Concat(CompatibilityAssemblyNames)
                 .Concat(ExpectedTestOnlyReferences[testMode])
                 .ToArray();
 

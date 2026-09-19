@@ -23,10 +23,12 @@ using PoolTable.Physics.Rails;
 using PoolTable.Presentation;
 using PoolTable.Presentation.Audio;
 using PoolTable.Presentation.Camera;
+using PoolTable.Presentation.UI;
 using PoolTable.Presentation.Vfx;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UIElements;
 
 namespace PoolTable.Tests.PlayMode
 {
@@ -60,24 +62,77 @@ namespace PoolTable.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator PoolTableScene_StartsWithPlayerOneBeforeAnyShotIsResolved()
+        public IEnumerator PoolTableScene_StartsInUiToolkitMatchSetupWithLegacyHudDisabled()
         {
-            yield return LoadPoolTableScene();
+            yield return LoadPoolTableScene(false);
 
             var activeScene = SceneManager.GetActiveScene();
+            var legacyUi = activeScene.GetRootGameObjects().Single(root => root.name == "UI");
+            var matchUi = activeScene.GetRootGameObjects().Single(root => root.name == "MatchUI");
+            var document = matchUi.GetComponent<UIDocument>();
+            var view = matchUi.GetComponent<MatchHudView>();
+            var playerController = EnumerateSceneObjects(activeScene)
+                .Select(gameObject => FindMonoBehaviourByTypeName(gameObject, "PlayersStateManagement"))
+                .FirstOrDefault(component => component != null);
+
+            Assert.That(legacyUi.activeSelf, Is.False, "The legacy bottom HUD must be disabled once the UI Toolkit shell owns the match UI.");
+            Assert.That(matchUi.activeInHierarchy, Is.True);
+            Assert.That(document, Is.Not.Null);
+            Assert.That(document.panelSettings, Is.Not.Null);
+            Assert.That(document.visualTreeAsset, Is.Not.Null);
+            Assert.That(view, Is.Not.Null);
+            Assert.That(view.CurrentModel, Is.Not.Null);
+            Assert.That(view.CurrentModel.Screen, Is.EqualTo(MatchPresentationScreen.Setup));
+            Assert.That(view.RootVisualElement.Q<TextField>("player-one-input"), Is.Not.Null);
+            Assert.That(view.RootVisualElement.Q<TextField>("player-two-input"), Is.Not.Null);
+            Assert.That(view.RootVisualElement.Q<Button>("start-button"), Is.Not.Null);
+            Assert.That(view.RootVisualElement.Q<VisualElement>("setup-layer").resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
+            Assert.That(view.RootVisualElement.Q<VisualElement>("hud-layer").resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
+            Assert.That(playerController, Is.Not.Null);
+            Assert.That(
+                playerController.GetType().GetMethod("IsMatchStarted").Invoke(playerController, null),
+                Is.EqualTo(false),
+                "Gameplay must stay gated until the setup screen starts the match.");
+        }
+
+        [UnityTest]
+        public IEnumerator PoolTableScene_StartMatchRendersTypedBreakerAndTourState()
+        {
+            yield return LoadPoolTableScene(false);
+
+            var activeScene = SceneManager.GetActiveScene();
+            var view = Object.FindFirstObjectByType<MatchHudView>();
+            Assert.That(view, Is.Not.Null);
+
+            var playerOneInput = view.RootVisualElement.Q<TextField>("player-one-input");
+            var playerTwoInput = view.RootVisualElement.Q<TextField>("player-two-input");
+            playerOneInput.value = "ALPHA_01!";
+            playerTwoInput.value = "BRAVO-2";
+
+            view.SubmitSetup();
+            yield return null;
+
+            var model = view.CurrentModel;
+            Assert.That(model.Screen, Is.EqualTo(MatchPresentationScreen.Match));
+            Assert.That(model.PlayerOne.DisplayName, Is.EqualTo("ALPHA_01"));
+            Assert.That(model.PlayerTwo.DisplayName, Is.EqualTo("BRAVO-2"));
+            Assert.That(model.TourNumber, Is.EqualTo(0));
+            Assert.That(model.Phase, Is.EqualTo(MatchPhase.Break));
+            Assert.That(model.PlayerOne.IsActive ^ model.PlayerTwo.IsActive, Is.True);
+            Assert.That(view.RootVisualElement.Q<VisualElement>("setup-layer").resolvedStyle.display, Is.EqualTo(DisplayStyle.None));
+            Assert.That(view.RootVisualElement.Q<VisualElement>("hud-layer").resolvedStyle.display, Is.EqualTo(DisplayStyle.Flex));
+            Assert.That(view.RootVisualElement.Q<Label>("turn-value").text, Is.EqualTo("0"));
+
             var gameManager = FindActiveMonoBehaviourByTypeName(activeScene, "GameManager");
             Assert.That(gameManager, Is.Not.Null);
-
             var currentTurn = gameManager.GetType().GetMethod("getCurrentPlayerTurn").Invoke(gameManager, null);
-            var playerOneTurn = GetPublicGameObjectField(gameManager, "UI_Player1Turn");
-            var playerTwoTurn = GetPublicGameObjectField(gameManager, "UI_Player2Turn");
+            var expectedTurn = model.ActivePlayer == MatchPlayerId.PlayerOne
+                ? "PlayerOneTurn"
+                : "PlayerTwoTurn";
+            Assert.That(currentTurn.ToString(), Is.EqualTo(expectedTurn));
 
-            Assert.That(
-                currentTurn.ToString(),
-                Is.EqualTo("PlayerOneTurn"),
-                "Loading the scene must initialize the first turn instead of adjudicating a shot that never happened.");
-            Assert.That(playerOneTurn.activeInHierarchy, Is.True);
-            Assert.That(playerTwoTurn.activeInHierarchy, Is.False);
+            var playerController = FindActiveMonoBehaviourByTypeName(activeScene, "PlayersStateManagement");
+            Assert.That(playerController, Is.Not.Null, "Starting the match must hand control back to the gameplay state machine.");
         }
 
         [UnityTest]
@@ -1679,10 +1734,12 @@ namespace PoolTable.Tests.PlayMode
             Assert.That(playerTwoBallType, Is.Not.Null);
             Assert.That(FindMonoBehaviourByTypeName(playerOneBallType, "Text"), Is.Not.Null, "Player 1 ball-type UI must keep its Text component.");
             Assert.That(FindMonoBehaviourByTypeName(playerTwoBallType, "Text"), Is.Not.Null, "Player 2 ball-type UI must keep its Text component.");
+            Assert.That(playerOneTurn.activeInHierarchy, Is.False, "The migrated legacy HUD must remain hidden under its inactive root.");
+            Assert.That(playerTwoTurn.activeInHierarchy, Is.False, "The migrated legacy HUD must remain hidden under its inactive root.");
             Assert.That(
-                playerOneTurn.activeInHierarchy,
-                Is.Not.EqualTo(playerTwoTurn.activeInHierarchy),
-                "Exactly one turn indicator must be active in the scene hierarchy after startup.");
+                playerOneTurn.activeSelf,
+                Is.Not.EqualTo(playerTwoTurn.activeSelf),
+                "The compatibility bridge may keep one legacy turn marker selected internally, but it must not render.");
         }
 
         [UnityTest]
@@ -1794,7 +1851,7 @@ namespace PoolTable.Tests.PlayMode
                 "A break must record impulse transfer through object-ball contacts that already existed in the rack.");
         }
 
-        private static IEnumerator LoadPoolTableScene()
+        private static IEnumerator LoadPoolTableScene(bool startMatch = true)
         {
             Assert.That(SceneManager.sceneCountInBuildSettings, Is.GreaterThan(0));
 
@@ -1809,6 +1866,19 @@ namespace PoolTable.Tests.PlayMode
             yield return null;
             yield return null;
             yield return null;
+
+            if (!startMatch)
+            {
+                yield break;
+            }
+
+            var matchHud = Object.FindFirstObjectByType<MatchHudView>();
+            if (matchHud != null && matchHud.CurrentModel?.Screen == MatchPresentationScreen.Setup)
+            {
+                matchHud.SubmitSetup();
+                yield return null;
+                yield return null;
+            }
         }
 
         private sealed class TestCursorStateAccessor : ICursorStateAccessor

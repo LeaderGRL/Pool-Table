@@ -184,6 +184,20 @@ namespace PoolTable.Presentation.Diagnostics
         private static IEnumerator ValidateLocalControls(WindowsPlayerSmokeReport report)
         {
             var player = FindActiveLegacyComponent("PlayersStateManagement");
+
+            if (!(bool)InvokeLegacyMethod(player, "IsMatchStarted"))
+            {
+                var matchHud = FindActiveLegacyComponent("MatchHudView");
+                InvokeLegacyMethod(matchHud, "SubmitSetup");
+                yield return null;
+                yield return null;
+                ThrowIfRuntimeErrors();
+            }
+
+            Require(
+                (bool)InvokeLegacyMethod(player, "IsMatchStarted"),
+                "The UI Toolkit setup must start the match before local-control smoke validation.");
+
             var aiming = RequireLegacyBehaviour<CueAimingController>(player, "aimingController");
             var spin = RequireLegacyBehaviour<CueBallSpinController>(player, "spinController");
             var shotPower = RequireLegacyBehaviour<ShotPowerController>(player, "shotPowerController");

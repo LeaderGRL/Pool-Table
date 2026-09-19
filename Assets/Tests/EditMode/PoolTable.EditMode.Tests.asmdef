@@ -7,7 +7,8 @@
         "PoolTable.Input",
         "PoolTable.Gameplay",
         "PoolTable.Networking",
-        "PoolTable.Presentation"
+        "PoolTable.Presentation",
+        "PoolTable.Presentation.UI"
     ],
     "includePlatforms": [
         "Editor"

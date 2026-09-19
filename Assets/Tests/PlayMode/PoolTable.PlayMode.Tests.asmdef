@@ -8,6 +8,7 @@
         "PoolTable.Gameplay",
         "PoolTable.Networking",
         "PoolTable.Presentation",
+        "PoolTable.Presentation.UI",
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework"
     ],

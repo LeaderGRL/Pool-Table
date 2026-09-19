@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
     public static event System.Action<GameState> OnGameStateChanged;
+    public static event System.Action OnOpeningBreakResolved;
     public GameState state;
     public GameObject UI_Player1Turn;
     public GameObject UI_Player2Turn;
@@ -41,6 +42,8 @@ public class GameManager : MonoBehaviour
     private Player player1;
     private Player player2;
 
+    public bool HasStartingPlayer { get; private set; }
+
 
 
     //private Dictionary<BallStateManager, int> pocketedBalls;
@@ -60,9 +63,6 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
         //setTrianglePositionBall();
 
         player1 = new Player();
@@ -85,6 +85,23 @@ public class GameManager : MonoBehaviour
         }
 
         //updateGameState(GameState.PlayerOneTurn);
+    }
+
+    public void StartMatch(GameState startingTurn)
+    {
+        if (startingTurn != GameState.PlayerOneTurn && startingTurn != GameState.PlayerTwoTurn)
+        {
+            throw new System.ArgumentOutOfRangeException(nameof(startingTurn), startingTurn, "Starting turn must belong to a player.");
+        }
+
+        HasStartingPlayer = true;
+        turnNumber = 0;
+        updateGameState(startingTurn);
+    }
+
+    public void NotifyOpeningBreakResolved()
+    {
+        OnOpeningBreakResolved?.Invoke();
     }
 
     // Update is called once per frame

@@ -17,9 +17,18 @@ public class PlayersPlayState : PlayersBaseState
 
         if (GameManager.instance.getTurnNumber() == 0)
         {
-            GameManager.instance.updateGameState(GameState.PlayerOneTurn);
+            if (!GameManager.instance.HasStartingPlayer)
+            {
+                GameManager.instance.StartMatch(GameState.PlayerOneTurn);
+            }
+
             GameManager.instance.turnNumber++;
             return;
+        }
+
+        if (GameManager.instance.getTurnNumber() == 1)
+        {
+            GameManager.instance.NotifyOpeningBreakResolved();
         }
 
         GameManager.instance.turnNumber++;
